@@ -24,12 +24,15 @@ export async function POST(req: Request) {
     const items: Array<{ ticketTypeId: string; quantity: number }> = JSON.parse(meta.items ?? "[]");
     const supabase = await createAdminClient() as any;
 
-    const { data: dbEvent } = await supabase
+    const { data: dbEvent, error: eventError } = await supabase
       .from("events")
       .select("*, ticket_types(*)")
       .eq("id", meta.eventId)
       .single();
-    if (!dbEvent) return NextResponse.json({ error: "Event not found" }, { status: 404 });
+    if (!dbEvent) {
+      console.error("Event not found. eventId:", meta.eventId, "supabaseError:", eventError);
+      return NextResponse.json({ error: "Event not found", eventId: meta.eventId, supabaseError: eventError?.message }, { status: 404 });
+    }
 
     let subtotal = 0;
     for (const item of items) {
