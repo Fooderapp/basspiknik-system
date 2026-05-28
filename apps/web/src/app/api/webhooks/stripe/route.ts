@@ -102,12 +102,17 @@ export async function POST(req: Request) {
         qr_code: `TKT-${order.id.slice(0,8).toUpperCase()}-${orderItem.id.slice(0,4).toUpperCase()}-${String(i+1).padStart(2,"0")}`,
       }));
 
-      const { data: createdTickets } = await supabase
+      const { data: createdTickets, error: ticketError } = await supabase
         .from("tickets")
         .insert(ticketInserts)
         .select();
 
-      if (createdTickets) allTickets.push(...createdTickets);
+      if (ticketError) {
+        console.error("Ticket insert error:", JSON.stringify(ticketError));
+      }
+      if (createdTickets && createdTickets.length > 0) {
+        allTickets.push(...createdTickets);
+      }
 
       await supabase.rpc("increment_ticket_sold", {
         p_ticket_type_id: item.ticketTypeId,
@@ -157,7 +162,7 @@ export async function POST(req: Request) {
       emailStatus = "skipped";
     }
 
-    return NextResponse.json({ received: true, emailStatus, emailError, buyerEmail });
+    return NextResponse.json({ received: true, emailStatus, emailError, buyerEmail, ticketsCreated: allTickets.length });
   }
 
   return NextResponse.json({ received: true });
