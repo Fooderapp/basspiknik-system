@@ -2,15 +2,20 @@ import nodemailer from "nodemailer";
 import QRCode from "qrcode";
 
 // ─── Brevo SMTP transport ──────────────────────────────────────────────────
-const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.BREVO_SMTP_USER!,
-    pass: process.env.BREVO_SMTP_KEY!,
-  },
-});
+// BREVO_SMTP_USER = the login shown in Brevo → SMTP & API → SMTP tab (not your email!)
+// BREVO_SMTP_KEY  = the SMTP key generated on that same page (NOT the API key)
+function createTransporter() {
+  return nodemailer.createTransport({
+    host: "smtp-relay.brevo.com",
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.BREVO_SMTP_USER!,
+      pass: process.env.BREVO_SMTP_KEY!,
+    },
+    tls: { rejectUnauthorized: false },
+  });
+}
 
 function formatEventDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -159,6 +164,7 @@ export async function sendTicketConfirmation(input: SendTicketConfirmationInput)
   `.trim();
 
   const fromAddress = process.env.BREVO_FROM_EMAIL ?? process.env.BREVO_SMTP_USER!;
+  const transporter = createTransporter();
 
   await transporter.sendMail({
     from: `EventOS <${fromAddress}>`,

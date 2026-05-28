@@ -25,51 +25,54 @@ interface ScanResult {
   };
 }
 
-// Border color of the scan square
-const FRAME_BORDER: Record<ScanStatus, string> = {
-  idle:         "border-white/30",
-  ok:           "border-green-400",
-  already_used: "border-amber-400",
-  invalid:      "border-red-500",
-  cancelled:    "border-red-700",
+const BORDER_COLOR: Record<ScanStatus, string> = {
+  idle:         "",
+  ok:           "border-green-400  shadow-[0_0_0_4px_rgba(74,222,128,0.3)]",
+  already_used: "border-amber-400  shadow-[0_0_0_4px_rgba(251,191,36,0.3)]",
+  invalid:      "border-red-500    shadow-[0_0_0_4px_rgba(239,68,68,0.3)]",
+  cancelled:    "border-red-700    shadow-[0_0_0_4px_rgba(185,28,28,0.3)]",
 };
 
-// Popup accent colors
 const POPUP_CONFIG: Record<ScanStatus, { bar: string; icon: React.ReactNode; label: string; labelColor: string }> = {
-  idle:         { bar: "bg-white/20",    icon: null,                                              label: "",           labelColor: "" },
+  idle:         { bar: "",               icon: null,                                               label: "",           labelColor: "" },
   ok:           { bar: "bg-green-500",   icon: <CheckCircle2 className="h-5 w-5 text-green-400"/>, label: "ADMITTED",   labelColor: "text-green-400" },
   already_used: { bar: "bg-amber-500",   icon: <AlertCircle  className="h-5 w-5 text-amber-400"/>, label: "ALREADY IN", labelColor: "text-amber-400" },
   invalid:      { bar: "bg-red-500",     icon: <XCircle      className="h-5 w-5 text-red-400"/>,   label: "INVALID",    labelColor: "text-red-400" },
   cancelled:    { bar: "bg-red-700",     icon: <XCircle      className="h-5 w-5 text-red-400"/>,   label: "CANCELLED",  labelColor: "text-red-400" },
 };
 
+const CORNER_CLASSES = [
+  "top-0 left-0 border-t-[5px] border-l-[5px] rounded-tl-2xl",
+  "top-0 right-0 border-t-[5px] border-r-[5px] rounded-tr-2xl",
+  "bottom-0 left-0 border-b-[5px] border-l-[5px] rounded-bl-2xl",
+  "bottom-0 right-0 border-b-[5px] border-r-[5px] rounded-br-2xl",
+];
+
 export function CheckinScanner() {
-  const videoRef     = useRef<HTMLVideoElement>(null);
-  const canvasRef    = useRef<HTMLCanvasElement>(null);
-  const streamRef    = useRef<MediaStream | null>(null);
-  const rafRef       = useRef<number>(0);
+  const videoRef       = useRef<HTMLVideoElement>(null);
+  const canvasRef      = useRef<HTMLCanvasElement>(null);
+  const streamRef      = useRef<MediaStream | null>(null);
+  const rafRef         = useRef<number>(0);
   const lastScannedRef = useRef<string>("");
-  const cooldownRef  = useRef(false);
-  const popupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cooldownRef    = useRef(false);
+  const timerRef       = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [torch, setTorch]               = useState(false);
+  const [torch, setTorch]                 = useState(false);
   const [torchSupported, setTorchSupported] = useState(false);
-  const [manualMode, setManualMode]     = useState(false);
-  const [manualInput, setManualInput]   = useState("");
-  const [result, setResult]             = useState<ScanResult | null>(null);
-  const [popupVisible, setPopupVisible] = useState(false);
-  const [cameraError, setCameraError]   = useState<string | null>(null);
+  const [manualMode, setManualMode]       = useState(false);
+  const [manualInput, setManualInput]     = useState("");
+  const [result, setResult]               = useState<ScanResult | null>(null);
+  const [popupVisible, setPopupVisible]   = useState(false);
+  const [cameraError, setCameraError]     = useState<string | null>(null);
 
-  // ─── Camera init ───────────────────────────────────────────────
+  // ─── Camera ────────────────────────────────────────────────────
   const startCamera = useCallback(async () => {
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
-      const isSecure = typeof location !== "undefined" &&
+      const secure = typeof location !== "undefined" &&
         (location.protocol === "https:" || location.hostname === "localhost");
-      setCameraError(
-        isSecure
-          ? "Camera not available on this browser. Use manual entry."
-          : "Camera requires HTTPS. Open this page over HTTPS or use manual entry."
-      );
+      setCameraError(secure
+        ? "Camera not available on this browser. Use manual entry."
+        : "Camera requires HTTPS. Use manual entry or open via HTTPS.");
       return;
     }
     try {
@@ -77,10 +80,7 @@ export function CheckinScanner() {
         video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
       });
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
+      if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play(); }
       const track = stream.getVideoTracks()[0];
       const caps = track.getCapabilities() as MediaTrackCapabilities & { torch?: boolean };
       setTorchSupported(!!caps.torch);
@@ -97,8 +97,7 @@ export function CheckinScanner() {
   }, []);
 
   useEffect(() => {
-    if (!manualMode) startCamera();
-    else stopCamera();
+    if (!manualMode) startCamera(); else stopCamera();
     return stopCamera;
   }, [manualMode, startCamera, stopCamera]);
 
@@ -110,27 +109,26 @@ export function CheckinScanner() {
     try {
       await track.applyConstraints({ advanced: [{ torch: next } as MediaTrackConstraintSet] });
       setTorch(next);
-    } catch {
-      toast.error("Torch not supported on this device");
-    }
+    } catch { toast.error("Torch not supported"); }
   };
 
-  // ─── Show popup then auto-dismiss ──────────────────────────────
+  // ─── Show result + auto-dismiss ────────────────────────────────
   const showResult = useCallback((res: ScanResult) => {
-    if (popupTimerRef.current) clearTimeout(popupTimerRef.current);
+    if (timerRef.current) clearTimeout(timerRef.current);
     setResult(res);
     setPopupVisible(true);
-    popupTimerRef.current = setTimeout(() => {
+    timerRef.current = setTimeout(() => {
       setPopupVisible(false);
+      // wait for fade-out before resetting
       setTimeout(() => {
         setResult(null);
         cooldownRef.current = false;
         lastScannedRef.current = "";
-      }, 300); // wait for fade-out before clearing
-    }, 1800);
+      }, 300);
+    }, 3000);
   }, []);
 
-  // ─── QR scanning loop ──────────────────────────────────────────
+  // ─── QR loop ───────────────────────────────────────────────────
   const processQR = useCallback((code: string) => {
     if (cooldownRef.current || code === lastScannedRef.current) return;
     lastScannedRef.current = code;
@@ -168,7 +166,7 @@ export function CheckinScanner() {
       });
       const data = await res.json();
       let status: ScanStatus = "invalid";
-      if (data.status === "OK")           status = "ok";
+      if      (data.status === "OK")           status = "ok";
       else if (data.status === "ALREADY_USED") status = "already_used";
       else if (data.status === "CANCELLED")    status = "cancelled";
       showResult({ status, message: data.message, ticket: data.ticket });
@@ -179,13 +177,14 @@ export function CheckinScanner() {
     }
   };
 
-  const status = result?.status ?? "idle";
-  const popup  = POPUP_CONFIG[status];
+  const status  = result?.status ?? "idle";
+  const popup   = POPUP_CONFIG[status];
+  const isIdle  = status === "idle";
 
   return (
     <div className="flex-1 flex flex-col relative bg-black">
 
-      {/* ── Camera ─────────────────────────────────────────────── */}
+      {/* ── Camera view ────────────────────────────────────────── */}
       {!manualMode && (
         <div className="flex-1 relative flex items-center justify-center overflow-hidden">
           {cameraError ? (
@@ -200,43 +199,27 @@ export function CheckinScanner() {
               <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover" muted playsInline />
               <canvas ref={canvasRef} className="hidden" />
 
-              {/* ── Scan frame with status border ──────────────── */}
-              <div className="relative z-10 flex flex-col items-center gap-4">
-                <div
-                  className={cn(
-                    "w-64 h-64 sm:w-72 sm:h-72 rounded-2xl",
-                    "border-[5px] transition-colors duration-200",
-                    FRAME_BORDER[status],
-                    // glow ring that matches border color
-                    status === "ok"           && "shadow-[0_0_0_4px_rgba(74,222,128,0.25)]",
-                    status === "already_used" && "shadow-[0_0_0_4px_rgba(251,191,36,0.25)]",
-                    (status === "invalid" || status === "cancelled") && "shadow-[0_0_0_4px_rgba(239,68,68,0.25)]",
-                  )}
-                >
-                  {/* scanning line — only when idle */}
-                  {status === "idle" && (
-                    <div className="absolute inset-x-0 top-1/2 h-0.5 bg-white/40 animate-scan-line" />
-                  )}
-                </div>
+              {/* ── Scan frame wrapper — popup floats above, frame never moves ── */}
+              <div className="relative z-10">
 
-                {/* ── Result popup ───────────────────────────── */}
+                {/* Popup — absolutely above the scan square, no layout impact */}
                 <div
                   className={cn(
-                    "w-64 sm:w-72 rounded-xl overflow-hidden bg-black/80 backdrop-blur-sm border border-white/10",
+                    "absolute bottom-full mb-3 left-0 right-0",
+                    "rounded-xl overflow-hidden bg-black/85 backdrop-blur-sm border border-white/10",
                     "transition-all duration-300",
-                    popupVisible && result ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none",
+                    popupVisible && result
+                      ? "opacity-100 translate-y-0 pointer-events-auto"
+                      : "opacity-0 translate-y-1 pointer-events-none",
                   )}
                 >
-                  {result && (
+                  {result && result.status !== "idle" && (
                     <>
-                      {/* Colored accent bar */}
                       <div className={cn("h-1 w-full", popup.bar)} />
                       <div className="px-4 py-3 flex items-start gap-3">
                         {popup.icon}
                         <div className="flex-1 min-w-0">
-                          <p className={cn("text-sm font-black tracking-wider", popup.labelColor)}>
-                            {popup.label}
-                          </p>
+                          <p className={cn("text-sm font-black tracking-wider", popup.labelColor)}>{popup.label}</p>
                           {result.ticket && (
                             <>
                               <p className="text-white text-sm font-semibold truncate mt-0.5">
@@ -248,14 +231,10 @@ export function CheckinScanner() {
                                   {result.ticket.tier.replace("_", " ")}
                                 </span>
                               )}
-                              {/* Multi-entry dots */}
                               {status === "ok" && (result.ticket.entriesAllowed ?? 1) > 1 && (
                                 <div className="flex items-center gap-1.5 mt-2">
                                   {Array.from({ length: result.ticket.entriesAllowed! }).map((_, i) => (
-                                    <div
-                                      key={i}
-                                      className={cn("h-2 w-2 rounded-full", i < (result.ticket!.entriesUsed ?? 0) ? "bg-green-400" : "bg-white/20")}
-                                    />
+                                    <div key={i} className={cn("h-2 w-2 rounded-full", i < (result.ticket!.entriesUsed ?? 0) ? "bg-green-400" : "bg-white/20")} />
                                   ))}
                                   <span className="text-[10px] text-white/50 ml-1">{result.ticket.entriesLeft} left</span>
                                 </div>
@@ -275,6 +254,29 @@ export function CheckinScanner() {
                     </>
                   )}
                 </div>
+
+                {/* ── The scan square itself ── */}
+                <div
+                  className={cn(
+                    "w-64 h-64 sm:w-72 sm:h-72 rounded-2xl relative",
+                    "transition-all duration-200",
+                    // idle: transparent border (corners handle styling)
+                    // result: thick solid colored border
+                    isIdle
+                      ? "border-2 border-transparent"
+                      : cn("border-[10px]", BORDER_COLOR[status]),
+                  )}
+                >
+                  {/* Corner brackets — only in idle */}
+                  {isIdle && CORNER_CLASSES.map((cls, i) => (
+                    <div key={i} className={cn("absolute w-10 h-10 border-white", cls)} />
+                  ))}
+
+                  {/* Scanning line — only in idle */}
+                  {isIdle && (
+                    <div className="absolute inset-x-0 top-1/2 h-0.5 bg-white/40 animate-scan-line" />
+                  )}
+                </div>
               </div>
             </>
           )}
@@ -283,8 +285,8 @@ export function CheckinScanner() {
 
       {/* ── Manual entry ───────────────────────────────────────── */}
       {manualMode && (
-        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6">
-          <p className="text-white/60 text-sm">Enter QR code manually</p>
+        <div className="flex-1 flex flex-col items-center justify-center gap-5 px-6">
+          <p className="text-white/50 text-sm">Enter ticket code manually</p>
           <div className="w-full max-w-sm flex gap-2">
             <Input
               value={manualInput}
@@ -307,8 +309,8 @@ export function CheckinScanner() {
             </Button>
           </div>
 
-          {/* Show popup in manual mode too */}
-          {result && popupVisible && (
+          {/* Result popup in manual mode */}
+          {result && result.status !== "idle" && (
             <div className={cn(
               "w-full max-w-sm rounded-xl overflow-hidden bg-white/5 border border-white/10",
               "transition-all duration-300",
@@ -320,7 +322,12 @@ export function CheckinScanner() {
                 <div>
                   <p className={cn("text-sm font-black tracking-wider", popup.labelColor)}>{popup.label}</p>
                   {result.ticket && (
-                    <p className="text-white/70 text-xs mt-0.5">{result.ticket.holderName ?? "Guest"} · {result.ticket.ticketName}</p>
+                    <p className="text-white/70 text-xs mt-0.5">
+                      {result.ticket.holderName ?? "Guest"} · {result.ticket.ticketName}
+                    </p>
+                  )}
+                  {status === "invalid" && (
+                    <p className="text-white/50 text-xs mt-0.5">{result.message}</p>
                   )}
                 </div>
               </div>
@@ -340,7 +347,7 @@ export function CheckinScanner() {
           {manualMode ? <RotateCcw className="h-5 w-5" /> : <Keyboard className="h-5 w-5" />}
         </Button>
 
-        <p className="text-xs text-white/40">
+        <p className="text-xs text-white/30">
           {manualMode ? "Manual Entry" : "Point at QR code"}
         </p>
 
@@ -348,7 +355,6 @@ export function CheckinScanner() {
           variant="ghost" size="icon"
           className={cn("hover:bg-white/10", torch ? "text-yellow-400" : "text-white/40", !torchSupported && "opacity-0 pointer-events-none")}
           onClick={toggleTorch}
-          title="Toggle torch"
         >
           {torch ? <Flashlight className="h-5 w-5" /> : <FlashlightOff className="h-5 w-5" />}
         </Button>
