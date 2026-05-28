@@ -127,7 +127,9 @@ export async function POST(req: Request) {
     // Send confirmation email
     // meta.guestEmail is empty for logged-in users — fall back to session.customer_email
     const buyerEmail = meta.guestEmail || session.customer_email || null;
-    console.log("Email debug — buyerEmail:", buyerEmail, "tickets:", allTickets.length, "BREVO_SMTP_USER:", process.env.BREVO_SMTP_USER ? "set" : "MISSING", "BREVO_SMTP_KEY:", process.env.BREVO_SMTP_KEY ? "set" : "MISSING");
+    let emailStatus = "not_attempted";
+    let emailError = "";
+
     if (buyerEmail && allTickets.length > 0) {
       try {
         await sendTicketConfirmation({
@@ -146,14 +148,16 @@ export async function POST(req: Request) {
           total: (session.amount_total ?? 0) / 100,
           orderId: order.id,
         });
-        console.log("Email sent successfully to:", buyerEmail);
-      } catch (emailErr) {
-        // Non-fatal — log but don't fail the webhook
-        console.error("Email send failed:", JSON.stringify(emailErr, Object.getOwnPropertyNames(emailErr)));
+        emailStatus = "sent";
+      } catch (emailErr: any) {
+        emailStatus = "failed";
+        emailError = emailErr?.message ?? String(emailErr);
       }
     } else {
-      console.log("Email skipped — buyerEmail:", buyerEmail, "tickets:", allTickets.length);
+      emailStatus = "skipped";
     }
+
+    return NextResponse.json({ received: true, emailStatus, emailError, buyerEmail });
   }
 
   return NextResponse.json({ received: true });
