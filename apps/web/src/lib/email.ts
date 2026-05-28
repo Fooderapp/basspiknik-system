@@ -1,7 +1,16 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 import QRCode from "qrcode";
 
-const resend = new Resend(process.env.RESEND_API_KEY!);
+// ─── Brevo SMTP transport ──────────────────────────────────────────────────
+const transporter = nodemailer.createTransport({
+  host: "smtp-relay.brevo.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.BREVO_SMTP_USER!,
+    pass: process.env.BREVO_SMTP_KEY!,
+  },
+});
 
 function formatEventDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -149,11 +158,9 @@ export async function sendTicketConfirmation(input: SendTicketConfirmationInput)
 </html>
   `.trim();
 
-  // Use RESEND_FROM_EMAIL env var if set (verified domain for production),
-  // otherwise fall back to Resend's shared sandbox address for testing.
-  const fromAddress = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
+  const fromAddress = process.env.BREVO_FROM_EMAIL ?? process.env.BREVO_SMTP_USER!;
 
-  await resend.emails.send({
+  await transporter.sendMail({
     from: `EventOS <${fromAddress}>`,
     to,
     subject: `Your tickets for ${eventName} 🎫`,
