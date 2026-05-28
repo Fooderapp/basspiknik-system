@@ -1,19 +1,30 @@
-import nodemailer from "nodemailer";
-
-// ─── Brevo SMTP transport ──────────────────────────────────────────────────
-// BREVO_SMTP_USER = the login shown in Brevo → SMTP & API → SMTP tab (not your email!)
-// BREVO_SMTP_KEY  = the SMTP key generated on that same page (NOT the API key)
-function createTransporter() {
-  return nodemailer.createTransport({
-    host: "smtp-relay.brevo.com",
-    port: 587,
-    secure: false,
-    auth: {
-      user: process.env.BREVO_SMTP_USER!,
-      pass: process.env.BREVO_SMTP_KEY!,
+// ─── Brevo HTTP API transport ─────────────────────────────────────────────
+// BREVO_API_KEY = from Brevo → SMTP & API → API Keys tab (not the SMTP key)
+// BREVO_FROM_EMAIL = verified sender address in Brevo
+async function sendBrevoEmail(options: {
+  from: { name: string; email: string };
+  to: string;
+  subject: string;
+  html: string;
+}) {
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "api-key": process.env.BREVO_API_KEY!,
+      "content-type": "application/json",
+      "accept": "application/json",
     },
-    tls: { rejectUnauthorized: false },
+    body: JSON.stringify({
+      sender: options.from,
+      to: [{ email: options.to }],
+      subject: options.subject,
+      htmlContent: options.html,
+    }),
   });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Brevo API error ${res.status}: ${body}`);
+  }
 }
 
 function formatEventDate(iso: string) {
@@ -149,11 +160,10 @@ export async function sendTicketConfirmation(input: SendTicketConfirmationInput)
 </html>
   `.trim();
 
-  const fromAddress = process.env.BREVO_FROM_EMAIL ?? process.env.BREVO_SMTP_USER!;
-  const transporter = createTransporter();
+  const fromAddress = process.env.BREVO_FROM_EMAIL ?? "noreply@example.com";
 
-  await transporter.sendMail({
-    from: `EventOS <${fromAddress}>`,
+  await sendBrevoEmail({
+    from: { name: "EventOS", email: fromAddress },
     to,
     subject: `Your tickets for ${eventName} 🎫`,
     html,
