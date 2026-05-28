@@ -14,6 +14,7 @@ export default function HomePage() {
           <div className="flex items-center gap-3">
             <Button variant="ghost" asChild><Link href="/events">Events</Link></Button>
             <Button variant="ghost" asChild><Link href="/menu">Bar Menu</Link></Button>
+            <Button variant="ghost" asChild><Link href="/my-tickets">My Tickets</Link></Button>
             <Button asChild><Link href="/sign-in">Sign In</Link></Button>
           </div>
         </div>

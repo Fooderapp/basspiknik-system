@@ -156,6 +156,11 @@ export default async function SuccessPage({
               <ArrowLeft className="h-4 w-4 mr-2" /> Back to Event
             </Link>
           </Button>
+          <Button asChild variant="outline" className="flex-1">
+            <Link href="/my-tickets">
+              <Download className="h-4 w-4 mr-2" /> View All Tickets
+            </Link>
+          </Button>
           <Button asChild className="flex-1">
             <Link href="/events">Browse More Events</Link>
           </Button>

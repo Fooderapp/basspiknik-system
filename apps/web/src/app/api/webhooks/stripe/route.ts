@@ -162,7 +162,7 @@ export async function POST(req: Request) {
       emailStatus = "skipped";
     }
 
-    return NextResponse.json({ received: true, emailStatus, emailError, buyerEmail, ticketsCreated: allTickets.length });
+    return NextResponse.json({ received: true, emailStatus, emailError, buyerEmail, ticketsCreated: allTickets.length, orderId: order.id });
   }
 
   return NextResponse.json({ received: true });
