@@ -137,19 +137,25 @@ export async function POST(req: Request) {
     let emailStatus = "not_attempted";
     let emailError = "";
 
-    if (buyerEmail && allTickets.length > 0) {
+    if (buyerEmail) {
+      // Query tickets fresh from DB — don't rely on insert().select() which can return empty
+      const { data: emailTickets } = await supabase
+        .from("tickets")
+        .select("*")
+        .eq("order_id", order.id);
+
       try {
         await sendTicketConfirmation({
           to: buyerEmail,
-          buyerName: meta.guestName || "Guest",
+          buyerName: meta.guestName || (session.customer_details as any)?.name || "Guest",
           eventName: dbEvent.name,
           eventDate: dbEvent.start_date,
           eventVenue: dbEvent.venue || undefined,
-          tickets: allTickets.map((t: any) => ({
+          tickets: (emailTickets ?? []).map((t: any) => ({
             id: t.id,
             qrCode: t.qr_code,
             ticketName: t.ticket_name ?? "Ticket",
-            tier: t.tier,
+            tier: t.tier ?? "GENERAL",
             holderName: t.holder_name || undefined,
           })),
           total: (session.amount_total ?? 0) / 100,
@@ -161,7 +167,7 @@ export async function POST(req: Request) {
         emailError = emailErr?.message ?? String(emailErr);
       }
     } else {
-      emailStatus = "skipped";
+      emailStatus = "skipped_no_email";
     }
 
     return NextResponse.json({ received: true, emailStatus, emailError, buyerEmail, ticketsCreated: allTickets.length, orderId: order.id, ticketError: firstTicketError ? { code: firstTicketError.code, message: firstTicketError.message, details: firstTicketError.details } : null });
