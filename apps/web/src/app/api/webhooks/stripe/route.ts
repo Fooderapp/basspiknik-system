@@ -62,6 +62,7 @@ export async function POST(req: Request) {
     if (orderError || !order) return NextResponse.json({ error: "Order creation failed" }, { status: 500 });
 
     const allTickets: any[] = [];
+    let firstTicketError: any = null;
 
     for (const item of items) {
       const tt = dbEvent.ticket_types.find((t: any) => t.id === item.ticketTypeId);
@@ -109,6 +110,7 @@ export async function POST(req: Request) {
 
       if (ticketError) {
         console.error("Ticket insert error:", JSON.stringify(ticketError));
+        if (!firstTicketError) firstTicketError = ticketError;
       }
       if (createdTickets && createdTickets.length > 0) {
         allTickets.push(...createdTickets);
@@ -162,7 +164,7 @@ export async function POST(req: Request) {
       emailStatus = "skipped";
     }
 
-    return NextResponse.json({ received: true, emailStatus, emailError, buyerEmail, ticketsCreated: allTickets.length, orderId: order.id });
+    return NextResponse.json({ received: true, emailStatus, emailError, buyerEmail, ticketsCreated: allTickets.length, orderId: order.id, ticketError: firstTicketError ? { code: firstTicketError.code, message: firstTicketError.message, details: firstTicketError.details } : null });
   }
 
   return NextResponse.json({ received: true });
