@@ -1,5 +1,4 @@
 import nodemailer from "nodemailer";
-import QRCode from "qrcode";
 
 // ─── Brevo SMTP transport ──────────────────────────────────────────────────
 // BREVO_SMTP_USER = the login shown in Brevo → SMTP & API → SMTP tab (not your email!)
@@ -56,28 +55,15 @@ interface SendTicketConfirmationInput {
   orderId: string;
 }
 
-async function generateQRDataURL(text: string): Promise<string> {
-  return QRCode.toDataURL(text, {
-    width: 200,
-    margin: 1,
-    color: { dark: "#000000", light: "#ffffff" },
-    errorCorrectionLevel: "H",
-  });
-}
-
 export async function sendTicketConfirmation(input: SendTicketConfirmationInput) {
   const { to, buyerName, eventName, eventDate, eventVenue, tickets, total, orderId } = input;
 
-  // Generate QR code images for each ticket
-  const ticketsWithQR = await Promise.all(
-    tickets.map(async (t) => ({
-      ...t,
-      qrDataUrl: await generateQRDataURL(t.qrCode),
-    }))
-  );
+  // Use the hosted QR endpoint — email clients block base64 data: URLs
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
 
-  const ticketBlocksHtml = ticketsWithQR.map((t, i) => {
+  const ticketBlocksHtml = tickets.map((t, i) => {
     const color = TIER_COLORS[t.tier] ?? "#374151";
+    const qrUrl = `${appUrl}/api/tickets/qr?code=${encodeURIComponent(t.qrCode)}`;
     return `
       <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:24px;margin-bottom:16px;text-align:center;">
         <div style="display:inline-block;background:${color};color:#fff;font-size:11px;font-weight:700;letter-spacing:0.08em;padding:4px 12px;border-radius:999px;margin-bottom:12px;text-transform:uppercase;">
@@ -85,7 +71,7 @@ export async function sendTicketConfirmation(input: SendTicketConfirmationInput)
         </div>
         <div style="font-size:16px;font-weight:700;color:#111827;margin-bottom:4px;">${t.ticketName}</div>
         ${t.holderName ? `<div style="font-size:13px;color:#6b7280;margin-bottom:12px;">${t.holderName}</div>` : ""}
-        <img src="${t.qrDataUrl}" alt="QR Code" width="160" height="160" style="display:block;margin:0 auto 12px;" />
+        <img src="${qrUrl}" alt="${t.qrCode}" width="160" height="160" style="display:block;margin:0 auto 12px;border:1px solid #e5e7eb;border-radius:8px;" />
         <div style="font-family:monospace;font-size:11px;color:#9ca3af;letter-spacing:0.05em;">${t.qrCode}</div>
         ${tickets.length > 1 ? `<div style="font-size:11px;color:#9ca3af;margin-top:4px;">Ticket ${i + 1} of ${tickets.length}</div>` : ""}
       </div>
