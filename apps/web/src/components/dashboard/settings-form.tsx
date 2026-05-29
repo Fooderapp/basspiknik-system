@@ -13,7 +13,7 @@ import type { AppSettings, Currency, Language } from "@/lib/settings";
 const CURRENCIES: { value: Currency; label: string; symbol: string; note?: string }[] = [
   { value: "EUR", label: "Euro",         symbol: "€" },
   { value: "USD", label: "US Dollar",    symbol: "$" },
-  { value: "HUF", label: "Hungarian Forint", symbol: "Ft", note: "Zero-decimal" },
+  { value: "HUF", label: "Hungarian Forint", symbol: "Ft" },
 ];
 
 const LANGUAGES: { value: Language; label: string; flag: string }[] = [
@@ -139,12 +139,6 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             </Select>
           </div>
 
-          {currency === "HUF" && (
-            <div className="rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
-              <strong>HUF note:</strong> Stripe treats HUF as a zero-decimal currency. Ticket
-              prices are charged in whole forints (e.g. a price of 1500 = 1 500 Ft).
-            </div>
-          )}
         </CardContent>
       </Card>
 

@@ -31,8 +31,9 @@ export async function getSettings(): Promise<AppSettings> {
   }
 }
 
-/** Zero-decimal currencies — Stripe wants the amount as-is (no × 100). */
-const ZERO_DECIMAL: Currency[] = ["HUF"];
+/** Zero-decimal currencies — Stripe wants the amount as-is (no × 100).
+ *  HUF is NOT zero-decimal in Stripe — it uses fillér (×100) like EUR/USD. */
+const ZERO_DECIMAL: Currency[] = [];
 
 export function isZeroDecimal(currency: Currency): boolean {
   return ZERO_DECIMAL.includes(currency);
