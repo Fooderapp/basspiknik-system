@@ -41,12 +41,12 @@ export async function POST(req: Request) {
   const supabase = await createAdminClient() as any;
   const { error } = await supabase
     .from("app_settings")
-    .upsert({
-      id: "global",
+    .update({
       ...parsed.data,
       updated_at: new Date().toISOString(),
       updated_by: profile.id,
-    });
+    })
+    .eq("id", "global");
 
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
