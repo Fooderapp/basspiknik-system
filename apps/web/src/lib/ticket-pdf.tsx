@@ -1,6 +1,8 @@
 import React from "react";
 import { renderToBuffer, Document, Page, View, Text, Image, StyleSheet } from "@react-pdf/renderer";
 import QRCode from "qrcode";
+import { getDictionary, t } from "./i18n";
+import type { Language } from "./settings";
 
 const TIER_COLORS: Record<string, string> = {
   VIP:        "#7c3aed",
@@ -146,6 +148,7 @@ export interface PdfTicketInput {
   eventDate: string;
   eventVenue?: string;
   orderId: string;
+  language?: Language;
   tickets: Array<{
     id: string;
     qrCode: string;
@@ -155,18 +158,22 @@ export interface PdfTicketInput {
   }>;
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
+function formatDate(iso: string, lang: Language) {
+  const locale = lang === "hu" ? "hu-HU" : "en-US";
+  return new Date(iso).toLocaleDateString(locale, {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
     hour: "2-digit", minute: "2-digit",
   });
 }
 
 export async function generateTicketPdf(input: PdfTicketInput): Promise<Buffer> {
+  const lang: Language = input.language ?? "en";
+  const dict = getDictionary(lang);
+
   // Generate QR PNGs as base64 data URIs
   const qrDataUris = await Promise.all(
-    input.tickets.map((t) =>
-      QRCode.toDataURL(t.qrCode, { width: 240, margin: 2, color: { dark: "#000000", light: "#ffffff" } })
+    input.tickets.map((tk) =>
+      QRCode.toDataURL(tk.qrCode, { width: 240, margin: 2, color: { dark: "#000000", light: "#ffffff" } })
     )
   );
 
@@ -176,75 +183,64 @@ export async function generateTicketPdf(input: PdfTicketInput): Promise<Buffer> 
 
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>🎫 EventOS</Text>
-          <Text style={styles.headerSub}>Your tickets are confirmed</Text>
+          <Text style={styles.headerTitle}>EventOS</Text>
+          <Text style={styles.headerSub}>{t(dict, "pdf.confirmed")}</Text>
         </View>
 
         {/* Event info */}
         <View style={styles.eventInfoBox}>
           <Text style={styles.eventName}>{input.eventName}</Text>
           <View style={styles.metaRow}>
-            <Text style={styles.metaLabel}>Date</Text>
-            <Text style={styles.metaValue}>{formatDate(input.eventDate)}</Text>
+            <Text style={styles.metaLabel}>{t(dict, "pdf.date")}</Text>
+            <Text style={styles.metaValue}>{formatDate(input.eventDate, lang)}</Text>
           </View>
           {input.eventVenue && (
             <View style={styles.metaRow}>
-              <Text style={styles.metaLabel}>Venue</Text>
+              <Text style={styles.metaLabel}>{t(dict, "pdf.venue")}</Text>
               <Text style={styles.metaValue}>{input.eventVenue}</Text>
             </View>
           )}
           <View style={styles.metaRow}>
-            <Text style={styles.metaLabel}>Order</Text>
+            <Text style={styles.metaLabel}>{t(dict, "pdf.order")}</Text>
             <Text style={styles.metaValue}>{input.orderId.slice(0, 8).toUpperCase()}</Text>
           </View>
         </View>
 
         {/* Ticket label */}
-        <Text style={styles.ticketsLabel}>Your Tickets ({input.tickets.length})</Text>
+        <Text style={styles.ticketsLabel}>{t(dict, "pdf.your_tickets")} ({input.tickets.length})</Text>
 
         {/* Ticket cards */}
-        {input.tickets.map((t, i) => {
-          const color = TIER_COLORS[t.tier] ?? "#374151";
+        {input.tickets.map((tk, i) => {
+          const color = TIER_COLORS[tk.tier] ?? "#374151";
           return (
-            <View key={t.id} style={styles.card}>
-              {/* Tier colour bar */}
+            <View key={tk.id} style={styles.card}>
               <View style={[styles.tierBar, { backgroundColor: color }]} />
-
               <View style={styles.cardBody}>
                 {/* QR code */}
                 <View style={styles.qrWrap}>
                   <Image src={qrDataUris[i]} style={styles.qrImage} />
-                  <Text style={styles.qrCode}>{t.qrCode}</Text>
+                  <Text style={styles.qrCode}>{tk.qrCode}</Text>
                 </View>
-
                 {/* Info */}
                 <View style={styles.info}>
-                  <Text style={[styles.tierBadge, { color }]}>
-                    {t.tier.replace("_", " ")}
-                  </Text>
-                  <Text style={styles.ticketName}>{t.ticketName}</Text>
-                  {t.holderName && (
-                    <Text style={styles.holderName}>{t.holderName}</Text>
-                  )}
+                  <Text style={[styles.tierBadge, { color }]}>{tk.tier.replace("_", " ")}</Text>
+                  <Text style={styles.ticketName}>{tk.ticketName}</Text>
+                  {tk.holderName && <Text style={styles.holderName}>{tk.holderName}</Text>}
                   <View style={styles.divider} />
                   <View style={styles.metaRow}>
-                    <Text style={styles.metaLabel}>Event</Text>
-                    <Text style={styles.metaValue}>{input.eventName}</Text>
-                  </View>
-                  <View style={styles.metaRow}>
-                    <Text style={styles.metaLabel}>Date</Text>
-                    <Text style={styles.metaValue}>{formatDate(input.eventDate)}</Text>
+                    <Text style={styles.metaLabel}>{t(dict, "pdf.date")}</Text>
+                    <Text style={styles.metaValue}>{formatDate(input.eventDate, lang)}</Text>
                   </View>
                   {input.eventVenue && (
                     <View style={styles.metaRow}>
-                      <Text style={styles.metaLabel}>Venue</Text>
+                      <Text style={styles.metaLabel}>{t(dict, "pdf.venue")}</Text>
                       <Text style={styles.metaValue}>{input.eventVenue}</Text>
                     </View>
                   )}
                   {input.tickets.length > 1 && (
                     <View style={styles.metaRow}>
-                      <Text style={styles.metaLabel}>Ticket</Text>
-                      <Text style={styles.metaValue}>{i + 1} of {input.tickets.length}</Text>
+                      <Text style={styles.metaLabel}>{t(dict, "pdf.ticket_of")}</Text>
+                      <Text style={styles.metaValue}>{i + 1} / {input.tickets.length}</Text>
                     </View>
                   )}
                 </View>
@@ -255,9 +251,7 @@ export async function generateTicketPdf(input: PdfTicketInput): Promise<Buffer> 
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Show the QR code at the entrance · Powered by EventOS
-          </Text>
+          <Text style={styles.footerText}>{t(dict, "pdf.footer")}</Text>
         </View>
 
       </Page>

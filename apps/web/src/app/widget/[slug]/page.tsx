@@ -4,6 +4,8 @@ import { formatDate, formatCurrency } from "@/lib/utils";
 import { TicketSelector } from "@/components/events/ticket-selector";
 import { CalendarDays, MapPin } from "lucide-react";
 import type { Event, TicketType } from "@/lib/supabase/types";
+import { getSettings } from "@/lib/settings";
+import { getDictionary } from "@/lib/i18n";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -11,16 +13,15 @@ export default async function WidgetPage({ params }: { params: Promise<{ slug: s
   const { slug } = await params;
   const supabase = await createClient() as any;
 
-  const { data } = await supabase
-    .from("events")
-    .select("*, ticket_types(*)")
-    .eq("slug", slug)
-    .eq("status", "PUBLISHED")
-    .single();
+  const [{ data }, settings] = await Promise.all([
+    supabase.from("events").select("*, ticket_types(*)").eq("slug", slug).eq("status", "PUBLISHED").single(),
+    getSettings(),
+  ]);
 
   if (!data) notFound();
 
   const event = data as Event & { ticket_types: TicketType[] };
+  const dict = getDictionary(settings.language);
   const tts = event.ticket_types ?? [];
   const totalSold = tts.reduce((a, t) => a + t.sold, 0);
   const totalCapacity = tts.reduce((a, t) => a + t.quantity, 0);
@@ -67,6 +68,8 @@ export default async function WidgetPage({ params }: { params: Promise<{ slug: s
           ) : (
             <TicketSelector
               eventId={event.id}
+              dict={dict}
+              currency={settings.currency}
               ticketTypes={tts.map((t) => ({
                 id: t.id, name: t.name,
                 description: t.description ?? undefined,

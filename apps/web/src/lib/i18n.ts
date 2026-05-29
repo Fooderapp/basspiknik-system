@@ -1,0 +1,242 @@
+import type { Language } from "@/lib/settings";
+
+// ─── Dictionaries ─────────────────────────────────────────────────────────────
+
+const en = {
+  // Nav
+  "nav.events":     "Events",
+  "nav.bar_menu":   "Bar Menu",
+  "nav.my_tickets": "My Tickets",
+  "nav.sign_in":    "Sign In",
+  "nav.dashboard":  "Dashboard",
+
+  // Homepage
+  "home.headline":       "Events. Tickets. Bar.",
+  "home.headline_accent":"All in one place.",
+  "home.subline":        "Sell tickets online and in-person, manage check-ins with QR codes, and run your bar with real-time ordering — built for event series.",
+  "home.browse_events":  "Browse Events",
+  "home.feature_tickets_title": "Ticket Sales",
+  "home.feature_tickets_desc":  "Online, in-person, and embedded on any website. Apple & Google Wallet included.",
+  "home.feature_checkin_title": "QR Check-In",
+  "home.feature_checkin_desc":  "Fast scanning with green/red feedback. Offline mode with sync. Works on any device.",
+  "home.feature_bar_title":     "Bar Ordering",
+  "home.feature_bar_desc":      "Digital drink menu, cart, QR orders, and a real-time bartender app with VIP alerts.",
+
+  // Event page
+  "event.sold_out":      "Sold Out",
+  "event.on_sale":       "On Sale",
+  "event.tickets_sold":  "tickets sold",
+  "event.select_tickets":"Select Tickets",
+  "event.sold_out_msg":  "This event is sold out.",
+  "event.join_waitlist": "Join waitlist",
+
+  // Ticket selector
+  "ticket.sale":         "SALE",
+  "ticket.sold_out":     "Sold Out",
+  "ticket.bundle":       "bundle",
+  "ticket.entries":      "entries",
+  "ticket.entry":        "entry",
+  "ticket.free":         "Free",
+  "ticket.subtotal":     "Subtotal",
+  "ticket.promo_code":   "Promo code",
+  "ticket.promo_apply":  "Apply",
+  "ticket.checkout":     "Checkout",
+  "ticket.per_person":   "per person",
+
+  // Success page
+  "success.heading":         "You're in!",
+  "success.confirmed":       "Your tickets for",
+  "success.confirmed_suffix":"are confirmed.",
+  "success.email_sent":      "A confirmation email was sent to",
+  "success.order_summary":   "Order Summary",
+  "success.total_paid":      "Total paid",
+  "success.order_id":        "Order ID",
+  "success.your_tickets":    "Your Tickets",
+  "success.ticket_of":       "of",
+  "success.back_to_event":   "Back to Event",
+  "success.view_tickets":    "View All Tickets",
+  "success.browse_more":     "Browse More Events",
+  "success.date_time":       "DATE & TIME",
+  "success.venue":           "VENUE",
+  "success.tickets":         "TICKETS",
+  "success.tickets_count":   "ticket",
+  "success.tickets_count_pl":"tickets",
+
+  // My Tickets
+  "mytickets.title":      "My Tickets",
+  "mytickets.subtitle":   "All your purchased tickets in one place.",
+  "mytickets.empty":      "No tickets yet",
+  "mytickets.empty_sub":  "Tickets you purchase will appear here.",
+  "mytickets.browse":     "Browse Events",
+  "mytickets.status_valid":    "Valid",
+  "mytickets.status_used":     "Used",
+  "mytickets.status_cancelled":"Cancelled",
+  "mytickets.entries_left":    "left",
+  "mytickets.order_id":        "Order",
+  "mytickets.ticket_of":       "of",
+
+  // Check-in scanner labels
+  "checkin.admitted":    "ADMITTED",
+  "checkin.already_in":  "ALREADY IN",
+  "checkin.invalid":     "INVALID",
+  "checkin.cancelled":   "CANCELLED",
+  "checkin.manual_hint": "Enter ticket code manually",
+  "checkin.manual_ph":   "TKT-XXXXXXXX-…",
+  "checkin.check_btn":   "Check",
+  "checkin.pointing":    "Point at QR code",
+  "checkin.manual_mode": "Manual Entry",
+
+  // Email
+  "email.subject":         "Your tickets for",
+  "email.subject_suffix":  "🎫",
+  "email.header_sub":      "Your tickets are confirmed",
+  "email.greeting":        "Hi",
+  "email.confirmed_for":   "You're all set for",
+  "email.pdf_note":        "Your tickets are attached as a PDF — print them or show them on your phone at the entrance.",
+  "email.pdf_label":       "attached as PDF",
+  "email.pdf_sub":         "Open the attachment · Each ticket has its own QR code",
+  "email.date_time":       "DATE & TIME",
+  "email.venue":           "VENUE",
+  "email.tickets":         "TICKETS",
+  "email.total_paid":      "TOTAL PAID",
+  "email.show_qr":         "Show the QR code at the entrance.",
+  "email.order_id":        "Order ID",
+  "email.footer":          "Powered by EventOS · This email was sent to",
+  "email.ticket_count":    "ticket",
+  "email.ticket_count_pl": "tickets",
+
+  // PDF
+  "pdf.confirmed":      "Your tickets are confirmed",
+  "pdf.date":           "Date",
+  "pdf.venue":          "Venue",
+  "pdf.order":          "Order",
+  "pdf.your_tickets":   "Your Tickets",
+  "pdf.ticket_of":      "Ticket",
+  "pdf.footer":         "Show the QR code at the entrance · Powered by EventOS",
+};
+
+const hu: typeof en = {
+  // Nav
+  "nav.events":     "Rendezvények",
+  "nav.bar_menu":   "Bármenü",
+  "nav.my_tickets": "Jegyeim",
+  "nav.sign_in":    "Bejelentkezés",
+  "nav.dashboard":  "Vezérlőpult",
+
+  // Homepage
+  "home.headline":       "Rendezvények. Jegyek. Bár.",
+  "home.headline_accent":"Minden egy helyen.",
+  "home.subline":        "Adj el jegyeket online és személyesen, kezeld a beengedést QR kóddal, és működtesd a bárod valós idejű rendelésekkel — eseménysorozatokhoz tervezve.",
+  "home.browse_events":  "Rendezvények böngészése",
+  "home.feature_tickets_title": "Jegyeladás",
+  "home.feature_tickets_desc":  "Online, személyesen és beágyazva bármilyen weboldalon. Apple és Google Wallet támogatással.",
+  "home.feature_checkin_title": "QR Beengedés",
+  "home.feature_checkin_desc":  "Gyors beolvasás zöld/piros visszajelzéssel. Offline mód szinkronizálással. Bármilyen eszközön működik.",
+  "home.feature_bar_title":     "Bár Rendelés",
+  "home.feature_bar_desc":      "Digitális italmenü, kosár, QR rendelések, és valós idejű csaposalkalmazás VIP értesítésekkel.",
+
+  // Event page
+  "event.sold_out":      "Elfogyott",
+  "event.on_sale":       "Elérhető",
+  "event.tickets_sold":  "jegy eladva",
+  "event.select_tickets":"Jegyek kiválasztása",
+  "event.sold_out_msg":  "Ez a rendezvény elfogyott.",
+  "event.join_waitlist": "Várólistára feliratkozás",
+
+  // Ticket selector
+  "ticket.sale":         "AKCIÓ",
+  "ticket.sold_out":     "Elfogyott",
+  "ticket.bundle":       "csomag",
+  "ticket.entries":      "belépés",
+  "ticket.entry":        "belépés",
+  "ticket.free":         "Ingyenes",
+  "ticket.subtotal":     "Részösszeg",
+  "ticket.promo_code":   "Promó kód",
+  "ticket.promo_apply":  "Alkalmaz",
+  "ticket.checkout":     "Fizetés",
+  "ticket.per_person":   "személyenként",
+
+  // Success page
+  "success.heading":         "Beengedve!",
+  "success.confirmed":       "Jegyeid a következő rendezvényre megerősítve:",
+  "success.confirmed_suffix":"",
+  "success.email_sent":      "Visszaigazoló e-mailt küldtünk:",
+  "success.order_summary":   "Rendelés összefoglalója",
+  "success.total_paid":      "Fizetett összeg",
+  "success.order_id":        "Rendelési azonosító",
+  "success.your_tickets":    "Jegyeid",
+  "success.ticket_of":       "/",
+  "success.back_to_event":   "Vissza a rendezvényhez",
+  "success.view_tickets":    "Összes jegyem",
+  "success.browse_more":     "További rendezvények",
+  "success.date_time":       "DÁTUM ÉS IDŐ",
+  "success.venue":           "HELYSZÍN",
+  "success.tickets":         "JEGYEK",
+  "success.tickets_count":   "jegy",
+  "success.tickets_count_pl":"jegy",
+
+  // My Tickets
+  "mytickets.title":      "Jegyeim",
+  "mytickets.subtitle":   "Összes megvásárolt jegyed egy helyen.",
+  "mytickets.empty":      "Még nincs jegyed",
+  "mytickets.empty_sub":  "A megvásárolt jegyek itt fognak megjelenni.",
+  "mytickets.browse":     "Rendezvények böngészése",
+  "mytickets.status_valid":    "Érvényes",
+  "mytickets.status_used":     "Felhasznált",
+  "mytickets.status_cancelled":"Lemondott",
+  "mytickets.entries_left":    "maradt",
+  "mytickets.order_id":        "Rendelés",
+  "mytickets.ticket_of":       "/",
+
+  // Check-in scanner
+  "checkin.admitted":    "BEENGEDVE",
+  "checkin.already_in":  "MÁR BENT VAN",
+  "checkin.invalid":     "ÉRVÉNYTELEN",
+  "checkin.cancelled":   "LEMONDOTT",
+  "checkin.manual_hint": "Adj meg jegykódot kézzel",
+  "checkin.manual_ph":   "TKT-XXXXXXXX-…",
+  "checkin.check_btn":   "Ellenőrzés",
+  "checkin.pointing":    "Tartsd a QR kód elé",
+  "checkin.manual_mode": "Kézi bevitel",
+
+  // Email
+  "email.subject":         "Jegyeid a következő rendezvényre:",
+  "email.subject_suffix":  "🎫",
+  "email.header_sub":      "Jegyeid megerősítve",
+  "email.greeting":        "Szia",
+  "email.confirmed_for":   "Készen állsz a következőre:",
+  "email.pdf_note":        "Jegyeid PDF csatolmányként találhatóak — nyomtasd ki, vagy mutasd a telefonodon a bejáratnál.",
+  "email.pdf_label":       "jegy csatolva PDF-ben",
+  "email.pdf_sub":         "Nyisd meg a csatolmányt · Minden jegyhez tartozik egy QR kód",
+  "email.date_time":       "DÁTUM ÉS IDŐ",
+  "email.venue":           "HELYSZÍN",
+  "email.tickets":         "JEGYEK",
+  "email.total_paid":      "FIZETETT ÖSSZEG",
+  "email.show_qr":         "Mutasd a QR kódot a bejáratnál.",
+  "email.order_id":        "Rendelési azonosító",
+  "email.footer":          "Powered by EventOS · Ez az e-mail a következő címre lett küldve:",
+  "email.ticket_count":    "jegy",
+  "email.ticket_count_pl": "jegy",
+
+  // PDF
+  "pdf.confirmed":      "Jegyeid megerősítve",
+  "pdf.date":           "Dátum",
+  "pdf.venue":          "Helyszín",
+  "pdf.order":          "Rendelés",
+  "pdf.your_tickets":   "Jegyeid",
+  "pdf.ticket_of":      "Jegy",
+  "pdf.footer":         "Mutasd a QR kódot a bejáratnál · Powered by EventOS",
+};
+
+// ─── Public API ───────────────────────────────────────────────────────────────
+
+export type Dictionary = typeof en;
+
+export function getDictionary(lang: Language): Dictionary {
+  return lang === "hu" ? hu : en;
+}
+
+/** Shorthand: t(dict, "key") */
+export function t(dict: Dictionary, key: keyof Dictionary): string {
+  return dict[key] ?? key;
+}

@@ -3,7 +3,11 @@ import { redirect } from "next/navigation";
 import { formatDate } from "@/lib/utils";
 import { Ticket, CalendarDays, MapPin, QrCode } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import Link from "next/link";
+import { getSettings } from "@/lib/settings";
+import { getDictionary, t } from "@/lib/i18n";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -20,11 +24,15 @@ const TIER_COLORS: Record<string, string> = {
 
 export default async function MyTicketsPage() {
   const supabase = await createClient() as any;
-  const { data: { user } } = await supabase.auth.getUser();
+  const [{ data: { user } }, settings] = await Promise.all([
+    supabase.auth.getUser(),
+    getSettings(),
+  ]);
 
   if (!user) redirect("/sign-in?redirectTo=/my-tickets");
 
-  // Fetch orders with tickets and event info
+  const dict = getDictionary(settings.language);
+
   const { data: orders } = await supabase
     .from("orders")
     .select(`
@@ -41,18 +49,20 @@ export default async function MyTicketsPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container max-w-3xl py-10 px-4">
-        <div className="flex items-center gap-3 mb-8">
+        <div className="flex items-center gap-3 mb-2">
           <Ticket className="h-7 w-7 text-primary" />
-          <h1 className="text-3xl font-bold">My Tickets</h1>
+          <h1 className="text-3xl font-bold">{t(dict, "mytickets.title")}</h1>
         </div>
+        <p className="text-muted-foreground mb-8">{t(dict, "mytickets.subtitle")}</p>
 
         {allOrders.length === 0 ? (
           <div className="rounded-xl border border-dashed p-12 text-center">
             <Ticket className="h-10 w-10 mx-auto mb-4 text-muted-foreground/40" />
-            <p className="text-muted-foreground font-medium">No tickets yet</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Tickets you purchase will appear here.
-            </p>
+            <p className="text-muted-foreground font-medium">{t(dict, "mytickets.empty")}</p>
+            <p className="text-sm text-muted-foreground mt-1">{t(dict, "mytickets.empty_sub")}</p>
+            <Button asChild className="mt-6" variant="outline">
+              <Link href="/events">{t(dict, "mytickets.browse")}</Link>
+            </Button>
           </div>
         ) : (
           <div className="space-y-6">
@@ -67,12 +77,7 @@ export default async function MyTicketsPage() {
                   <div className="flex items-center gap-4 p-4 border-b bg-muted/30">
                     {event?.cover_image_url && (
                       <div className="relative h-14 w-20 rounded-md overflow-hidden shrink-0">
-                        <Image
-                          src={event.cover_image_url}
-                          alt={event.name}
-                          fill
-                          className="object-cover"
-                        />
+                        <Image src={event.cover_image_url} alt={event.name} fill className="object-cover" />
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
@@ -80,26 +85,27 @@ export default async function MyTicketsPage() {
                       <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
                         {event?.start_date && (
                           <span className="flex items-center gap-1">
-                            <CalendarDays className="h-3 w-3" />
-                            {formatDate(event.start_date)}
+                            <CalendarDays className="h-3 w-3" />{formatDate(event.start_date)}
                           </span>
                         )}
                         {event?.venue && (
                           <span className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {event.venue}
+                            <MapPin className="h-3 w-3" />{event.venue}
                           </span>
                         )}
                       </div>
                     </div>
-                    {isPast && (
-                      <Badge variant="secondary" className="shrink-0 text-xs">Past</Badge>
-                    )}
+                    <div className="shrink-0 flex flex-col items-end gap-1">
+                      {isPast && <Badge variant="secondary" className="text-xs">Past</Badge>}
+                      <p className="text-xs text-muted-foreground font-mono">
+                        {t(dict, "mytickets.order_id")}: {order.id.slice(0, 8).toUpperCase()}
+                      </p>
+                    </div>
                   </div>
 
                   {/* Tickets */}
                   <div className="divide-y">
-                    {tickets.map((ticket: any) => (
+                    {tickets.map((ticket: any, i: number) => (
                       <div key={ticket.id} className="flex items-center gap-4 p-4">
                         {/* QR code */}
                         <div className="shrink-0">
@@ -126,15 +132,18 @@ export default async function MyTicketsPage() {
                             <p className="text-xs text-muted-foreground">{ticket.holder_name}</p>
                           )}
                           <p className="text-xs font-mono text-muted-foreground mt-1 truncate">{ticket.qr_code}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {i + 1} {t(dict, "mytickets.ticket_of")} {tickets.length}
+                          </p>
                         </div>
 
                         <div className="shrink-0 text-right">
                           {ticket.status === "USED" ? (
-                            <Badge variant="secondary" className="text-xs">Used</Badge>
+                            <Badge variant="secondary" className="text-xs">{t(dict, "mytickets.status_used")}</Badge>
                           ) : ticket.status === "CANCELLED" ? (
-                            <Badge variant="destructive" className="text-xs">Cancelled</Badge>
+                            <Badge variant="destructive" className="text-xs">{t(dict, "mytickets.status_cancelled")}</Badge>
                           ) : (
-                            <Badge variant="success" className="text-xs">Valid</Badge>
+                            <Badge variant="success" className="text-xs">{t(dict, "mytickets.status_valid")}</Badge>
                           )}
                           {ticket.used_at && (
                             <p className="text-xs text-muted-foreground mt-1">

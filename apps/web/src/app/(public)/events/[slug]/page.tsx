@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarDays, MapPin, Users, Ticket } from "lucide-react";
 import { TicketSelector } from "@/components/events/ticket-selector";
 import type { Event, TicketType } from "@/lib/supabase/types";
+import { getSettings } from "@/lib/settings";
+import { getDictionary, t } from "@/lib/i18n";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -14,13 +16,18 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   const { slug } = await params;
   const supabase = await createClient() as any;
 
-  const { data } = await supabase.from("events").select("*, ticket_types(*)").eq("slug", slug).eq("status", "PUBLISHED").single();
+  const [{ data }, settings] = await Promise.all([
+    supabase.from("events").select("*, ticket_types(*)").eq("slug", slug).eq("status", "PUBLISHED").single(),
+    getSettings(),
+  ]);
+
   const event = data as EventWithTickets | null;
   if (!event) notFound();
 
+  const dict = getDictionary(settings.language);
   const tts = event.ticket_types;
-  const totalSold = tts.reduce((a, t) => a + t.sold, 0);
-  const totalCapacity = tts.reduce((a, t) => a + t.quantity, 0);
+  const totalSold = tts.reduce((a, tt) => a + tt.sold, 0);
+  const totalCapacity = tts.reduce((a, tt) => a + tt.quantity, 0);
   const isSoldOut = totalSold >= totalCapacity;
 
   return (
@@ -30,14 +37,12 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
         <>
           {/* ── Desktop: blurred backdrop + centred 16:9 crop capped at 300px tall ── */}
           <div className="hidden sm:block w-full relative overflow-hidden bg-black" style={{ height: "300px" }}>
-            {/* Blurred fill behind */}
             <img
               src={event.cover_image_url}
               alt=""
               aria-hidden="true"
               className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-50 pointer-events-none"
             />
-            {/* Centred image — 16:9 crop inside the 300px strip, max 1200px wide */}
             <div className="relative h-full mx-auto max-w-[1200px]">
               <img
                 src={event.cover_image_url}
@@ -47,14 +52,9 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
               />
             </div>
           </div>
-
-          {/* ── Mobile: 16:9 crop ── */}
+          {/* ── Mobile: 16:9 ── */}
           <div className="sm:hidden w-full aspect-video overflow-hidden bg-muted">
-            <img
-              src={event.cover_image_url}
-              alt={event.name}
-              className="w-full h-full object-cover object-center"
-            />
+            <img src={event.cover_image_url} alt={event.name} className="w-full h-full object-cover object-center" />
           </div>
         </>
       )}
@@ -62,14 +62,25 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
       <div className="border-b bg-card">
         <div className="container max-w-4xl py-12">
           <div className="flex items-start gap-4 mb-4">
-            <Badge variant={isSoldOut ? "destructive" : "success"}>{isSoldOut ? "Sold Out" : "On Sale"}</Badge>
+            <Badge variant={isSoldOut ? "destructive" : "success"}>
+              {isSoldOut ? t(dict, "event.sold_out") : t(dict, "event.on_sale")}
+            </Badge>
           </div>
           <h1 className="text-4xl font-bold mb-3">{event.name}</h1>
           {event.description && <p className="text-muted-foreground text-lg mb-6">{event.description}</p>}
           <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1.5"><CalendarDays className="h-4 w-4" />{formatDate(event.start_date)}{event.end_date && ` — ${formatDate(event.end_date)}`}</span>
-            {event.venue && <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" />{event.venue}{event.address && `, ${event.address}`}</span>}
-            <span className="flex items-center gap-1.5"><Users className="h-4 w-4" />{totalSold}/{totalCapacity} tickets sold</span>
+            <span className="flex items-center gap-1.5">
+              <CalendarDays className="h-4 w-4" />
+              {formatDate(event.start_date)}{event.end_date && ` — ${formatDate(event.end_date)}`}
+            </span>
+            {event.venue && (
+              <span className="flex items-center gap-1.5">
+                <MapPin className="h-4 w-4" />{event.venue}{event.address && `, ${event.address}`}
+              </span>
+            )}
+            <span className="flex items-center gap-1.5">
+              <Users className="h-4 w-4" />{totalSold}/{totalCapacity} {t(dict, "event.tickets_sold")}
+            </span>
           </div>
         </div>
       </div>
@@ -77,24 +88,30 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
       <div className="container max-w-4xl py-8">
         <div className="grid md:grid-cols-3 gap-8">
           <div className="md:col-span-2">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2"><Ticket className="h-5 w-5" />Select Tickets</h2>
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <Ticket className="h-5 w-5" />{t(dict, "event.select_tickets")}
+            </h2>
             {isSoldOut ? (
-              <div className="rounded-lg border border-dashed p-8 text-center"><p className="text-muted-foreground">This event is sold out.</p></div>
+              <div className="rounded-lg border border-dashed p-8 text-center">
+                <p className="text-muted-foreground">{t(dict, "event.sold_out_msg")}</p>
+              </div>
             ) : (
               <TicketSelector
                 eventId={event.id}
-                ticketTypes={tts.map((t) => ({
-                  id: t.id, name: t.name,
-                  description: t.description ?? undefined,
-                  price: t.price,
-                  saleEnabled: t.sale_enabled ?? false,
-                  salePrice: t.sale_price ?? undefined,
-                  available: t.quantity - t.sold,
-                  maxPerOrder: t.max_per_order,
-                  tier: t.tier,
-                  isBundle: t.is_bundle,
-                  bundleSize: t.bundle_size ?? undefined,
-                  entriesPerTicket: t.entries_per_ticket ?? 1,
+                dict={dict}
+                currency={settings.currency}
+                ticketTypes={tts.map((tt) => ({
+                  id: tt.id, name: tt.name,
+                  description: tt.description ?? undefined,
+                  price: tt.price,
+                  saleEnabled: tt.sale_enabled ?? false,
+                  salePrice: tt.sale_price ?? undefined,
+                  available: tt.quantity - tt.sold,
+                  maxPerOrder: tt.max_per_order,
+                  tier: tt.tier,
+                  isBundle: tt.is_bundle,
+                  bundleSize: tt.bundle_size ?? undefined,
+                  entriesPerTicket: tt.entries_per_ticket ?? 1,
                 }))}
               />
             )}
@@ -107,8 +124,12 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
                 {event.venue && <p className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />{event.venue}</p>}
               </div>
               <div className="border-t pt-3">
-                <p className="text-xs text-muted-foreground mb-1">Tickets from</p>
-                <p className="text-xl font-bold">{formatCurrency(Math.min(...tts.map((t) => t.price)))}</p>
+                <p className="text-xs text-muted-foreground mb-1">
+                  {settings.language === "hu" ? "Jegy ártól" : "Tickets from"}
+                </p>
+                <p className="text-xl font-bold">
+                  {formatCurrency(Math.min(...tts.map((tt) => tt.price)), settings.currency)}
+                </p>
               </div>
             </div>
           </div>

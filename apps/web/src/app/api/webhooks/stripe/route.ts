@@ -3,7 +3,7 @@ import { stripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/server";
 import { headers } from "next/headers";
 import { sendTicketConfirmation } from "@/lib/email";
-import { fromStripeAmount, type Currency } from "@/lib/settings";
+import { fromStripeAmount, getSettings, type Currency } from "@/lib/settings";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -134,7 +134,7 @@ export async function POST(req: Request) {
     }
 
     // Send confirmation email
-    // meta.guestEmail is empty for logged-in users — fall back to session.customer_email
+    const appSettings = await getSettings();
     const buyerEmail = meta.guestEmail || session.customer_email || null;
     let emailStatus = "not_attempted";
     let emailError = "";
@@ -162,6 +162,8 @@ export async function POST(req: Request) {
           })),
           total: fromStripeAmount(session.amount_total ?? 0, (meta.currency as Currency) || "EUR"),
           orderId: order.id,
+          language: appSettings.language,
+          currency: (meta.currency as Currency) || "EUR",
         });
         emailStatus = "sent";
       } catch (emailErr: any) {
