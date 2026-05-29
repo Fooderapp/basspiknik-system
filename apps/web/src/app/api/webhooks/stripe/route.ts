@@ -3,6 +3,7 @@ import { stripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/server";
 import { headers } from "next/headers";
 import { sendTicketConfirmation } from "@/lib/email";
+import { fromStripeAmount, type Currency } from "@/lib/settings";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -53,7 +54,8 @@ export async function POST(req: Request) {
       subtotal,
       discount_amount: parseFloat(meta.discountAmount ?? "0"),
       tax_amount: parseFloat(meta.taxAmount ?? "0"),
-      total: (session.amount_total ?? 0) / 100,
+      total: fromStripeAmount(session.amount_total ?? 0, (meta.currency as Currency) || "EUR"),
+      currency: meta.currency || "EUR",
       status: "PAID",
       payment_method: "ONLINE",
       promo_code_id: meta.promoCodeId || null,
@@ -158,7 +160,7 @@ export async function POST(req: Request) {
             tier: t.tier ?? "GENERAL",
             holderName: t.holder_name || undefined,
           })),
-          total: (session.amount_total ?? 0) / 100,
+          total: fromStripeAmount(session.amount_total ?? 0, (meta.currency as Currency) || "EUR"),
           orderId: order.id,
         });
         emailStatus = "sent";

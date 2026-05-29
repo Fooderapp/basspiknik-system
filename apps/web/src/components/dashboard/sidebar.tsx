@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, CalendarDays, Users, BarChart3,
   Ticket, Wine, ScanLine, UserCheck,
-  LogOut, ChevronLeft, Menu, User
+  LogOut, ChevronLeft, Menu, User, Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,8 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Drinks", href: "/dashboard/drinks", icon: Wine, roles: ["ADMIN", "EDITOR", "STAFF", "BARTENDER"] },
   { label: "Seller", href: "/seller", icon: Ticket, roles: ["ADMIN", "EDITOR", "SELLER"] },
   { label: "Check-In", href: "/checkin", icon: UserCheck, roles: ["ADMIN", "EDITOR", "STAFF"] },
-  { label: "Bar", href: "/bar", icon: ScanLine, roles: ["ADMIN", "EDITOR", "STAFF", "BARTENDER"] },
+  { label: "Bar",      href: "/bar",                icon: ScanLine,  roles: ["ADMIN", "EDITOR", "STAFF", "BARTENDER"] },
+  { label: "Settings", href: "/dashboard/settings", icon: Settings,  roles: ["ADMIN"] },
 ];
 
 interface SidebarProps {

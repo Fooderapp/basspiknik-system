@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { stripe, formatStripeAmount } from "@/lib/stripe";
+import { stripe } from "@/lib/stripe";
+import { getSettings, toStripeAmount, fromStripeAmount } from "@/lib/settings";
 import { createClient } from "@/lib/supabase/server";
 import type { Event, TicketType, PromoCode, Profile } from "@/lib/supabase/types";
 
@@ -34,6 +35,10 @@ export async function POST(req: Request) {
 
   const { eventId, items, promoCode, guestEmail, guestName } = parsed.data;
 
+  // Load app settings to get active currency
+  const settings = await getSettings();
+  const currency = settings.currency;
+
   const { data: eventData } = await supabase.from("events").select("*, ticket_types(*)").eq("id", eventId).eq("status", "PUBLISHED").single();
   const event = eventData as (Event & { ticket_types: TicketType[] }) | null;
   if (!event) return NextResponse.json({ error: "Event not available" }, { status: 400 });
@@ -46,9 +51,14 @@ export async function POST(req: Request) {
     if (!ticketType) return NextResponse.json({ error: "Ticket type not found" }, { status: 400 });
     const available = ticketType.quantity - ticketType.sold;
     if (available < item.quantity) return NextResponse.json({ error: `Not enough ${ticketType.name} tickets` }, { status: 400 });
-    subtotal += ticketType.price * item.quantity;
+    const unitPrice = ticketType.sale_enabled && ticketType.sale_price != null ? ticketType.sale_price : ticketType.price;
+    subtotal += unitPrice * item.quantity;
     lineItems.push({
-      price_data: { currency: "eur", product_data: { name: `${event.name} — ${ticketType.name}` }, unit_amount: formatStripeAmount(ticketType.price) },
+      price_data: {
+        currency: currency.toLowerCase(),
+        product_data: { name: `${event.name} — ${ticketType.name}` },
+        unit_amount: toStripeAmount(unitPrice, currency),
+      },
       quantity: item.quantity,
     });
   }
@@ -85,7 +95,7 @@ export async function POST(req: Request) {
     customer_email: profileEmail,
     metadata: {
       eventId, userId: user?.id ?? "", guestEmail: guestEmail ?? "", guestName: guestName ?? "",
-      items: JSON.stringify(items), promoCodeId,
+      items: JSON.stringify(items), promoCodeId, currency,
       discountAmount: discountAmount.toString(), taxAmount: taxAmount.toString(),
     },
   });
