@@ -28,27 +28,28 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
       {/* Cover image */}
       {event.cover_image_url && (
         <>
-          {/* ── Desktop: full-width blurred backdrop + centred 16:9 image (max 1200px) ── */}
-          <div className="hidden sm:block w-full relative overflow-hidden bg-black">
-            {/* Blurred fill — stretched behind */}
+          {/* ── Desktop: blurred backdrop + centred 16:9 crop capped at 300px tall ── */}
+          <div className="hidden sm:block w-full relative overflow-hidden bg-black" style={{ height: "300px" }}>
+            {/* Blurred fill behind */}
             <img
               src={event.cover_image_url}
               alt=""
               aria-hidden="true"
               className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-50 pointer-events-none"
             />
-            {/* Centred 16:9 image */}
-            <div className="relative mx-auto max-w-[1200px] aspect-[16/9]">
+            {/* Centred image — 16:9 crop inside the 300px strip, max 1200px wide */}
+            <div className="relative h-full mx-auto max-w-[1200px]">
               <img
                 src={event.cover_image_url}
                 alt={event.name}
                 className="w-full h-full object-cover object-center"
+                style={{ aspectRatio: "16/9", maxHeight: "300px" }}
               />
             </div>
           </div>
 
-          {/* ── Mobile: 1:1 centre-crop ── */}
-          <div className="sm:hidden w-full aspect-square overflow-hidden bg-muted">
+          {/* ── Mobile: 16:9 crop ── */}
+          <div className="sm:hidden w-full aspect-video overflow-hidden bg-muted">
             <img
               src={event.cover_image_url}
               alt={event.name}

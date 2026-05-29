@@ -1,8 +1,8 @@
 import { Resend } from "resend";
-import QRCode from "qrcode";
+import { generateTicketPdf } from "./ticket-pdf";
 
 // RESEND_API_KEY  = from resend.com → API Keys
-// RESEND_FROM     = verified sender, e.g. "EventOS <tickets@yourdomain.com>"
+// RESEND_FROM     = verified sender, e.g. "EventOS <tickets@mail.basspiknik.com>"
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -16,15 +16,6 @@ function formatEventDate(iso: string) {
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(amount);
 }
-
-const TIER_COLORS: Record<string, string> = {
-  VIP:        "#7c3aed",
-  EARLY_BIRD: "#1d4ed8",
-  GENERAL:    "#374151",
-  LATE:       "#c2410c",
-  DOOR:       "#92400e",
-  FREE:       "#166534",
-};
 
 interface TicketForEmail {
   id: string;
@@ -48,29 +39,14 @@ interface SendTicketConfirmationInput {
 export async function sendTicketConfirmation(input: SendTicketConfirmationInput) {
   const { to, buyerName, eventName, eventDate, eventVenue, tickets, total, orderId } = input;
 
-  // Generate QR codes as PNG buffers for inline CID attachments
-  const qrBuffers = await Promise.all(
-    tickets.map((t) =>
-      QRCode.toBuffer(t.qrCode, { width: 200, margin: 2, color: { dark: "#000000", light: "#ffffff" } })
-    )
-  );
-
-  const ticketBlocksHtml = tickets.map((t, i) => {
-    const color = TIER_COLORS[t.tier] ?? "#374151";
-    const cid = `qr-ticket-${i}`;
-    return `
-      <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:24px;margin-bottom:16px;text-align:center;">
-        <div style="display:inline-block;background:${color};color:#fff;font-size:11px;font-weight:700;letter-spacing:0.08em;padding:4px 12px;border-radius:999px;margin-bottom:12px;text-transform:uppercase;">
-          ${t.tier.replace("_", " ")}
-        </div>
-        <div style="font-size:16px;font-weight:700;color:#111827;margin-bottom:4px;">${t.ticketName}</div>
-        ${t.holderName ? `<div style="font-size:13px;color:#6b7280;margin-bottom:12px;">${t.holderName}</div>` : ""}
-        <img src="cid:${cid}" alt="${t.qrCode}" width="160" height="160" style="display:block;margin:0 auto 12px;border:1px solid #e5e7eb;border-radius:8px;" />
-        <div style="font-family:monospace;font-size:11px;color:#9ca3af;letter-spacing:0.05em;">${t.qrCode}</div>
-        ${tickets.length > 1 ? `<div style="font-size:11px;color:#9ca3af;margin-top:4px;">Ticket ${i + 1} of ${tickets.length}</div>` : ""}
-      </div>
-    `;
-  }).join("");
+  // Generate PDF with formatted ticket cards
+  const pdfBuffer = await generateTicketPdf({
+    eventName,
+    eventDate,
+    eventVenue,
+    orderId,
+    tickets,
+  });
 
   const html = `
 <!DOCTYPE html>
@@ -93,6 +69,7 @@ export async function sendTicketConfirmation(input: SendTicketConfirmationInput)
           <p style="font-size:18px;font-weight:700;color:#111827;margin:0 0 4px;">Hi ${buyerName}!</p>
           <p style="font-size:14px;color:#6b7280;margin:0 0 24px;">
             You're all set for <strong style="color:#111827;">${eventName}</strong>.
+            Your tickets are attached as a PDF — print them or show them on your phone at the entrance.
           </p>
 
           <!-- Event info -->
@@ -118,9 +95,16 @@ export async function sendTicketConfirmation(input: SendTicketConfirmationInput)
             </table>
           </div>
 
-          <!-- Tickets -->
-          <p style="font-size:13px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.06em;margin:0 0 12px;">Your Tickets</p>
-          ${ticketBlocksHtml}
+          <!-- PDF notice -->
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:16px 20px;margin-bottom:24px;text-align:center;">
+            <div style="font-size:28px;margin-bottom:8px;">📎</div>
+            <p style="font-size:14px;font-weight:700;color:#1e40af;margin:0 0 4px;">
+              ${tickets.length} ticket${tickets.length !== 1 ? "s" : ""} attached as PDF
+            </p>
+            <p style="font-size:12px;color:#3b82f6;margin:0;">
+              Open the attachment · Each ticket has its own QR code
+            </p>
+          </div>
 
           <p style="font-size:12px;color:#9ca3af;text-align:center;margin-top:24px;line-height:1.6;">
             Show the QR code at the entrance.<br>
@@ -150,11 +134,12 @@ export async function sendTicketConfirmation(input: SendTicketConfirmationInput)
     to,
     subject: `Your tickets for ${eventName} 🎫`,
     html,
-    attachments: tickets.map((t, i) => ({
-      filename: `ticket-${i + 1}.png`,
-      content: qrBuffers[i],
-      content_id: `qr-ticket-${i}`,
-    })),
+    attachments: [
+      {
+        filename: `tickets-${orderId.slice(0, 8).toUpperCase()}.pdf`,
+        content: pdfBuffer,
+      },
+    ],
   });
 
   if (error) throw new Error(`Resend error: ${error.message}`);
