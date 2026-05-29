@@ -42,11 +42,12 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currency, language }),
       });
-      if (!res.ok) throw new Error("Failed to save");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
       toast.success("Settings saved");
       setDirty(false);
-    } catch {
-      toast.error("Failed to save settings");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save settings");
     } finally {
       setSaving(false);
     }
