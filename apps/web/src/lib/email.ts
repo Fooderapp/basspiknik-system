@@ -1,31 +1,9 @@
-// ─── Brevo HTTP API transport ─────────────────────────────────────────────
-// BREVO_API_KEY = from Brevo → SMTP & API → API Keys tab (not the SMTP key)
-// BREVO_FROM_EMAIL = verified sender address in Brevo
-async function sendBrevoEmail(options: {
-  from: { name: string; email: string };
-  to: string;
-  subject: string;
-  html: string;
-}) {
-  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
-    method: "POST",
-    headers: {
-      "api-key": process.env.BREVO_API_KEY!,
-      "content-type": "application/json",
-      "accept": "application/json",
-    },
-    body: JSON.stringify({
-      sender: options.from,
-      to: [{ email: options.to }],
-      subject: options.subject,
-      htmlContent: options.html,
-    }),
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Brevo API error ${res.status}: ${body}`);
-  }
-}
+import { Resend } from "resend";
+
+// RESEND_API_KEY  = from resend.com → API Keys
+// RESEND_FROM     = verified sender, e.g. "EventOS <tickets@yourdomain.com>"
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 function formatEventDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -69,7 +47,6 @@ interface SendTicketConfirmationInput {
 export async function sendTicketConfirmation(input: SendTicketConfirmationInput) {
   const { to, buyerName, eventName, eventDate, eventVenue, tickets, total, orderId } = input;
 
-  // Use the hosted QR endpoint — email clients block base64 data: URLs
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
 
   const ticketBlocksHtml = tickets.map((t, i) => {
@@ -160,12 +137,14 @@ export async function sendTicketConfirmation(input: SendTicketConfirmationInput)
 </html>
   `.trim();
 
-  const fromAddress = process.env.BREVO_FROM_EMAIL ?? "noreply@example.com";
+  const from = process.env.RESEND_FROM ?? "EventOS <onboarding@resend.dev>";
 
-  await sendBrevoEmail({
-    from: { name: "EventOS", email: fromAddress },
+  const { error } = await resend.emails.send({
+    from,
     to,
     subject: `Your tickets for ${eventName} 🎫`,
     html,
   });
+
+  if (error) throw new Error(`Resend error: ${error.message}`);
 }

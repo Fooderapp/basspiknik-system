@@ -25,26 +25,37 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Cover image — 16:9 on desktop, 1:1 centre-crop on mobile */}
+      {/* Cover image */}
       {event.cover_image_url && (
-        <div className="w-full overflow-hidden bg-muted">
-          {/* Desktop: 16:9 aspect ratio */}
-          <div className="hidden sm:block w-full h-[400px]">
+        <>
+          {/* ── Desktop: full-width blurred backdrop + centred 16:9 image (max 1200px) ── */}
+          <div className="hidden sm:block w-full relative overflow-hidden bg-black">
+            {/* Blurred fill — stretched behind */}
+            <img
+              src={event.cover_image_url}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-50 pointer-events-none"
+            />
+            {/* Centred 16:9 image */}
+            <div className="relative mx-auto max-w-[1200px] aspect-[16/9]">
+              <img
+                src={event.cover_image_url}
+                alt={event.name}
+                className="w-full h-full object-cover object-center"
+              />
+            </div>
+          </div>
+
+          {/* ── Mobile: 1:1 centre-crop ── */}
+          <div className="sm:hidden w-full aspect-square overflow-hidden bg-muted">
             <img
               src={event.cover_image_url}
               alt={event.name}
               className="w-full h-full object-cover object-center"
             />
           </div>
-          {/* Mobile: 1:1 centre-crop */}
-          <div className="sm:hidden w-full aspect-square">
-            <img
-              src={event.cover_image_url}
-              alt={event.name}
-              className="w-full h-full object-cover object-center"
-            />
-          </div>
-        </div>
+        </>
       )}
 
       <div className="border-b bg-card">
