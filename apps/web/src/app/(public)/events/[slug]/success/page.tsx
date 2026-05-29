@@ -77,7 +77,7 @@ export default async function SuccessPage({
         {/* Event info card */}
         <div className="rounded-xl border bg-card p-5 space-y-3">
           {event.cover_image_url && (
-            <div className="w-full h-40 rounded-lg overflow-hidden mb-4">
+            <div className="w-full aspect-video rounded-lg overflow-hidden mb-4">
               <img src={event.cover_image_url} alt={event.name} className="w-full h-full object-cover object-center" />
             </div>
           )}

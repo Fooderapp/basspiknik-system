@@ -35,13 +35,13 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   qrWrap: {
-    width: 120,
-    height: 120,
+    width: 180,
+    height: 180,
     flexShrink: 0,
   },
   qrImage: {
-    width: 120,
-    height: 120,
+    width: 180,
+    height: 180,
     borderRadius: 8,
   },
   info: {
@@ -173,7 +173,7 @@ export async function generateTicketPdf(input: PdfTicketInput): Promise<Buffer> 
   // Generate QR PNGs as base64 data URIs
   const qrDataUris = await Promise.all(
     input.tickets.map((tk) =>
-      QRCode.toDataURL(tk.qrCode, { width: 240, margin: 2, color: { dark: "#000000", light: "#ffffff" } })
+      QRCode.toDataURL(tk.qrCode, { width: 400, margin: 2, color: { dark: "#000000", light: "#ffffff" } })
     )
   );
 
