@@ -6,26 +6,23 @@ import {
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/context/auth";
 import type { Drink, DrinkCategoryRow } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 
 interface CartItem { drink: Drink; quantity: number }
 
 export default function MenuScreen() {
-  const { session } = useAuth();
   const insets = useSafeAreaInsets();
-
-  const [drinks, setDrinks] = useState<Drink[]>([]);
+  const [drinks, setDrinks]       = useState<Drink[]>([]);
   const [categories, setCategories] = useState<DrinkCategoryRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]     = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeCat, setActiveCat] = useState<string>("ALL");
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [cartOpen, setCartOpen] = useState(false);
+  const [cart, setCart]           = useState<CartItem[]>([]);
+  const [cartOpen, setCartOpen]   = useState(false);
   const [guestName, setGuestName] = useState("");
-  const [notes, setNotes] = useState("");
-  const [placing, setPlacing] = useState(false);
+  const [notes, setNotes]         = useState("");
+  const [placing, setPlacing]     = useState(false);
 
   async function load() {
     const [{ data: d }, { data: c }] = await Promise.all([
@@ -40,14 +37,15 @@ export default function MenuScreen() {
 
   async function onRefresh() { setRefreshing(true); await load(); setRefreshing(false); }
 
-  const categoryTabs = useMemo(() => {
-    return categories.filter(c => drinks.some(d => d.category_id === c.id));
-  }, [drinks, categories]);
+  const categoryTabs = useMemo(() =>
+    categories.filter(c => drinks.some(d => d.category_id === c.id)),
+    [drinks, categories]
+  );
 
-  const filtered = useMemo(() => {
-    if (activeCat === "ALL") return drinks;
-    return drinks.filter(d => d.category_id === activeCat);
-  }, [drinks, activeCat]);
+  const filtered = useMemo(() =>
+    activeCat === "ALL" ? drinks : drinks.filter(d => d.category_id === activeCat),
+    [drinks, activeCat]
+  );
 
   function addToCart(drink: Drink) {
     setCart(prev => {
@@ -65,7 +63,7 @@ export default function MenuScreen() {
     }));
   }
 
-  function getQty(drinkId: string) { return cart.find(c => c.drink.id === drinkId)?.quantity ?? 0; }
+  const getQty    = (id: string) => cart.find(c => c.drink.id === id)?.quantity ?? 0;
   const cartCount = cart.reduce((s, i) => s + i.quantity, 0);
   const cartTotal = cart.reduce((s, i) => {
     const p = i.drink.sale_enabled && i.drink.sale_price ? i.drink.sale_price : i.drink.price;
@@ -76,24 +74,24 @@ export default function MenuScreen() {
     if (cart.length === 0) return;
     setPlacing(true);
     try {
-      const APP_URL = process.env.EXPO_PUBLIC_APP_URL ?? "";
-      const res = await fetch(`${APP_URL}/api/bar/orders`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
-        },
-        body: JSON.stringify({
-          guestName: guestName.trim() || null,
-          notes: notes.trim() || null,
-          items: cart.map(c => ({ drinkId: c.drink.id, quantity: c.quantity, notes: null })),
-        }),
+      const { data, error } = await supabase.rpc("place_bar_order", {
+        p_guest_name: guestName.trim() || null,
+        p_notes:      notes.trim() || null,
+        p_items:      cart.map(c => ({
+          drinkId:  c.drink.id,
+          quantity: c.quantity,
+          notes:    null,
+        })),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed");
+
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+
       setCart([]);
       setCartOpen(false);
-      router.push(`/(app)/menu/order?orderId=${data.id}&token=${data.qrToken}` as never);
+      setGuestName("");
+      setNotes("");
+      router.push(`/(app)/menu/order?orderId=${data.id}&qrToken=${data.qrToken}` as never);
     } catch (e: any) {
       alert(e.message);
     } finally {
@@ -102,7 +100,11 @@ export default function MenuScreen() {
   }
 
   if (loading) {
-    return <View className="flex-1 bg-background items-center justify-center"><ActivityIndicator size="large" color="#7c3aed" /></View>;
+    return (
+      <View className="flex-1 bg-background items-center justify-center">
+        <ActivityIndicator size="large" color="#7c3aed" />
+      </View>
+    );
   }
 
   return (
@@ -111,21 +113,25 @@ export default function MenuScreen() {
       <View className="flex-row items-center justify-between px-5 pt-4 pb-2">
         <View>
           <Text className="text-foreground text-2xl font-bold">🍹 Bar Menu</Text>
-          <Text className="text-muted-foreground text-sm">{drinks.length} items</Text>
+          <Text className="text-muted-foreground text-sm">{drinks.length} items available</Text>
         </View>
         {cartCount > 0 && (
           <TouchableOpacity
             onPress={() => setCartOpen(true)}
-            className="bg-primary px-4 py-2 rounded-xl flex-row items-center gap-2"
+            className="bg-primary px-4 py-2.5 rounded-xl flex-row items-center gap-2"
           >
-            <Text className="text-white font-semibold">🛒 {cartCount}</Text>
-            <Text className="text-white font-bold">{formatCurrency(cartTotal)}</Text>
+            <Text className="text-white font-bold">🛒 {cartCount}  ·  {formatCurrency(cartTotal)}</Text>
           </TouchableOpacity>
         )}
       </View>
 
       {/* Category tabs */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-5 mb-2" contentContainerStyle={{ gap: 8 }}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        className="px-5 mb-2"
+        contentContainerStyle={{ gap: 8, paddingRight: 20 }}
+      >
         <TouchableOpacity
           onPress={() => setActiveCat("ALL")}
           className={`px-3 py-1.5 rounded-full ${activeCat === "ALL" ? "bg-primary" : "bg-card border border-border"}`}
@@ -152,37 +158,41 @@ export default function MenuScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7c3aed" />}
         renderItem={({ item: drink }) => {
           const price = drink.sale_enabled && drink.sale_price ? drink.sale_price : drink.price;
-          const qty = getQty(drink.id);
+          const qty   = getQty(drink.id);
           return (
             <View className="bg-card border border-border rounded-2xl p-4 mb-3">
-              <View className="flex-row items-start justify-between mb-2">
+              <View className="flex-row items-start justify-between mb-3">
                 <View className="flex-1 mr-3">
-                  <Text className="text-foreground font-semibold">{drink.name}</Text>
+                  <Text className="text-foreground font-semibold text-base">{drink.name}</Text>
                   {drink.description && (
                     <Text className="text-muted-foreground text-xs mt-0.5" numberOfLines={2}>{drink.description}</Text>
                   )}
                   {drink.allergens?.length > 0 && (
                     <Text className="text-muted-foreground text-xs mt-1">⚠️ {drink.allergens.join(", ")}</Text>
                   )}
+                  {drink.is_popular && <Text className="text-warning text-xs mt-0.5">⭐ Popular</Text>}
                 </View>
                 <View className="items-end">
                   <Text className="text-foreground font-bold text-base">{formatCurrency(price)}</Text>
                   {drink.sale_enabled && drink.sale_price && (
                     <Text className="text-muted-foreground text-xs line-through">{formatCurrency(drink.price)}</Text>
                   )}
-                  {drink.is_popular && <Text className="text-warning text-xs">⭐ Popular</Text>}
                 </View>
               </View>
-              <View className="flex-row justify-end items-center gap-2 mt-1">
+              <View className="flex-row justify-end">
                 {qty === 0 ? (
-                  <TouchableOpacity onPress={() => addToCart(drink)} className="bg-primary px-4 py-2 rounded-lg">
+                  <TouchableOpacity onPress={() => addToCart(drink)} className="bg-primary px-5 py-2 rounded-xl">
                     <Text className="text-white font-semibold text-sm">+ Add</Text>
                   </TouchableOpacity>
                 ) : (
-                  <View className="flex-row items-center gap-3 bg-muted rounded-lg px-3 py-1.5">
-                    <TouchableOpacity onPress={() => adjustQty(drink.id, -1)}><Text className="text-foreground text-lg font-bold">−</Text></TouchableOpacity>
-                    <Text className="text-foreground font-bold w-5 text-center">{qty}</Text>
-                    <TouchableOpacity onPress={() => adjustQty(drink.id, 1)}><Text className="text-foreground text-lg font-bold">+</Text></TouchableOpacity>
+                  <View className="flex-row items-center gap-3 bg-muted rounded-xl px-4 py-2">
+                    <TouchableOpacity onPress={() => adjustQty(drink.id, -1)}>
+                      <Text className="text-foreground font-bold text-xl">−</Text>
+                    </TouchableOpacity>
+                    <Text className="text-foreground font-bold w-6 text-center">{qty}</Text>
+                    <TouchableOpacity onPress={() => adjustQty(drink.id, 1)}>
+                      <Text className="text-foreground font-bold text-xl">+</Text>
+                    </TouchableOpacity>
                   </View>
                 )}
               </View>
@@ -197,7 +207,7 @@ export default function MenuScreen() {
           <View className="flex-row items-center justify-between mb-6">
             <Text className="text-foreground text-xl font-bold">🛒 Your Order</Text>
             <TouchableOpacity onPress={() => setCartOpen(false)}>
-              <Text className="text-muted-foreground text-base">Close</Text>
+              <Text className="text-muted-foreground">Close</Text>
             </TouchableOpacity>
           </View>
 
@@ -214,17 +224,17 @@ export default function MenuScreen() {
                     <TouchableOpacity onPress={() => adjustQty(item.drink.id, -1)} className="w-8 h-8 bg-muted rounded-lg items-center justify-center">
                       <Text className="text-foreground font-bold">−</Text>
                     </TouchableOpacity>
-                    <Text className="text-foreground font-bold w-4 text-center">{item.quantity}</Text>
+                    <Text className="text-foreground font-bold w-5 text-center">{item.quantity}</Text>
                     <TouchableOpacity onPress={() => adjustQty(item.drink.id, 1)} className="w-8 h-8 bg-muted rounded-lg items-center justify-center">
                       <Text className="text-foreground font-bold">+</Text>
                     </TouchableOpacity>
-                    <Text className="text-foreground font-semibold ml-2 w-16 text-right">{formatCurrency(p * item.quantity)}</Text>
+                    <Text className="text-foreground font-semibold w-16 text-right">{formatCurrency(p * item.quantity)}</Text>
                   </View>
                 </View>
               );
             })}
 
-            <View className="mt-4 gap-3">
+            <View className="mt-5 gap-3">
               <TextInput
                 className="bg-card border border-border rounded-xl px-4 py-3 text-foreground"
                 placeholder="Your name (optional)"
@@ -234,7 +244,7 @@ export default function MenuScreen() {
               />
               <TextInput
                 className="bg-card border border-border rounded-xl px-4 py-3 text-foreground"
-                placeholder="Notes (e.g. no ice)"
+                placeholder="Notes, e.g. no ice"
                 placeholderTextColor="#71717a"
                 value={notes}
                 onChangeText={setNotes}

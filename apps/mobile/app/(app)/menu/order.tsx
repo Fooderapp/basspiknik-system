@@ -3,99 +3,126 @@ import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView } from "rea
 import { useLocalSearchParams, router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
+import { supabase } from "@/lib/supabase";
 import { formatCurrency } from "@/lib/utils";
 
-const STATUS_COLOR: Record<string, string> = {
+type OrderStatus = "PENDING" | "IN_PROGRESS" | "FULFILLED" | "CANCELLED";
+
+const STATUS_COLOR: Record<OrderStatus, string> = {
   PENDING:     "#f59e0b",
   IN_PROGRESS: "#3b82f6",
   FULFILLED:   "#22c55e",
   CANCELLED:   "#ef4444",
 };
-
-const STATUS_EMOJI: Record<string, string> = {
+const STATUS_EMOJI: Record<OrderStatus, string> = {
   PENDING:     "⏳",
   IN_PROGRESS: "🔄",
   FULFILLED:   "✅",
   CANCELLED:   "❌",
 };
+const STATUS_LABEL: Record<OrderStatus, string> = {
+  PENDING:     "Order Placed!",
+  IN_PROGRESS: "Being Prepared",
+  FULFILLED:   "Ready — Pick Up!",
+  CANCELLED:   "Cancelled",
+};
 
 export default function OrderStatusScreen() {
-  const { orderId, token } = useLocalSearchParams<{ orderId: string; token: string }>();
-  const insets = useSafeAreaInsets();
-  const [status, setStatus] = useState("PENDING");
-  const [total, setTotal] = useState(0);
+  const { orderId, qrToken } = useLocalSearchParams<{ orderId: string; qrToken: string }>();
+  const insets  = useSafeAreaInsets();
+  const [status, setStatus]       = useState<OrderStatus>("PENDING");
+  const [total, setTotal]         = useState(0);
   const [cancelling, setCancelling] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const APP_URL = process.env.EXPO_PUBLIC_APP_URL ?? "";
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-  async function fetchStatus() {
-    try {
-      const res = await fetch(`${APP_URL}/api/bar/orders/${orderId}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      setStatus(data.status);
-      setTotal(data.total);
-      if (data.status === "FULFILLED" || data.status === "CANCELLED") {
-        clearInterval(intervalRef.current!);
-      }
-    } catch {}
-  }
-
+  // Initial fetch
   useEffect(() => {
-    fetchStatus();
-    intervalRef.current = setInterval(fetchStatus, 5000);
-    return () => clearInterval(intervalRef.current!);
+    (supabase as any)
+      .from("drink_orders")
+      .select("status, total")
+      .eq("id", orderId)
+      .single()
+      .then(({ data }: any) => {
+        if (data) { setStatus(data.status); setTotal(data.total); }
+      });
+  }, [orderId]);
+
+  // Realtime subscription — no polling needed
+  useEffect(() => {
+    const channel = supabase
+      .channel(`order-status-${orderId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "drink_orders", filter: `id=eq.${orderId}` },
+        (payload: any) => {
+          setStatus(payload.new.status as OrderStatus);
+          if (payload.new.total) setTotal(payload.new.total);
+        }
+      )
+      .subscribe();
+
+    channelRef.current = channel;
+    return () => { supabase.removeChannel(channel); };
   }, [orderId]);
 
   async function cancelOrder() {
     setCancelling(true);
-    try {
-      const res = await fetch(`${APP_URL}/api/bar/orders/${orderId}`, { method: "DELETE" });
-      if (res.ok) setStatus("CANCELLED");
-    } catch {}
+    const { data, error } = await supabase.rpc("cancel_bar_order", {
+      p_order_id: orderId,
+      p_qr_token: qrToken,
+    });
+    if (!error && data?.ok) setStatus("CANCELLED");
+    else alert(data?.error ?? error?.message ?? "Failed to cancel");
     setCancelling(false);
   }
 
-  const color = STATUS_COLOR[status] ?? "#71717a";
-  const isPending = status === "PENDING";
-  const isInProgress = status === "IN_PROGRESS";
+  const color      = STATUS_COLOR[status];
   const isTerminal = status === "FULFILLED" || status === "CANCELLED";
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       <View className="flex-row items-center px-5 py-4">
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.replace("/(app)/menu" as never)}>
           <Text className="text-primary text-base">← Menu</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={{ alignItems: "center", paddingHorizontal: 24, paddingBottom: 40, paddingTop: 20 }}>
-        {/* Status */}
+      <ScrollView contentContainerStyle={{ alignItems: "center", paddingHorizontal: 24, paddingBottom: 40, paddingTop: 16 }}>
         <Text className="text-6xl mb-4">{STATUS_EMOJI[status]}</Text>
-        <Text className="text-foreground text-2xl font-bold mb-1">
-          {status === "PENDING" ? "Order Placed!" : status === "IN_PROGRESS" ? "Being Prepared" : status === "FULFILLED" ? "Ready! Pick up" : "Cancelled"}
-        </Text>
+
+        <Text className="text-foreground text-2xl font-bold mb-2 text-center">{STATUS_LABEL[status]}</Text>
+
         <View className="px-4 py-1.5 rounded-full mb-8" style={{ backgroundColor: color + "22" }}>
           <Text className="font-semibold text-sm" style={{ color }}>{status.replace("_", " ")}</Text>
         </View>
 
-        {/* QR */}
-        {status !== "CANCELLED" && (
-          <View className="bg-white rounded-3xl p-5 mb-6">
-            <QRCode value={token} size={200} />
+        {/* QR code */}
+        {status !== "CANCELLED" && qrToken && (
+          <View className="bg-white rounded-3xl p-5 mb-6 items-center gap-3">
+            <QRCode value={qrToken} size={200} />
+            <Text className="text-black/40 text-xs font-mono">{qrToken}</Text>
           </View>
         )}
 
         {total > 0 && (
-          <Text className="text-muted-foreground text-sm mb-8">Total: {formatCurrency(total)}</Text>
+          <Text className="text-muted-foreground text-sm mb-8">
+            Total: {formatCurrency(total)}
+          </Text>
         )}
 
-        {/* Actions */}
-        {isPending && (
+        {status === "IN_PROGRESS" && (
+          <View className="bg-card border border-border rounded-xl px-5 py-4 w-full mb-6">
+            <Text className="text-muted-foreground text-sm text-center">
+              A bartender is preparing your order. Show your QR code when picking up.
+            </Text>
+          </View>
+        )}
+
+        {status === "PENDING" && (
           <TouchableOpacity
             onPress={cancelOrder}
             disabled={cancelling}
-            className="border border-destructive rounded-xl px-6 py-3 w-full items-center"
+            className="border border-destructive rounded-xl px-6 py-3.5 w-full items-center mb-3"
           >
             {cancelling
               ? <ActivityIndicator color="#ef4444" />
@@ -104,18 +131,10 @@ export default function OrderStatusScreen() {
           </TouchableOpacity>
         )}
 
-        {isInProgress && (
-          <View className="bg-card border border-border rounded-xl px-5 py-4 w-full">
-            <Text className="text-muted-foreground text-sm text-center">
-              A bartender is preparing your order. Show your QR code when picking up.
-            </Text>
-          </View>
-        )}
-
         {isTerminal && (
           <TouchableOpacity
             onPress={() => router.replace("/(app)/menu" as never)}
-            className="bg-primary rounded-xl px-6 py-3.5 w-full items-center"
+            className="bg-primary rounded-xl px-6 py-4 w-full items-center"
           >
             <Text className="text-white font-bold text-base">New Order</Text>
           </TouchableOpacity>
