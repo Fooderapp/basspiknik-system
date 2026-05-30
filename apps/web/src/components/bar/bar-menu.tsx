@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import { ShoppingCart, Plus, Minus, Trash2, Wine, CheckCircle2, RefreshCw, Pencil, X, Clock, Loader2 } from "lucide-react";
-import type { Drink, DrinkCategory } from "@/lib/supabase/types";
+import type { Drink, DrinkCategory, DrinkCategoryRow } from "@/lib/supabase/types";
 import type { Dictionary } from "@/lib/i18n";
 import type { Currency } from "@/lib/settings";
 
@@ -19,11 +19,12 @@ interface CartItem { drink: Drink; quantity: number; notes?: string }
 
 interface Props {
   drinks: Drink[];
+  categories: DrinkCategoryRow[];
   dict: Dictionary;
   currency: Currency;
 }
 
-const CATEGORY_MAP: Record<DrinkCategory, keyof Dictionary> = {
+const ENUM_LABEL: Record<DrinkCategory, keyof Dictionary> = {
   COCKTAIL:   "menu.cat_cocktail",
   BEER:       "menu.cat_beer",
   WINE:       "menu.cat_wine",
@@ -33,7 +34,7 @@ const CATEGORY_MAP: Record<DrinkCategory, keyof Dictionary> = {
   OTHER:      "menu.cat_other",
 };
 
-const CATEGORY_EMOJI: Record<DrinkCategory, string> = {
+const ENUM_EMOJI: Record<DrinkCategory, string> = {
   COCKTAIL:   "🍹",
   BEER:       "🍺",
   WINE:       "🍷",
@@ -43,14 +44,21 @@ const CATEGORY_EMOJI: Record<DrinkCategory, string> = {
   OTHER:      "🍶",
 };
 
+interface CategoryTab {
+  key: string;
+  label: string;
+  emoji: string;
+  color?: string;
+}
+
 type OrderResult = { id: string; qrToken: string; total: number };
 
-export function BarMenu({ drinks, dict, currency }: Props) {
+export function BarMenu({ drinks, categories, dict, currency }: Props) {
   const t = (key: keyof Dictionary) => dict[key] ?? key;
   const fmt = (amount: number) => formatCurrency(amount, currency);
 
   // ── state ──
-  const [activeCategory, setActiveCategory] = useState<DrinkCategory | "ALL">("ALL");
+  const [activeCategory, setActiveCategory] = useState<string>("ALL");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [guestName, setGuestName] = useState("");
@@ -62,16 +70,44 @@ export function BarMenu({ drinks, dict, currency }: Props) {
   const [cancelling, setCancelling] = useState(false);
   const [editMode, setEditMode] = useState(false);
 
-  // ── derived ──
-  const categories = useMemo(() => {
-    const cats = [...new Set(drinks.map((d) => d.category))] as DrinkCategory[];
-    return cats;
-  }, [drinks]);
+  // ── derived: build unified category tabs ──
+  const categoryTabs = useMemo((): CategoryTab[] => {
+    const tabs: CategoryTab[] = [];
+    const seenDbIds = new Set<string>();
+    const seenEnums = new Set<DrinkCategory>();
 
-  const filtered = useMemo(() =>
-    activeCategory === "ALL" ? drinks : drinks.filter((d) => d.category === activeCategory),
-    [drinks, activeCategory]
-  );
+    // First pass: DB categories (in sort_order) that have at least one drink
+    for (const cat of categories) {
+      if (drinks.some(d => d.category_id === cat.id)) {
+        seenDbIds.add(cat.id);
+        tabs.push({ key: `db:${cat.id}`, label: cat.name, emoji: cat.emoji, color: cat.color });
+      }
+    }
+
+    // Second pass: enum categories for drinks without category_id
+    for (const drink of drinks) {
+      if (!drink.category_id && !seenEnums.has(drink.category)) {
+        seenEnums.add(drink.category);
+        tabs.push({ key: `enum:${drink.category}`, label: t(ENUM_LABEL[drink.category]), emoji: ENUM_EMOJI[drink.category] });
+      }
+    }
+
+    return tabs;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drinks, categories]);
+
+  const filtered = useMemo(() => {
+    if (activeCategory === "ALL") return drinks;
+    if (activeCategory.startsWith("db:")) {
+      const catId = activeCategory.slice(3);
+      return drinks.filter(d => d.category_id === catId);
+    }
+    if (activeCategory.startsWith("enum:")) {
+      const enumVal = activeCategory.slice(5) as DrinkCategory;
+      return drinks.filter(d => !d.category_id && d.category === enumVal);
+    }
+    return drinks;
+  }, [drinks, activeCategory]);
 
   const cartCount = cart.reduce((s, i) => s + i.quantity, 0);
   const cartTotal = cart.reduce((s, i) => {
@@ -334,18 +370,18 @@ export function BarMenu({ drinks, dict, currency }: Props) {
           >
             {t("menu.all")}
           </button>
-          {categories.map((cat) => (
+          {categoryTabs.map((tab) => (
             <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
+              key={tab.key}
+              onClick={() => setActiveCategory(tab.key)}
               className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${
-                activeCategory === cat
+                activeCategory === tab.key
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground hover:bg-muted/80"
               }`}
             >
-              <span>{CATEGORY_EMOJI[cat]}</span>
-              {t(CATEGORY_MAP[cat])}
+              <span>{tab.emoji}</span>
+              {tab.label}
             </button>
           ))}
         </div>
