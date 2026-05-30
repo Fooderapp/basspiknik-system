@@ -31,10 +31,14 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
-    "start": "expo start",
+    "start": "expo start --dev-client",
+    "start:go": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "build:dev": "eas build --platform ios --profile development",
+    "build:preview": "eas build --platform ios --profile preview",
+    "build:prod": "eas build --platform ios --profile production",
+    "device:register": "eas device:create"
   },
   "private": true
 }
