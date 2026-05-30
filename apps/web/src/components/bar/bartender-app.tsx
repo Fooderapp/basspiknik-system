@@ -8,6 +8,10 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  AlertDialog, AlertDialogAction, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   ScanLine, Clock, CheckCircle2, XCircle, Loader2,
   Minus, Plus, Trash2, Wine, ChevronLeft, Keyboard, Flashlight, FlashlightOff, RotateCcw
 } from "lucide-react";
@@ -59,10 +63,14 @@ export function BartenderApp({ initialOrders, dict, currency }: Props) {
   const fmt = (n: number) => formatCurrency(n, currency);
 
   /* Queue */
-  const [orders, setOrders]         = useState<DrinkOrder[]>(initialOrders);
-  const [activeOrder, setActiveOrder] = useState<DrinkOrder | null>(null);
-  const [scanState, setScanState]   = useState<ScanState>("idle");
-  const [, setTick]                 = useState(0);
+  const [orders, setOrders]           = useState<DrinkOrder[]>(initialOrders);
+  const [activeOrder, setActiveOrder]   = useState<DrinkOrder | null>(null);
+  const [scanState, setScanState]     = useState<ScanState>("idle");
+  const [, setTick]                   = useState(0);
+  // Track which order IDs this device opened — prevents cross-device takeover
+  const myOrderIds                    = useRef<Set<string>>(new Set());
+  // Alert popup state
+  const [alert, setAlert]             = useState<{ title: string; body: string } | null>(null);
 
   /* Camera */
   const videoRef       = useRef<HTMLVideoElement>(null);
@@ -190,24 +198,40 @@ export function BartenderApp({ initialOrders, dict, currency }: Props) {
       if (!res.ok) { setScanState("not_found"); reset(2000); return; }
       const order: DrinkOrder = await res.json();
 
-      if (order.status === "FULFILLED") { setScanState("done"); reset(2500); return; }
-      if (order.status === "CANCELLED") { setScanState("cancelled"); reset(2500); return; }
-
-      if (order.status === "IN_PROGRESS") {
-        // Already being processed — show warning with the order visible
-        setActiveOrder(order);
-        setScanState("in_progress_warn");
-        initFulfilled(order);
-        return;
+      // Already done — alert popup, stay on scanner
+      if (order.status === "FULFILLED") {
+        setAlert({ title: "Order already fulfilled", body: `This order (${order.guest_name ?? "Guest"}) has already been completed.` });
+        setScanState("idle"); reset(0); return;
+      }
+      if (order.status === "CANCELLED") {
+        setAlert({ title: "Order cancelled", body: "This order has been cancelled and cannot be processed." });
+        setScanState("idle"); reset(0); return;
       }
 
-      // PENDING → move to IN_PROGRESS
+      if (order.status === "IN_PROGRESS") {
+        // This device opened it previously — safe to resume
+        if (myOrderIds.current.has(order.id)) {
+          setActiveOrder(order);
+          setScanState("found");
+          initFulfilled(order);
+          return;
+        }
+        // Different device is processing it — alert, block
+        setAlert({
+          title: "Already being processed",
+          body: "This order is currently being processed on another device. Only one bartender can process it at a time.",
+        });
+        setScanState("idle"); reset(0); return;
+      }
+
+      // PENDING → this device takes ownership
       const patchRes = await fetch(`/api/bar/orders/${order.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "IN_PROGRESS" }),
       });
       const updated: DrinkOrder = await patchRes.json();
+      myOrderIds.current.add(updated.id);
       setOrders(prev => prev.map(o => o.id === updated.id ? { ...o, status: "IN_PROGRESS" } : o));
       setActiveOrder(updated);
       setScanState("found");
@@ -329,14 +353,21 @@ export function BartenderApp({ initialOrders, dict, currency }: Props) {
 
   /* ── Load order from queue tap ──────────────────────────────────── */
   const loadOrder = async (order: DrinkOrder) => {
+    if (order.status === "IN_PROGRESS" && !myOrderIds.current.has(order.id)) {
+      setAlert({
+        title: "Already being processed",
+        body: "This order is currently being processed on another device.",
+      });
+      return;
+    }
     if (order.status === "PENDING") {
-      // Auto-start it
       const res = await fetch(`/api/bar/orders/${order.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "IN_PROGRESS" }),
       });
       const updated: DrinkOrder = await res.json();
+      myOrderIds.current.add(updated.id);
       setOrders(prev => prev.map(o => o.id === updated.id ? { ...o, status: "IN_PROGRESS" } : o));
       setActiveOrder(updated);
       setScanState("found");
@@ -355,6 +386,22 @@ export function BartenderApp({ initialOrders, dict, currency }: Props) {
      RENDER
   ═══════════════════════════════════════════════════════════════════ */
   return (
+    <>
+    {/* ── Alert popup (blocked scans) ──────────────────────────────── */}
+    <AlertDialog open={!!alert} onOpenChange={(open) => { if (!open) { setAlert(null); cooldownRef.current = false; lastTokenRef.current = ""; } }}>
+      <AlertDialogContent className="bg-card border-border max-w-xs">
+        <AlertDialogHeader>
+          <AlertDialogTitle>{alert?.title}</AlertDialogTitle>
+          <AlertDialogDescription>{alert?.body}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogAction onClick={() => { setAlert(null); cooldownRef.current = false; lastTokenRef.current = ""; }}>
+            OK
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
     <div className="flex h-screen bg-black text-white overflow-hidden">
 
       {/* ═══ LEFT: Queue strip ═══════════════════════════════════════ */}
@@ -442,6 +489,7 @@ export function BartenderApp({ initialOrders, dict, currency }: Props) {
         )}
       </main>
     </div>
+    </>
   );
 }
 
@@ -654,14 +702,6 @@ function OrderDetail({ order, scanState, fulfilled, allDone, completing, fmt,
           <p className="font-bold">{fmt(order.total)}</p>
         </div>
       </div>
-
-      {/* Already in progress warning banner */}
-      {scanState === "in_progress_warn" && (
-        <div className="bg-amber-500/20 border-b border-amber-500/30 px-4 py-2 flex items-center gap-2">
-          <span className="text-amber-400 text-sm font-bold">⚠ Already being processed</span>
-          <span className="text-amber-400/60 text-xs">— tap to resume</span>
-        </div>
-      )}
 
       {/* Notes */}
       {order.notes && (
