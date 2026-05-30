@@ -14,16 +14,16 @@ async function getProfile(): Promise<Profile | null> {
 }
 
 const updateSchema = z.object({
-  name: z.string().min(1).optional(),
+  name:        z.string().min(1).optional(),
   description: z.string().optional().nullable(),
-  category: z.enum(["COCKTAIL","BEER","WINE","SPIRIT","SOFT_DRINK","SHOT","OTHER"]).optional(),
-  price: z.coerce.number().min(0).optional(),
-  available: z.boolean().optional(),
+  categoryId:  z.string().uuid().optional(),
+  price:       z.coerce.number().min(0).optional(),
+  available:   z.boolean().optional(),
   saleEnabled: z.boolean().optional(),
-  salePrice: z.coerce.number().min(0).optional().nullable(),
-  isPopular: z.boolean().optional(),
-  allergens: z.array(z.string()).optional(),
-  sortOrder: z.coerce.number().int().optional(),
+  salePrice:   z.coerce.number().min(0).optional().nullable(),
+  isPopular:   z.boolean().optional(),
+  allergens:   z.array(z.string()).optional(),
+  sortOrder:   z.coerce.number().int().optional(),
 });
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -39,16 +39,16 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const d = parsed.data;
   const supabase = await createAdminClient() as any;
   const { data, error } = await supabase.from("drinks").update({
-    ...(d.name !== undefined && { name: d.name }),
+    ...(d.name !== undefined        && { name: d.name }),
     ...(d.description !== undefined && { description: d.description }),
-    ...(d.category !== undefined && { category: d.category }),
-    ...(d.price !== undefined && { price: d.price }),
-    ...(d.available !== undefined && { available: d.available }),
+    ...(d.categoryId !== undefined  && { category_id: d.categoryId }),
+    ...(d.price !== undefined       && { price: d.price }),
+    ...(d.available !== undefined   && { available: d.available }),
     ...(d.saleEnabled !== undefined && { sale_enabled: d.saleEnabled }),
-    ...(d.salePrice !== undefined && { sale_price: d.salePrice }),
-    ...(d.isPopular !== undefined && { is_popular: d.isPopular }),
-    ...(d.allergens !== undefined && { allergens: d.allergens }),
-    ...(d.sortOrder !== undefined && { sort_order: d.sortOrder }),
+    ...(d.salePrice !== undefined   && { sale_price: d.salePrice }),
+    ...(d.isPopular !== undefined   && { is_popular: d.isPopular }),
+    ...(d.allergens !== undefined   && { allergens: d.allergens }),
+    ...(d.sortOrder !== undefined   && { sort_order: d.sortOrder }),
   }).eq("id", id).select().single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

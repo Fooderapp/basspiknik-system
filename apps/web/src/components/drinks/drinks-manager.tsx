@@ -16,109 +16,94 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Trash2, Wine, Star, Eye, EyeOff } from "lucide-react";
-import type { Drink, DrinkCategory, DrinkCategoryRow } from "@/lib/supabase/types";
-
-const CATEGORIES: { value: DrinkCategory; label: string; emoji: string }[] = [
-  { value: "COCKTAIL",   label: "Cocktail",   emoji: "🍹" },
-  { value: "BEER",       label: "Beer",       emoji: "🍺" },
-  { value: "WINE",       label: "Wine",       emoji: "🍷" },
-  { value: "SPIRIT",     label: "Spirit",     emoji: "🥃" },
-  { value: "SOFT_DRINK", label: "Soft Drink", emoji: "🥤" },
-  { value: "SHOT",       label: "Shot",       emoji: "🥊" },
-  { value: "OTHER",      label: "Other",      emoji: "🍶" },
-];
+import type { Drink, DrinkCategoryRow } from "@/lib/supabase/types";
 
 const schema = z.object({
-  name: z.string().min(1, "Name required"),
+  name:        z.string().min(1, "Name required"),
   description: z.string().optional(),
-  category: z.enum(["COCKTAIL","BEER","WINE","SPIRIT","SOFT_DRINK","SHOT","OTHER"]),
-  price: z.coerce.number().min(0),
-  available: z.boolean().default(true),
+  categoryId:  z.string().min(1, "Category required"),
+  price:       z.coerce.number().min(0),
+  available:   z.boolean().default(true),
   saleEnabled: z.boolean().default(false),
-  salePrice: z.coerce.number().min(0).optional(),
-  isPopular: z.boolean().default(false),
-  allergens: z.string().optional(), // comma-separated, parsed on submit
-  sortOrder: z.coerce.number().int().default(0),
+  salePrice:   z.coerce.number().min(0).optional(),
+  isPopular:   z.boolean().default(false),
+  allergens:   z.string().optional(),
+  sortOrder:   z.coerce.number().int().default(0),
 });
 type FormData = z.infer<typeof schema>;
 
 interface Props { initialDrinks: Drink[]; initialCategories?: DrinkCategoryRow[] }
 
-const CATEGORY_COLORS: Record<string, string> = {
-  COCKTAIL:   "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200",
-  BEER:       "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
-  WINE:       "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-  SPIRIT:     "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-  SOFT_DRINK: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200",
-  SHOT:       "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-  OTHER:      "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
-};
-
 export function DrinksManager({ initialDrinks, initialCategories = [] }: Props) {
-  const [drinks, setDrinks] = useState<Drink[]>(initialDrinks);
-  const [customCategories] = useState<DrinkCategoryRow[]>(initialCategories);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState<Drink | null>(null);
+  const [drinks, setDrinks]           = useState<Drink[]>(initialDrinks);
+  const [categories]                  = useState<DrinkCategoryRow[]>(initialCategories);
+  const [dialogOpen, setDialogOpen]   = useState(false);
+  const [editing, setEditing]         = useState<Drink | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Drink | null>(null);
-  const [filter, setFilter] = useState<DrinkCategory | "ALL">("ALL");
+  const [filter, setFilter]           = useState<string>("ALL");
 
   const { register, handleSubmit, setValue, watch, reset, formState: { errors, isSubmitting } } =
     useForm<FormData>({
       resolver: zodResolver(schema),
-      defaultValues: { category: "COCKTAIL", available: true, saleEnabled: false, isPopular: false, sortOrder: 0 },
+      defaultValues: {
+        categoryId: categories[0]?.id ?? "",
+        available: true, saleEnabled: false, isPopular: false, sortOrder: 0,
+      },
     });
 
   const saleEnabled = watch("saleEnabled");
+  const categoryId  = watch("categoryId");
+
+  function catById(id: string | null) {
+    return categories.find(c => c.id === id) ?? null;
+  }
 
   const openAdd = () => {
     setEditing(null);
-    reset({ category: "COCKTAIL", available: true, saleEnabled: false, isPopular: false, sortOrder: drinks.length });
+    reset({
+      categoryId: categories[0]?.id ?? "",
+      available: true, saleEnabled: false, isPopular: false, sortOrder: drinks.length,
+    });
     setDialogOpen(true);
   };
 
   const openEdit = (d: Drink) => {
     setEditing(d);
     reset({
-      name: d.name,
+      name:        d.name,
       description: d.description ?? "",
-      category: d.category,
-      price: d.price,
-      available: d.available,
+      categoryId:  d.category_id ?? categories[0]?.id ?? "",
+      price:       d.price,
+      available:   d.available,
       saleEnabled: d.sale_enabled,
-      salePrice: d.sale_price ?? undefined,
-      isPopular: d.is_popular,
-      allergens: d.allergens?.join(", ") ?? "",
-      sortOrder: d.sort_order,
+      salePrice:   d.sale_price ?? undefined,
+      isPopular:   d.is_popular,
+      allergens:   d.allergens?.join(", ") ?? "",
+      sortOrder:   d.sort_order,
     });
     setDialogOpen(true);
   };
 
   const onSubmit = async (data: FormData) => {
     const payload = {
-      name: data.name,
+      name:        data.name,
       description: data.description || null,
-      category: data.category,
-      price: data.price,
-      available: data.available,
+      categoryId:  data.categoryId,
+      price:       data.price,
+      available:   data.available,
       saleEnabled: data.saleEnabled,
-      salePrice: data.saleEnabled ? data.salePrice : null,
-      isPopular: data.isPopular,
-      allergens: data.allergens ? data.allergens.split(",").map(s => s.trim()).filter(Boolean) : [],
-      sortOrder: data.sortOrder,
+      salePrice:   data.saleEnabled ? data.salePrice : null,
+      isPopular:   data.isPopular,
+      allergens:   data.allergens ? data.allergens.split(",").map(s => s.trim()).filter(Boolean) : [],
+      sortOrder:   data.sortOrder,
     };
-
     try {
-      const url = editing ? `/api/drinks/${editing.id}` : "/api/drinks";
+      const url    = editing ? `/api/drinks/${editing.id}` : "/api/drinks";
       const method = editing ? "PATCH" : "POST";
       const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error ?? "Failed to save");
-      }
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error ?? "Failed to save"); }
       const saved = await res.json() as Drink;
       setDrinks(prev => editing
         ? prev.map(d => d.id === saved.id ? saved : d)
@@ -133,16 +118,13 @@ export function DrinksManager({ initialDrinks, initialCategories = [] }: Props) 
   const toggleAvailable = async (drink: Drink) => {
     try {
       const res = await fetch(`/api/drinks/${drink.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ available: !drink.available }),
       });
       if (!res.ok) throw new Error("Failed");
       const updated = await res.json() as Drink;
       setDrinks(prev => prev.map(d => d.id === updated.id ? updated : d));
-    } catch {
-      toast.error("Failed to update availability");
-    }
+    } catch { toast.error("Failed to update availability"); }
   };
 
   const handleDelete = async () => {
@@ -154,19 +136,17 @@ export function DrinksManager({ initialDrinks, initialCategories = [] }: Props) 
       toast.success("Drink deleted");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Delete failed");
-    } finally {
-      setDeleteTarget(null);
-    }
+    } finally { setDeleteTarget(null); }
   };
 
-  const filtered = filter === "ALL" ? drinks : drinks.filter(d => d.category === filter);
-  const counts = CATEGORIES.reduce((acc, c) => ({ ...acc, [c.value]: drinks.filter(d => d.category === c.value).length }), {} as Record<string, number>);
+  // Filter chips: only categories that have at least one drink
+  const usedCats = categories.filter(c => drinks.some(d => d.category_id === c.id));
+  const filtered = filter === "ALL" ? drinks : drinks.filter(d => d.category_id === filter);
 
   return (
     <div className="space-y-5">
       {/* Toolbar */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        {/* Category filter chips */}
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setFilter("ALL")}
@@ -174,13 +154,13 @@ export function DrinksManager({ initialDrinks, initialCategories = [] }: Props) 
           >
             All ({drinks.length})
           </button>
-          {CATEGORIES.filter(c => counts[c.value] > 0).map(c => (
+          {usedCats.map(c => (
             <button
-              key={c.value}
-              onClick={() => setFilter(c.value)}
-              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${filter === c.value ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/70"}`}
+              key={c.id}
+              onClick={() => setFilter(c.id)}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${filter === c.id ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/70"}`}
             >
-              {c.emoji} {c.label} ({counts[c.value]})
+              {c.emoji} {c.name} ({drinks.filter(d => d.category_id === c.id).length})
             </button>
           ))}
         </div>
@@ -200,15 +180,19 @@ export function DrinksManager({ initialDrinks, initialCategories = [] }: Props) 
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((drink) => {
-            const cat = CATEGORIES.find(c => c.value === drink.category);
+            const cat = catById(drink.category_id);
             const displayPrice = drink.sale_enabled && drink.sale_price != null ? drink.sale_price : drink.price;
             return (
               <div key={drink.id} className={`rounded-lg border bg-card p-4 space-y-2 relative ${!drink.available ? "opacity-60" : ""}`}>
-                {/* Badges row */}
                 <div className="flex items-center gap-1.5 flex-wrap pr-16">
-                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${CATEGORY_COLORS[drink.category]}`}>
-                    {cat?.emoji} {cat?.label}
-                  </span>
+                  {cat && (
+                    <span
+                      className="text-[11px] font-semibold px-2 py-0.5 rounded-full text-white"
+                      style={{ backgroundColor: cat.color }}
+                    >
+                      {cat.emoji} {cat.name}
+                    </span>
+                  )}
                   {drink.is_popular && <Badge className="text-[11px] bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200 border-0"><Star className="h-2.5 w-2.5 mr-0.5" />Popular</Badge>}
                   {drink.sale_enabled && <Badge className="text-[11px] bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200 border-0">Sale</Badge>}
                   {!drink.available && <Badge variant="secondary" className="text-[11px]">Unavailable</Badge>}
@@ -230,7 +214,6 @@ export function DrinksManager({ initialDrinks, initialCategories = [] }: Props) 
                   <p className="text-[11px] text-muted-foreground">⚠️ {drink.allergens.join(", ")}</p>
                 )}
 
-                {/* Actions */}
                 <div className="absolute top-3 right-3 flex gap-1">
                   <Button
                     variant="ghost" size="icon" className="h-7 w-7"
@@ -273,15 +256,19 @@ export function DrinksManager({ initialDrinks, initialCategories = [] }: Props) 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label>Category *</Label>
-                <Select defaultValue={watch("category")} onValueChange={v => setValue("category", v as DrinkCategory)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Select value={categoryId} onValueChange={v => setValue("categoryId", v)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
                   <SelectContent>
-                    {customCategories.length > 0 && customCategories.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{c.emoji} {c.name}</SelectItem>
+                    {categories.map(c => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.emoji} {c.name}
+                      </SelectItem>
                     ))}
-                    {CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{c.emoji} {c.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
+                {errors.categoryId && <p className="text-xs text-destructive">{errors.categoryId.message}</p>}
               </div>
               <div className="space-y-1">
                 <Label>Price *</Label>
@@ -303,7 +290,6 @@ export function DrinksManager({ initialDrinks, initialCategories = [] }: Props) 
               </div>
             </div>
 
-            {/* Toggles */}
             <div className="space-y-3">
               {[
                 { id: "available", label: "Available", desc: "Show on menu and accept orders", field: "available" as const },
@@ -318,7 +304,6 @@ export function DrinksManager({ initialDrinks, initialCategories = [] }: Props) 
                 </div>
               ))}
 
-              {/* Sale price toggle */}
               <div className={`rounded-lg border p-3 space-y-3 ${saleEnabled ? "border-primary/50 bg-primary/5" : ""}`}>
                 <div className="flex items-center justify-between">
                   <div>

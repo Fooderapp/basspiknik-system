@@ -14,16 +14,16 @@ async function getProfile(): Promise<Profile | null> {
 }
 
 const drinkSchema = z.object({
-  name: z.string().min(1),
+  name:        z.string().min(1),
   description: z.string().optional().nullable(),
-  category: z.enum(["COCKTAIL","BEER","WINE","SPIRIT","SOFT_DRINK","SHOT","OTHER"]),
-  price: z.coerce.number().min(0),
-  available: z.boolean().default(true),
+  categoryId:  z.string().uuid(),
+  price:       z.coerce.number().min(0),
+  available:   z.boolean().default(true),
   saleEnabled: z.boolean().default(false),
-  salePrice: z.coerce.number().min(0).optional().nullable(),
-  isPopular: z.boolean().default(false),
-  allergens: z.array(z.string()).default([]),
-  sortOrder: z.coerce.number().int().default(0),
+  salePrice:   z.coerce.number().min(0).optional().nullable(),
+  isPopular:   z.boolean().default(false),
+  allergens:   z.array(z.string()).default([]),
+  sortOrder:   z.coerce.number().int().default(0),
 });
 
 export async function GET() {
@@ -45,16 +45,17 @@ export async function POST(req: Request) {
   const d = parsed.data;
   const supabase = await createAdminClient() as any;
   const { data, error } = await supabase.from("drinks").insert({
-    name: d.name,
+    name:        d.name,
     description: d.description ?? null,
-    category: d.category,
-    price: d.price,
-    available: d.available,
+    category:    "OTHER",          // legacy column; category_id is authoritative
+    category_id: d.categoryId,
+    price:       d.price,
+    available:   d.available,
     sale_enabled: d.saleEnabled,
-    sale_price: d.saleEnabled ? (d.salePrice ?? null) : null,
-    is_popular: d.isPopular,
-    allergens: d.allergens,
-    sort_order: d.sortOrder,
+    sale_price:  d.saleEnabled ? (d.salePrice ?? null) : null,
+    is_popular:  d.isPopular,
+    allergens:   d.allergens,
+    sort_order:  d.sortOrder,
   }).select().single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
