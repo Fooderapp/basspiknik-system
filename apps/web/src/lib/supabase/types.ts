@@ -180,6 +180,7 @@ export interface Database {
           allergens: string[]
           is_popular: boolean
           order_count: number
+          category_id: string | null
           created_at: string
           updated_at: string
         }
@@ -218,6 +219,19 @@ export interface Database {
         }
         Insert: Omit<Database['public']['Tables']['drink_order_items']['Row'], 'id'>
         Update: Partial<Database['public']['Tables']['drink_order_items']['Insert']>
+      }
+      drink_categories: {
+        Row: {
+          id: string
+          name: string
+          name_hu: string | null
+          emoji: string
+          color: string
+          sort_order: number
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['drink_categories']['Row'], 'id' | 'created_at'>
+        Update: Partial<Database['public']['Tables']['drink_categories']['Insert']>
       }
       waitlist_entries: {
         Row: {
@@ -271,3 +285,4 @@ export type Drink = Database['public']['Tables']['drinks']['Row']
 export type DrinkOrder = Database['public']['Tables']['drink_orders']['Row']
 export type DrinkOrderItem = Database['public']['Tables']['drink_order_items']['Row']
 export type PromoCode = Database['public']['Tables']['promo_codes']['Row']
+export type DrinkCategoryRow = Database['public']['Tables']['drink_categories']['Row']

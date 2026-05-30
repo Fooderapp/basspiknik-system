@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Trash2, Wine, Star, Eye, EyeOff } from "lucide-react";
-import type { Drink, DrinkCategory } from "@/lib/supabase/types";
+import type { Drink, DrinkCategory, DrinkCategoryRow } from "@/lib/supabase/types";
 
 const CATEGORIES: { value: DrinkCategory; label: string; emoji: string }[] = [
   { value: "COCKTAIL",   label: "Cocktail",   emoji: "🍹" },
@@ -42,7 +42,7 @@ const schema = z.object({
 });
 type FormData = z.infer<typeof schema>;
 
-interface Props { initialDrinks: Drink[] }
+interface Props { initialDrinks: Drink[]; initialCategories?: DrinkCategoryRow[] }
 
 const CATEGORY_COLORS: Record<string, string> = {
   COCKTAIL:   "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200",
@@ -54,8 +54,9 @@ const CATEGORY_COLORS: Record<string, string> = {
   OTHER:      "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
 };
 
-export function DrinksManager({ initialDrinks }: Props) {
+export function DrinksManager({ initialDrinks, initialCategories = [] }: Props) {
   const [drinks, setDrinks] = useState<Drink[]>(initialDrinks);
+  const [customCategories] = useState<DrinkCategoryRow[]>(initialCategories);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Drink | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Drink | null>(null);
@@ -275,6 +276,9 @@ export function DrinksManager({ initialDrinks }: Props) {
                 <Select defaultValue={watch("category")} onValueChange={v => setValue("category", v as DrinkCategory)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
+                    {customCategories.length > 0 && customCategories.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.emoji} {c.name}</SelectItem>
+                    ))}
                     {CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{c.emoji} {c.label}</SelectItem>)}
                   </SelectContent>
                 </Select>

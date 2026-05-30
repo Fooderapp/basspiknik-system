@@ -28,6 +28,14 @@ All UI components come from **shadcn/ui**: https://ui.shadcn.com
 - `apps/web/src/lib/stripe.ts` — Stripe client
 - `apps/web/src/lib/utils.ts` — `formatDate()`, `formatCurrency()`, `cn()`
 
+## Internationalisation — MANDATORY
+- **Every new user-facing string MUST be added to both `en` and `hu` dictionaries** in `apps/web/src/lib/i18n.ts`
+- Never hard-code English text in JSX — always use `t(dict, "key")` or `dict["key"]`
+- Hungarian (`hu`) is the primary language for this platform; English is the fallback
+- Server components: call `getSettings()` → `getDictionary(settings.language)` → pass `dict` as prop
+- Client components: receive `dict: Dictionary` as a prop, use `dict["key"]` or a local `t` helper
+- Keys follow `section.specific_name` format (e.g. `menu.place_order`, `bar.fulfill`)
+
 ## Conventions
 - Server components fetch directly from Supabase
 - Client components use `fetch()` to hit `/api/*` routes

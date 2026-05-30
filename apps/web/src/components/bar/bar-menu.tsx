@@ -202,38 +202,41 @@ export function BarMenu({ drinks, dict, currency }: Props) {
   // ─────────────────────────────────────────────────────────────────────────────
   // Order success / status screen
   if (orderResult) {
-    const isPending = orderStatus === "PENDING";
+    const isPending    = orderStatus === "PENDING";
     const isInProgress = orderStatus === "IN_PROGRESS";
-    const isFulfilled = orderStatus === "FULFILLED";
-    const isCancelled = orderStatus === "CANCELLED";
+    const isFulfilled  = orderStatus === "FULFILLED";
+    const isCancelled  = orderStatus === "CANCELLED";
+    // Active = bartender has it or is waiting — block New Order until terminal state
+    const isActive     = isPending || isInProgress;
 
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 gap-6 max-w-sm mx-auto">
         {/* Status icon */}
-        <div className={`rounded-full p-5 ${isFulfilled ? "bg-green-100 dark:bg-green-900" : isCancelled ? "bg-gray-100 dark:bg-gray-800" : isInProgress ? "bg-blue-100 dark:bg-blue-900" : "bg-green-100 dark:bg-green-900"}`}>
-          {isFulfilled
-            ? <CheckCircle2 className="h-12 w-12 text-green-600 dark:text-green-400" />
-            : isCancelled
-              ? <X className="h-12 w-12 text-gray-500" />
-              : isInProgress
-                ? <Loader2 className="h-12 w-12 text-blue-500 animate-spin" />
-                : <CheckCircle2 className="h-12 w-12 text-green-600 dark:text-green-400" />
-          }
+        <div className={`rounded-full p-5 ${
+          isFulfilled  ? "bg-green-100 dark:bg-green-900"
+          : isCancelled ? "bg-gray-100 dark:bg-gray-800"
+          : isInProgress ? "bg-blue-100 dark:bg-blue-900"
+          : "bg-amber-100 dark:bg-amber-900"
+        }`}>
+          {isFulfilled  ? <CheckCircle2 className="h-12 w-12 text-green-600 dark:text-green-400" />
+          : isCancelled ? <X className="h-12 w-12 text-gray-500" />
+          : isInProgress ? <Loader2 className="h-12 w-12 text-blue-500 animate-spin" />
+          : <Clock className="h-12 w-12 text-amber-600 dark:text-amber-400" />}
         </div>
 
         {/* Status text */}
         <div className="text-center space-y-1">
           <h1 className="text-2xl font-bold">
-            {isFulfilled ? "Ready to collect! 🎉"
-              : isCancelled ? "Order cancelled"
-              : isInProgress ? "Being prepared…"
-              : t("menu.order_success")}
+            {isFulfilled  ? t("menu.status_fulfilled")
+            : isCancelled ? t("menu.status_cancelled")
+            : isInProgress ? t("menu.status_progress")
+            : t("menu.order_success")}
           </h1>
           <p className="text-muted-foreground text-sm">
-            {isFulfilled ? "Your order is ready — show this QR at the bar."
-              : isCancelled ? "Your order has been cancelled."
-              : isInProgress ? "The bartender is working on your order."
-              : t("menu.order_success_sub")}
+            {isFulfilled  ? t("menu.show_qr")
+            : isCancelled ? t("menu.status_cancelled")
+            : isInProgress ? t("menu.no_edit_progress")
+            : t("menu.order_success_sub")}
           </p>
         </div>
 
@@ -247,19 +250,19 @@ export function BarMenu({ drinks, dict, currency }: Props) {
             {isPending && (
               <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
                 <Clock className="h-3.5 w-3.5" />
-                Waiting for bartender…
+                {t("menu.status_pending")}
               </div>
             )}
             {isInProgress && (
               <div className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Being prepared…
+                {t("menu.status_progress")}
               </div>
             )}
           </div>
         )}
 
-        {/* Action buttons */}
+        {/* Action buttons — only available while PENDING; nothing while IN_PROGRESS */}
         <div className="flex flex-col gap-2 w-full">
           {isPending && (
             <>
@@ -276,10 +279,14 @@ export function BarMenu({ drinks, dict, currency }: Props) {
               </Button>
             </>
           )}
-          <Button variant="outline" onClick={resetOrder} className="w-full gap-2">
-            <RefreshCw className="h-4 w-4" />
-            {t("menu.new_order")}
-          </Button>
+
+          {/* "New Order" only after terminal state — NOT while active */}
+          {!isActive && (
+            <Button variant="outline" onClick={resetOrder} className="w-full gap-2">
+              <RefreshCw className="h-4 w-4" />
+              {t("menu.new_order")}
+            </Button>
+          )}
         </div>
       </div>
     );
