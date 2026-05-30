@@ -8,3 +8,10 @@ dist
 *.env.local
 *.env.example
 .DS_Store
+
+# Mobile app
+apps/mobile/node_modules
+apps/mobile/.expo
+apps/mobile/android
+apps/mobile/ios
+apps/mobile/.env

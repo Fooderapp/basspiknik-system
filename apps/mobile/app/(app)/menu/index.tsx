@@ -1,0 +1,267 @@
+import { useEffect, useState, useMemo } from "react";
+import {
+  View, Text, FlatList, TouchableOpacity, TextInput,
+  ActivityIndicator, RefreshControl, Modal, ScrollView,
+} from "react-native";
+import { router } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/context/auth";
+import type { Drink, DrinkCategoryRow } from "@/lib/types";
+import { formatCurrency } from "@/lib/utils";
+
+interface CartItem { drink: Drink; quantity: number }
+
+export default function MenuScreen() {
+  const { session } = useAuth();
+  const insets = useSafeAreaInsets();
+
+  const [drinks, setDrinks] = useState<Drink[]>([]);
+  const [categories, setCategories] = useState<DrinkCategoryRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [activeCat, setActiveCat] = useState<string>("ALL");
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [guestName, setGuestName] = useState("");
+  const [notes, setNotes] = useState("");
+  const [placing, setPlacing] = useState(false);
+
+  async function load() {
+    const [{ data: d }, { data: c }] = await Promise.all([
+      (supabase as any).from("drinks").select("*").eq("available", true).order("sort_order").order("name"),
+      (supabase as any).from("drink_categories").select("*").order("sort_order").order("name"),
+    ]);
+    setDrinks(d ?? []);
+    setCategories(c ?? []);
+  }
+
+  useEffect(() => { load().finally(() => setLoading(false)); }, []);
+
+  async function onRefresh() { setRefreshing(true); await load(); setRefreshing(false); }
+
+  const categoryTabs = useMemo(() => {
+    return categories.filter(c => drinks.some(d => d.category_id === c.id));
+  }, [drinks, categories]);
+
+  const filtered = useMemo(() => {
+    if (activeCat === "ALL") return drinks;
+    return drinks.filter(d => d.category_id === activeCat);
+  }, [drinks, activeCat]);
+
+  function addToCart(drink: Drink) {
+    setCart(prev => {
+      const idx = prev.findIndex(c => c.drink.id === drink.id);
+      if (idx >= 0) return prev.map((c, i) => i === idx ? { ...c, quantity: c.quantity + 1 } : c);
+      return [...prev, { drink, quantity: 1 }];
+    });
+  }
+
+  function adjustQty(drinkId: string, delta: number) {
+    setCart(prev => prev.flatMap(c => {
+      if (c.drink.id !== drinkId) return [c];
+      const next = c.quantity + delta;
+      return next <= 0 ? [] : [{ ...c, quantity: next }];
+    }));
+  }
+
+  function getQty(drinkId: string) { return cart.find(c => c.drink.id === drinkId)?.quantity ?? 0; }
+  const cartCount = cart.reduce((s, i) => s + i.quantity, 0);
+  const cartTotal = cart.reduce((s, i) => {
+    const p = i.drink.sale_enabled && i.drink.sale_price ? i.drink.sale_price : i.drink.price;
+    return s + p * i.quantity;
+  }, 0);
+
+  async function placeOrder() {
+    if (cart.length === 0) return;
+    setPlacing(true);
+    try {
+      const APP_URL = process.env.EXPO_PUBLIC_APP_URL ?? "";
+      const res = await fetch(`${APP_URL}/api/bar/orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({
+          guestName: guestName.trim() || null,
+          notes: notes.trim() || null,
+          items: cart.map(c => ({ drinkId: c.drink.id, quantity: c.quantity, notes: null })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed");
+      setCart([]);
+      setCartOpen(false);
+      router.push(`/(app)/menu/order?orderId=${data.id}&token=${data.qrToken}` as never);
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setPlacing(false);
+    }
+  }
+
+  if (loading) {
+    return <View className="flex-1 bg-background items-center justify-center"><ActivityIndicator size="large" color="#7c3aed" /></View>;
+  }
+
+  return (
+    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+      {/* Header */}
+      <View className="flex-row items-center justify-between px-5 pt-4 pb-2">
+        <View>
+          <Text className="text-foreground text-2xl font-bold">🍹 Bar Menu</Text>
+          <Text className="text-muted-foreground text-sm">{drinks.length} items</Text>
+        </View>
+        {cartCount > 0 && (
+          <TouchableOpacity
+            onPress={() => setCartOpen(true)}
+            className="bg-primary px-4 py-2 rounded-xl flex-row items-center gap-2"
+          >
+            <Text className="text-white font-semibold">🛒 {cartCount}</Text>
+            <Text className="text-white font-bold">{formatCurrency(cartTotal)}</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Category tabs */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-5 mb-2" contentContainerStyle={{ gap: 8 }}>
+        <TouchableOpacity
+          onPress={() => setActiveCat("ALL")}
+          className={`px-3 py-1.5 rounded-full ${activeCat === "ALL" ? "bg-primary" : "bg-card border border-border"}`}
+        >
+          <Text className={activeCat === "ALL" ? "text-white font-medium text-sm" : "text-muted-foreground text-sm"}>All</Text>
+        </TouchableOpacity>
+        {categoryTabs.map(c => (
+          <TouchableOpacity
+            key={c.id}
+            onPress={() => setActiveCat(c.id)}
+            className={`px-3 py-1.5 rounded-full flex-row items-center gap-1 ${activeCat === c.id ? "bg-primary" : "bg-card border border-border"}`}
+          >
+            <Text className="text-sm">{c.emoji}</Text>
+            <Text className={activeCat === c.id ? "text-white font-medium text-sm" : "text-muted-foreground text-sm"}>{c.name}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      {/* Drink list */}
+      <FlatList
+        data={filtered}
+        keyExtractor={d => d.id}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7c3aed" />}
+        renderItem={({ item: drink }) => {
+          const price = drink.sale_enabled && drink.sale_price ? drink.sale_price : drink.price;
+          const qty = getQty(drink.id);
+          return (
+            <View className="bg-card border border-border rounded-2xl p-4 mb-3">
+              <View className="flex-row items-start justify-between mb-2">
+                <View className="flex-1 mr-3">
+                  <Text className="text-foreground font-semibold">{drink.name}</Text>
+                  {drink.description && (
+                    <Text className="text-muted-foreground text-xs mt-0.5" numberOfLines={2}>{drink.description}</Text>
+                  )}
+                  {drink.allergens?.length > 0 && (
+                    <Text className="text-muted-foreground text-xs mt-1">⚠️ {drink.allergens.join(", ")}</Text>
+                  )}
+                </View>
+                <View className="items-end">
+                  <Text className="text-foreground font-bold text-base">{formatCurrency(price)}</Text>
+                  {drink.sale_enabled && drink.sale_price && (
+                    <Text className="text-muted-foreground text-xs line-through">{formatCurrency(drink.price)}</Text>
+                  )}
+                  {drink.is_popular && <Text className="text-warning text-xs">⭐ Popular</Text>}
+                </View>
+              </View>
+              <View className="flex-row justify-end items-center gap-2 mt-1">
+                {qty === 0 ? (
+                  <TouchableOpacity onPress={() => addToCart(drink)} className="bg-primary px-4 py-2 rounded-lg">
+                    <Text className="text-white font-semibold text-sm">+ Add</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <View className="flex-row items-center gap-3 bg-muted rounded-lg px-3 py-1.5">
+                    <TouchableOpacity onPress={() => adjustQty(drink.id, -1)}><Text className="text-foreground text-lg font-bold">−</Text></TouchableOpacity>
+                    <Text className="text-foreground font-bold w-5 text-center">{qty}</Text>
+                    <TouchableOpacity onPress={() => adjustQty(drink.id, 1)}><Text className="text-foreground text-lg font-bold">+</Text></TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            </View>
+          );
+        }}
+      />
+
+      {/* Cart modal */}
+      <Modal visible={cartOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setCartOpen(false)}>
+        <View className="flex-1 bg-background px-5 pt-6">
+          <View className="flex-row items-center justify-between mb-6">
+            <Text className="text-foreground text-xl font-bold">🛒 Your Order</Text>
+            <TouchableOpacity onPress={() => setCartOpen(false)}>
+              <Text className="text-muted-foreground text-base">Close</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+            {cart.map(item => {
+              const p = item.drink.sale_enabled && item.drink.sale_price ? item.drink.sale_price : item.drink.price;
+              return (
+                <View key={item.drink.id} className="flex-row items-center border-b border-border py-3">
+                  <View className="flex-1">
+                    <Text className="text-foreground font-medium">{item.drink.name}</Text>
+                    <Text className="text-muted-foreground text-sm">{formatCurrency(p)} × {item.quantity}</Text>
+                  </View>
+                  <View className="flex-row items-center gap-2">
+                    <TouchableOpacity onPress={() => adjustQty(item.drink.id, -1)} className="w-8 h-8 bg-muted rounded-lg items-center justify-center">
+                      <Text className="text-foreground font-bold">−</Text>
+                    </TouchableOpacity>
+                    <Text className="text-foreground font-bold w-4 text-center">{item.quantity}</Text>
+                    <TouchableOpacity onPress={() => adjustQty(item.drink.id, 1)} className="w-8 h-8 bg-muted rounded-lg items-center justify-center">
+                      <Text className="text-foreground font-bold">+</Text>
+                    </TouchableOpacity>
+                    <Text className="text-foreground font-semibold ml-2 w-16 text-right">{formatCurrency(p * item.quantity)}</Text>
+                  </View>
+                </View>
+              );
+            })}
+
+            <View className="mt-4 gap-3">
+              <TextInput
+                className="bg-card border border-border rounded-xl px-4 py-3 text-foreground"
+                placeholder="Your name (optional)"
+                placeholderTextColor="#71717a"
+                value={guestName}
+                onChangeText={setGuestName}
+              />
+              <TextInput
+                className="bg-card border border-border rounded-xl px-4 py-3 text-foreground"
+                placeholder="Notes (e.g. no ice)"
+                placeholderTextColor="#71717a"
+                value={notes}
+                onChangeText={setNotes}
+                multiline
+                numberOfLines={2}
+              />
+            </View>
+          </ScrollView>
+
+          <View className="py-4 border-t border-border">
+            <View className="flex-row justify-between mb-4">
+              <Text className="text-foreground font-bold text-lg">Total</Text>
+              <Text className="text-foreground font-bold text-lg">{formatCurrency(cartTotal)}</Text>
+            </View>
+            <TouchableOpacity
+              onPress={placeOrder}
+              disabled={placing}
+              className="bg-primary rounded-xl py-4 items-center"
+            >
+              {placing
+                ? <ActivityIndicator color="#fff" />
+                : <Text className="text-white font-bold text-base">Place Order</Text>
+              }
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}

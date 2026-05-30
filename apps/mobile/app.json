@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "EventOS",
+    "slug": "eventos-mobile",
+    "version": "1.0.0",
+    "scheme": "eventos",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.eventos.mobile",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Used to scan QR codes for tickets and drink orders.",
+        "NSMicrophoneUsageDescription": "Required by camera."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#000000"
+      },
+      "package": "com.eventos.mobile",
+      "permissions": ["CAMERA"]
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Used to scan QR codes for tickets and drink orders."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
