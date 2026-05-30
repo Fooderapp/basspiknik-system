@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSettings } from "@/lib/settings";
 import { getDictionary } from "@/lib/i18n";
 import { redirect } from "next/navigation";
-import { BartenderQueue } from "@/components/bar/bartender-queue";
+import { BartenderApp } from "@/components/bar/bartender-app";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -28,7 +28,7 @@ export default async function BarPage() {
   const dict = getDictionary(settings.language);
 
   return (
-    <BartenderQueue
+    <BartenderApp
       initialOrders={ordersData ?? []}
       dict={dict}
       currency={settings.currency}

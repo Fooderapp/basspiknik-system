@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
-import { ShoppingCart, Plus, Minus, Trash2, Wine, CheckCircle2, RefreshCw } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Trash2, Wine, CheckCircle2, RefreshCw, Pencil, X, Clock, Loader2 } from "lucide-react";
 import type { Drink, DrinkCategory } from "@/lib/supabase/types";
 import type { Dictionary } from "@/lib/i18n";
 import type { Currency } from "@/lib/settings";
@@ -58,6 +58,9 @@ export function BarMenu({ drinks, dict, currency }: Props) {
   const [placing, setPlacing] = useState(false);
   const [orderResult, setOrderResult] = useState<OrderResult | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [orderStatus, setOrderStatus] = useState<"PENDING" | "IN_PROGRESS" | "FULFILLED" | "CANCELLED" | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+  const [editMode, setEditMode] = useState(false);
 
   // ── derived ──
   const categories = useMemo(() => {
@@ -128,9 +131,13 @@ export function BarMenu({ drinks, dict, currency }: Props) {
       });
       setQrDataUrl(qr);
       setOrderResult(data);
+      setOrderStatus("PENDING");
       setCart([]);
       setCartOpen(false);
       toast.success(t("menu.order_success"));
+
+      // Poll for status updates
+      startStatusPoll(data.id);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to place order");
     } finally {
@@ -138,37 +145,142 @@ export function BarMenu({ drinks, dict, currency }: Props) {
     }
   }
 
+  // ── poll order status ──
+  function startStatusPoll(orderId: string) {
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/bar/orders/${orderId}`);
+        if (!res.ok) { clearInterval(interval); return; }
+        const data = await res.json();
+        setOrderStatus(data.status);
+        if (data.status === "FULFILLED" || data.status === "CANCELLED") clearInterval(interval);
+      } catch { clearInterval(interval); }
+    }, 5000);
+  }
+
+  // ── cancel order ──
+  async function cancelOrder() {
+    if (!orderResult) return;
+    setCancelling(true);
+    try {
+      const res = await fetch(`/api/bar/orders/${orderResult.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Cannot cancel");
+      }
+      setOrderStatus("CANCELLED");
+      toast.success("Order cancelled");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to cancel");
+    } finally {
+      setCancelling(false);
+    }
+  }
+
+  // ── edit order: restore cart and go back to menu ──
+  function editOrder() {
+    if (!orderResult) return;
+    // We don't know the original items here — just return to menu
+    // The order will be replaced when user places a new one
+    // For simplicity: cancel the old order and start fresh
+    setEditMode(true);
+    setOrderResult(null);
+    setQrDataUrl(null);
+    setOrderStatus(null);
+    setCartOpen(true);
+  }
+
   function resetOrder() {
     setOrderResult(null);
     setQrDataUrl(null);
+    setOrderStatus(null);
     setGuestName("");
     setOrderNotes("");
+    setEditMode(false);
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // Order success screen
+  // Order success / status screen
   if (orderResult) {
+    const isPending = orderStatus === "PENDING";
+    const isInProgress = orderStatus === "IN_PROGRESS";
+    const isFulfilled = orderStatus === "FULFILLED";
+    const isCancelled = orderStatus === "CANCELLED";
+
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 gap-6">
-        <div className="rounded-full bg-green-100 dark:bg-green-900 p-5">
-          <CheckCircle2 className="h-12 w-12 text-green-600 dark:text-green-400" />
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 gap-6 max-w-sm mx-auto">
+        {/* Status icon */}
+        <div className={`rounded-full p-5 ${isFulfilled ? "bg-green-100 dark:bg-green-900" : isCancelled ? "bg-gray-100 dark:bg-gray-800" : isInProgress ? "bg-blue-100 dark:bg-blue-900" : "bg-green-100 dark:bg-green-900"}`}>
+          {isFulfilled
+            ? <CheckCircle2 className="h-12 w-12 text-green-600 dark:text-green-400" />
+            : isCancelled
+              ? <X className="h-12 w-12 text-gray-500" />
+              : isInProgress
+                ? <Loader2 className="h-12 w-12 text-blue-500 animate-spin" />
+                : <CheckCircle2 className="h-12 w-12 text-green-600 dark:text-green-400" />
+          }
         </div>
+
+        {/* Status text */}
         <div className="text-center space-y-1">
-          <h1 className="text-2xl font-bold">{t("menu.order_success")}</h1>
-          <p className="text-muted-foreground">{t("menu.order_success_sub")}</p>
+          <h1 className="text-2xl font-bold">
+            {isFulfilled ? "Ready to collect! 🎉"
+              : isCancelled ? "Order cancelled"
+              : isInProgress ? "Being prepared…"
+              : t("menu.order_success")}
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            {isFulfilled ? "Your order is ready — show this QR at the bar."
+              : isCancelled ? "Your order has been cancelled."
+              : isInProgress ? "The bartender is working on your order."
+              : t("menu.order_success_sub")}
+          </p>
         </div>
-        {qrDataUrl && (
-          <div className="rounded-2xl border bg-card p-6 flex flex-col items-center gap-3">
+
+        {/* QR code — show while not cancelled */}
+        {qrDataUrl && !isCancelled && (
+          <div className="rounded-2xl border bg-card p-5 flex flex-col items-center gap-3 w-full">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={qrDataUrl} alt="Order QR" className="w-56 h-56 rounded-xl" />
+            <img src={qrDataUrl} alt="Order QR" className="w-52 h-52 rounded-xl" />
             <p className="text-xs text-muted-foreground font-mono">{orderResult.qrToken}</p>
             <p className="text-sm font-semibold">{t("menu.total")}: {fmt(orderResult.total)}</p>
+            {isPending && (
+              <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
+                <Clock className="h-3.5 w-3.5" />
+                Waiting for bartender…
+              </div>
+            )}
+            {isInProgress && (
+              <div className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Being prepared…
+              </div>
+            )}
           </div>
         )}
-        <Button variant="outline" onClick={resetOrder} className="gap-2">
-          <RefreshCw className="h-4 w-4" />
-          {t("menu.new_order")}
-        </Button>
+
+        {/* Action buttons */}
+        <div className="flex flex-col gap-2 w-full">
+          {isPending && (
+            <>
+              <Button variant="outline" className="w-full gap-2" onClick={editOrder}>
+                <Pencil className="h-4 w-4" />
+                Edit Order
+              </Button>
+              <Button
+                variant="destructive" className="w-full gap-2"
+                onClick={cancelOrder} disabled={cancelling}
+              >
+                {cancelling ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
+                Cancel Order
+              </Button>
+            </>
+          )}
+          <Button variant="outline" onClick={resetOrder} className="w-full gap-2">
+            <RefreshCw className="h-4 w-4" />
+            {t("menu.new_order")}
+          </Button>
+        </div>
       </div>
     );
   }

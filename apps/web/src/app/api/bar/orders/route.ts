@@ -13,16 +13,30 @@ async function getProfile(): Promise<Profile | null> {
   return data as Profile | null;
 }
 
-// ─── GET  (bartender/staff/admin: list active orders) ─────────────────────────
+// ─── GET  (bartender queue -or- scanner token lookup) ─────────────────────────
 export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const token = searchParams.get("token");
+
+  // Scanner lookup by QR token — no auth, token acts as the secret
+  if (token) {
+    const supabase = await createClient() as any;
+    const { data, error } = await supabase
+      .from("drink_orders")
+      .select("*, drink_order_items(*, drinks(name, category))")
+      .eq("qr_token", token)
+      .single();
+    if (error || !data) return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    return NextResponse.json(data);
+  }
+
+  // Full queue — bartender/staff/admin only
   const profile = await getProfile();
   if (!profile || !["ADMIN", "EDITOR", "STAFF", "BARTENDER"].includes(profile.role)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  const { searchParams } = new URL(req.url);
-  const statusFilter = searchParams.get("status"); // optional, e.g. "PENDING,IN_PROGRESS"
-
+  const statusFilter = searchParams.get("status");
   const supabase = await createClient() as any;
   let query = supabase
     .from("drink_orders")
@@ -31,8 +45,7 @@ export async function GET(req: Request) {
     .order("created_at", { ascending: true });
 
   if (statusFilter) {
-    const statuses = statusFilter.split(",");
-    query = query.in("status", statuses);
+    query = query.in("status", statusFilter.split(","));
   } else {
     query = query.in("status", ["PENDING", "IN_PROGRESS"]);
   }
@@ -65,7 +78,6 @@ export async function POST(req: Request) {
 
   const { guestName, notes, eventId, items } = parsed.data;
 
-  // Look up drink prices (public read)
   const supabase = await createClient() as any;
   const drinkIds = items.map((i) => i.drinkId);
   const { data: drinks, error: drinksError } = await supabase
@@ -77,27 +89,20 @@ export async function POST(req: Request) {
 
   const drinkMap = new Map((drinks ?? []).map((d: any) => [d.id, d]));
 
-  // Validate all drinks exist and are available
   for (const item of items) {
     const drink = drinkMap.get(item.drinkId) as any;
     if (!drink) return NextResponse.json({ error: `Drink ${item.drinkId} not found` }, { status: 400 });
     if (!drink.available) return NextResponse.json({ error: `"${drink.name}" is currently unavailable` }, { status: 400 });
   }
 
-  // Check if user is VIP
   const adminSupabase = await createAdminClient() as any;
   let isVip = false;
   const { data: { user } } = await (await createClient()).auth.getUser();
   if (user) {
-    const { data: profile } = await adminSupabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
+    const { data: profile } = await adminSupabase.from("profiles").select("role").eq("id", user.id).single();
     isVip = profile?.role === "VIP_GUEST";
   }
 
-  // Calculate total
   const orderItems = items.map((item) => {
     const drink = drinkMap.get(item.drinkId) as any;
     const unitPrice = drink.sale_enabled && drink.sale_price ? drink.sale_price : drink.price;
@@ -105,11 +110,8 @@ export async function POST(req: Request) {
   });
 
   const total = orderItems.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
-
-  // QR expiry: 4 hours from now
   const qrExpiresAt = new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString();
 
-  // Insert order
   const { data: order, error: orderError } = await adminSupabase
     .from("drink_orders")
     .insert({
@@ -128,7 +130,6 @@ export async function POST(req: Request) {
 
   if (orderError) return NextResponse.json({ error: orderError.message }, { status: 500 });
 
-  // Insert items
   const { error: itemsError } = await adminSupabase
     .from("drink_order_items")
     .insert(
