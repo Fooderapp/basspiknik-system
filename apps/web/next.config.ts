@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@event/types"],
+  // Explicitly include the composited background PNGs used by /api/wallet
+  outputFileTracingIncludes: {
+    "/api/wallet": ["./src/app/api/wallet/*.png"],
+  },
   // The serverless function size blew past Vercel's limit because the file
   // tracer pulled large build-time / native packages into the bundle. None of
   // these are needed at runtime (web talks to Supabase, not Prisma; SWC, the

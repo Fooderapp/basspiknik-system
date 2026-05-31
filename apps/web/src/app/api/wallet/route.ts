@@ -151,10 +151,19 @@ export async function GET(req: Request) {
       messageEncoding: "iso-8859-1",
     });
 
-    // Required icons — without icon.png iOS refuses to install the pass
+    // Required icons
     pass.addBuffer("icon.png",    ICON_1X);
     pass.addBuffer("icon@2x.png", ICON_2X);
     pass.addBuffer("icon@3x.png", ICON_3X);
+
+    // Background: grass photo + large centred BASSPIKNIK logo composited in
+    const assetsDir = path.join(process.cwd(), "src/app/api/wallet");
+    try {
+      pass.addBuffer("background.png",    fs.readFileSync(path.join(assetsDir, "background.png")));
+      pass.addBuffer("background@2x.png", fs.readFileSync(path.join(assetsDir, "background@2x.png")));
+    } catch {
+      // Assets missing in dev — pass renders without background
+    }
 
     const buf = pass.getAsBuffer();
 
