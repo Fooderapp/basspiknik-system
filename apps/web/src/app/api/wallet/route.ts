@@ -119,24 +119,15 @@ export async function GET(req: Request) {
         organizationName:   "EventOS",
         passTypeIdentifier: PASS_TYPE_ID,
         teamIdentifier:     TEAM_ID,
-        // Black body: name renders on black below the strip = "black frame" effect.
-        // Apple Wallet body (below strip) is one solid backgroundColor — no
-        // per-field backgrounds are supported, so this is the closest to a frame.
         foregroundColor: "rgb(255, 255, 255)",
-        backgroundColor: "rgb(0, 0, 0)",
-        labelColor:      "rgb(160, 200, 100)",
+        backgroundColor: "rgb(63, 105, 18)",
+        labelColor:      "rgb(200, 235, 160)",
       },
     );
 
     // storeCard: strip image is shown crisp (never blurred by iOS Wallet).
     // eventTicket blurs background.png — storeCard + strip avoids that entirely.
     pass.type = "storeCard";
-
-    pass.primaryFields.push({
-      key:   "tickets",
-      label: "VALID TICKETS",
-      value: String(validCount ?? 0),
-    });
 
     pass.backFields.push(
       { key: "info",    label: "How it works", value: "Show this pass at any BASS PIKNIK check-in. The scanner admits your next valid ticket for that event." },
