@@ -4,9 +4,11 @@
 // non-existent path and the whole deploy fails with:
 //   Error: ENOENT: no such file or directory, lstat '.../.next/export-detail.json'
 //
-// We are a normal SSR app (no `output: 'export'`), so write a valid v1 detail
-// file with success:false — the builder reads it, sees it's not a full static
-// export, and proceeds with the standard server deployment.
+// Next.js historically always wrote this file with `success: true` to signal
+// that the build/export step completed; the builder treats a missing file or
+// `success: false` as a failed export and aborts. Routing (SSR vs static) is
+// driven by routes-manifest.json / export-marker.json, not this flag, so
+// `success: true` is safe for our normal SSR app.
 import { writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
@@ -15,7 +17,7 @@ if (existsSync(dir)) {
   const file = join(dir, "export-detail.json");
   writeFileSync(
     file,
-    JSON.stringify({ version: 1, success: false, outDirectory: join(dir, "export") }),
+    JSON.stringify({ version: 1, success: true, outDirectory: join(dir, "export") }),
   );
   console.log("[write-export-detail] wrote", file);
 }
