@@ -4,6 +4,12 @@ import { PKPass } from "passkit-generator";
 import path from "path";
 import fs from "fs";
 
+// Minimal 29×29 / 58×58 / 87×87 purple (#7c3aed) PNG icons for the pass.
+// Apple Wallet requires icon.png; without it iOS refuses to install the pass.
+const ICON_1X = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAB0AAAAdCAIAAADZ8fBYAAAAJklEQVR4nGOosXpLC8Qwau6ouaPmjpo7au6ouaPmjpo7au6gMhcADdZgx2/R0fkAAAAASUVORK5CYII=", "base64");
+const ICON_2X = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAADoAAAA6CAIAAABu2d1/AAAATElEQVR4nO3OQQ0AMAgEMHShbZbnYRb2O0iaVEDr9F2k4gPdMXR1dXV1dXV1ddN0dXV1dXV1dXXTdHV1dXV1dXV103R1dXV1dXV1fzzw5YMoapEA7wAAAABJRU5ErkJggg==", "base64");
+const ICON_3X = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAFcAAABXCAIAAAD+qk47AAAAh0lEQVR4nO3QQQ0AQAgEMXShDcvn4VSQ5dFkBExa008VP7gQBQoUKFCgQIECBQoUKFCgQIECBQoUKFCgQIECBQoUKFCgQIFCOgoUKFCgQIECBQoUKFCgQIECBQoUKFCgQIECBQoUKFCgQIEChXQUKFCgQIECBQoUKFCgQIECBQoUKFCgQGGjD/GFZyTdEWOWAAAAAElFTkSuQmCC", "base64");
+
 // Per-user Apple Wallet pass.
 // One pass per user — its QR encodes the user's stable `wallet_token`.
 // At the door the check-in station picks the event, scans this pass, and
@@ -144,6 +150,11 @@ export async function GET(req: Request) {
       format:          "PKBarcodeFormatQR",
       messageEncoding: "iso-8859-1",
     });
+
+    // Required icons — without icon.png iOS refuses to install the pass
+    pass.addBuffer("icon.png",    ICON_1X);
+    pass.addBuffer("icon@2x.png", ICON_2X);
+    pass.addBuffer("icon@3x.png", ICON_3X);
 
     const buf = pass.getAsBuffer();
 
