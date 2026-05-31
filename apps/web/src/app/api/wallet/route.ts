@@ -133,12 +133,6 @@ export async function GET(req: Request) {
     pass.type = "storeCard";
 
     pass.primaryFields.push({
-      key:   "holder",
-      label: "NAME",
-      value: holderName,
-    });
-
-    pass.secondaryFields.push({
       key:   "tickets",
       label: "VALID TICKETS",
       value: String(validCount ?? 0),
