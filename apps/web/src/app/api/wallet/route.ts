@@ -119,10 +119,12 @@ export async function GET(req: Request) {
         organizationName:   "EventOS",
         passTypeIdentifier: PASS_TYPE_ID,
         teamIdentifier:     TEAM_ID,
-        // Same green as the grass photo so the area outside the strip blends in
+        // Black body: name renders on black below the strip = "black frame" effect.
+        // Apple Wallet body (below strip) is one solid backgroundColor — no
+        // per-field backgrounds are supported, so this is the closest to a frame.
         foregroundColor: "rgb(255, 255, 255)",
-        backgroundColor: "rgb(63, 105, 18)",
-        labelColor:      "rgb(200, 235, 160)",
+        backgroundColor: "rgb(0, 0, 0)",
+        labelColor:      "rgb(160, 200, 100)",
       },
     );
 
