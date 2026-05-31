@@ -119,10 +119,10 @@ export async function GET(req: Request) {
         organizationName:   "EventOS",
         passTypeIdentifier: PASS_TYPE_ID,
         teamIdentifier:     TEAM_ID,
-        // Dark background below the strip (matches the grass vibe)
+        // Same green as the grass photo so the area outside the strip blends in
         foregroundColor: "rgb(255, 255, 255)",
-        backgroundColor: "rgb(8, 18, 8)",
-        labelColor:      "rgb(160, 200, 160)",
+        backgroundColor: "rgb(63, 105, 18)",
+        labelColor:      "rgb(200, 235, 160)",
       },
     );
 
