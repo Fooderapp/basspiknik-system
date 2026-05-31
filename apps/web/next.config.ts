@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
   // TS compiler, Turbo and the stale Next 15.3.2 copy are build-only).
   outputFileTracingExcludes: {
     "*": [
+      // The wallet route uses passkit-generator (dynamic fs / process.cwd
+      // reads), which makes the tracer swallow the whole .next dir — chiefly
+      // the multi-hundred-MB webpack build cache. None of this is runtime.
+      "**/.next/cache/**",
+      "**/*.tsbuildinfo",
       "**/@next/swc-*/**",
       "**/@next+swc-*/**",
       "**/next@15.3.2*/**",
