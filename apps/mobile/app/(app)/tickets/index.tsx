@@ -33,21 +33,10 @@ export default function TicketsScreen() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
-      // Single per-user pass — iOS auto-prompts "Add to Apple Wallet" for the .pkpass MIME type
-      const url = `${API_URL}/api/wallet`;
-      const canOpen = await Linking.canOpenURL(url);
-      if (canOpen) {
-        await Linking.openURL(url);
-      } else {
-        const res = await fetch(url, {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error ?? "Failed to generate pass");
-        }
-        Alert.alert("Apple Wallet", "Pass downloaded. Check your Files app.");
-      }
+      // Single per-user pass — open in Safari so iOS prompts "Add to Apple Wallet"
+      // for the .pkpass response. Token goes in the query (browser sends no headers).
+      const url = `${API_URL}/api/wallet?token=${encodeURIComponent(session.access_token)}`;
+      await Linking.openURL(url);
     } catch (e: any) {
       Alert.alert("Error", e.message);
     } finally {

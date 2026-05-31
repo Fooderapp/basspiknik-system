@@ -31,8 +31,15 @@ function loadCert(envKey: string, fileName: string): Buffer {
 export async function GET(req: Request) {
   try {
     // ── Auth ──────────────────────────────────────────────────────────────────
+    // Token may arrive via Authorization header (fetch) OR ?token= query param,
+    // because the mobile app opens this URL in Safari (no headers) so iOS can
+    // prompt "Add to Apple Wallet" for the .pkpass response.
     const authHeader = req.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
+    const queryToken = new URL(req.url).searchParams.get("token");
+    const accessToken = authHeader?.startsWith("Bearer ")
+      ? authHeader.slice(7)
+      : queryToken;
+    if (!accessToken) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const supabase = createClient(
@@ -40,7 +47,7 @@ export async function GET(req: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     );
     const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.slice(7),
+      accessToken,
     );
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
