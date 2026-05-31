@@ -1,12 +1,14 @@
-import { useState, useRef } from "react";
-import { View, TouchableOpacity, Modal, Vibration, Pressable } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, FlatList, Modal, Pressable, Vibration, View } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth";
+import type { Event } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 
 interface ScanResult {
   success: boolean;
@@ -14,6 +16,7 @@ interface ScanResult {
   ticketName?: string | null;
   tier?: string;
   usedAt?: string | null;
+  remaining?: number;
   message?: string;
 }
 
@@ -21,15 +24,30 @@ export default function CheckInScreen() {
   const { profile } = useAuth();
   const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loadingEvents, setLoadingEvents] = useState(true);
+  const [event, setEvent] = useState<Event | null>(null);
   const [result, setResult] = useState<ScanResult | null>(null);
   const cooldown = useRef(false);
 
-  async function handleScan(qrCode: string) {
-    if (cooldown.current) return;
+  useEffect(() => {
+    (supabase as any)
+      .from("events")
+      .select("*")
+      .eq("status", "PUBLISHED")
+      .order("start_date")
+      .then(({ data }: any) => { setEvents(data ?? []); setLoadingEvents(false); });
+  }, []);
+
+  async function handleScan(walletToken: string) {
+    if (cooldown.current || !event) return;
     cooldown.current = true;
     Vibration.vibrate(50);
 
-    const { data, error } = await supabase.rpc("checkin_ticket", { p_qr_code: qrCode });
+    const { data, error } = await supabase.rpc("checkin_user_ticket", {
+      p_wallet_token: walletToken,
+      p_event_id:     event.id,
+    });
 
     if (error) {
       setResult({ success: false, message: error.message });
@@ -43,6 +61,49 @@ export default function CheckInScreen() {
     setTimeout(() => { cooldown.current = false; }, 1200);
   }
 
+  // ── Event picker ────────────────────────────────────────────────────────────
+  if (!event) {
+    return (
+      <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+        <View className="px-5 py-4">
+          <Text className="text-foreground text-2xl font-bold">Check-In</Text>
+          <Text className="text-muted-foreground text-sm mt-1">Pick the event for this door</Text>
+        </View>
+
+        {loadingEvents ? (
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator size="large" color="#7c3aed" />
+          </View>
+        ) : (
+          <FlatList
+            data={events}
+            keyExtractor={e => e.id}
+            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}
+            ListEmptyComponent={
+              <View className="items-center py-20">
+                <Text className="text-5xl mb-4">📅</Text>
+                <Text className="text-foreground font-semibold text-lg">No published events</Text>
+              </View>
+            }
+            renderItem={({ item }) => (
+              <Pressable onPress={() => setEvent(item)} className="mb-3 active:opacity-75">
+                <Card>
+                  <Text className="text-foreground font-semibold text-base" numberOfLines={1}>
+                    {item.name}
+                  </Text>
+                  <Text className="text-muted-foreground text-xs mt-1">
+                    {formatDate(item.start_date)}{item.venue ? ` · ${item.venue}` : ""}
+                  </Text>
+                </Card>
+              </Pressable>
+            )}
+          />
+        )}
+      </View>
+    );
+  }
+
+  // ── Camera permission ─────────────────────────────────────────────────────────
   if (!permission) return <View className="flex-1 bg-background" />;
 
   if (!permission.granted) {
@@ -51,7 +112,7 @@ export default function CheckInScreen() {
         <Text className="text-5xl mb-4">📷</Text>
         <Text className="text-foreground text-xl font-bold mb-2">Camera Access</Text>
         <Text className="text-muted-foreground text-sm text-center mb-6">
-          Camera is needed to scan ticket QR codes
+          Camera is needed to scan Wallet passes
         </Text>
         <Button onPress={requestPermission}>
           <Text>Grant Permission</Text>
@@ -60,12 +121,18 @@ export default function CheckInScreen() {
     );
   }
 
+  // ── Scanner ───────────────────────────────────────────────────────────────────
   return (
     <View className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
       {/* Header */}
-      <View className="absolute top-0 left-0 right-0 z-10 px-5" style={{ paddingTop: insets.top + 16 }}>
-        <Text className="text-white text-xl font-bold">Check-In Scanner</Text>
-        <Text className="text-white/60 text-sm">{profile?.name}</Text>
+      <View className="absolute top-0 left-0 right-0 z-10 px-5 flex-row items-start justify-between" style={{ paddingTop: insets.top + 16 }}>
+        <View className="flex-1 mr-3">
+          <Text className="text-white text-xl font-bold" numberOfLines={1}>{event.name}</Text>
+          <Text className="text-white/60 text-sm">{profile?.name}</Text>
+        </View>
+        <Pressable onPress={() => setEvent(null)} className="active:opacity-60 bg-white/15 rounded-xl px-3 py-2">
+          <Text className="text-white text-sm font-medium">Change</Text>
+        </Pressable>
       </View>
 
       {/* Camera */}
@@ -79,7 +146,7 @@ export default function CheckInScreen() {
       {/* Scan frame overlay */}
       <View className="absolute inset-0 items-center justify-center">
         <View className="w-64 h-64 border-2 border-white/60 rounded-2xl" />
-        <Text className="text-white/70 text-sm mt-4">Align ticket QR within frame</Text>
+        <Text className="text-white/70 text-sm mt-4">Scan the attendee's Wallet pass</Text>
       </View>
 
       {/* Result modal */}
@@ -92,15 +159,18 @@ export default function CheckInScreen() {
           }`}>
             <Text className="text-5xl text-center mb-3">{result?.success ? "✅" : "❌"}</Text>
             <Text className="text-white text-xl font-bold text-center mb-1">
-              {result?.success ? "Valid Ticket!" : "Rejected"}
+              {result?.success ? "Checked In!" : "Rejected"}
             </Text>
 
             {result?.success && (
               <View className="mt-4 gap-2">
-                {result.holderName && <Row label="Name"    value={result.holderName} />}
-                {result.ticketName && <Row label="Ticket"  value={result.ticketName} />}
-                {result.tier       && <Row label="Tier"    value={result.tier} />}
-                {result.usedAt     && <Row label="Checked" value={formatDate(result.usedAt)} />}
+                {result.holderName && <Row label="Name"   value={result.holderName} />}
+                {result.ticketName && <Row label="Ticket" value={result.ticketName} />}
+                {result.tier       && <Row label="Tier"   value={result.tier} />}
+                {result.usedAt     && <Row label="Time"   value={formatDate(result.usedAt)} />}
+                {typeof result.remaining === "number" && (
+                  <Row label="Remaining on pass" value={String(result.remaining)} />
+                )}
               </View>
             )}
 

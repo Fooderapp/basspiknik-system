@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Linking, Platform, Pressable, RefreshControl, View } from "react-native";
 import { router } from "expo-router";
 import { Screen } from "@/components/ui/Screen";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/Button";
 import { Text } from "@/components/ui/text";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth";
 import type { Ticket } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
 
 const STATUS_VARIANT: Record<string, "success" | "muted" | "destructive" | "secondary"> = {
   VALID:     "success",
@@ -23,6 +26,36 @@ export default function TicketsScreen() {
   const [tickets, setTickets]     = useState<Ticket[]>([]);
   const [loading, setLoading]     = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [addingWallet, setAddingWallet] = useState(false);
+
+  async function addToAppleWallet() {
+    setAddingWallet(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+      // Single per-user pass — iOS auto-prompts "Add to Apple Wallet" for the .pkpass MIME type
+      const url = `${API_URL}/api/wallet`;
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        const res = await fetch(url, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error ?? "Failed to generate pass");
+        }
+        Alert.alert("Apple Wallet", "Pass downloaded. Check your Files app.");
+      }
+    } catch (e: any) {
+      Alert.alert("Error", e.message);
+    } finally {
+      setAddingWallet(false);
+    }
+  }
+
+  const hasValid = tickets.some(t => t.status === "VALID");
 
   async function load() {
     if (!session) return;
@@ -64,6 +97,19 @@ export default function TicketsScreen() {
         keyExtractor={t => t.id}
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32, paddingTop: 8 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7c3aed" />}
+        ListHeaderComponent={
+          Platform.OS === "ios" && hasValid ? (
+            <Button
+              variant="secondary"
+              className="w-full mb-4"
+              onPress={addToAppleWallet}
+              loading={addingWallet}
+              disabled={addingWallet}
+            >
+              <Text className="font-semibold">🍎 Add to Apple Wallet</Text>
+            </Button>
+          ) : null
+        }
         ListEmptyComponent={
           <View className="items-center py-20">
             <Text className="text-5xl mb-4">🎟️</Text>
