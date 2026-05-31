@@ -40,6 +40,7 @@
     "framer-motion": "^12.15.0",
     "geist": "^1.7.1",
     "html5-qrcode": "^2.3.8",
+    "jsonwebtoken": "^9.0.3",
     "jsqr": "^1.4.0",
     "lucide-react": "^0.511.0",
     "next": "15.5.18",
@@ -58,6 +59,7 @@
     "zod": "^3.25.34"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.15.21",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^19.1.5",

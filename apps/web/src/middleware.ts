@@ -3,7 +3,7 @@ import { updateSession } from "@/lib/supabase/middleware";
 import { createServerClient } from "@supabase/ssr";
 import type { Database } from "@/lib/supabase/types";
 
-const PUBLIC_PATHS = ["/", "/events", "/menu", "/sign-in", "/sign-up", "/auth", "/api/webhooks", "/api/wallet", "/api/terminal", "/widget"];
+const PUBLIC_PATHS = ["/", "/events", "/menu", "/sign-in", "/sign-up", "/auth", "/api/webhooks", "/api/wallet", "/api/google-wallet", "/api/terminal", "/widget"];
 
 const ROLE_PATHS: Record<string, string[]> = {
   "/dashboard": ["ADMIN", "EDITOR", "STAFF", "SELLER", "BARTENDER"],
