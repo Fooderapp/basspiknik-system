@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  View, Text, TouchableOpacity, ActivityIndicator,
-  ScrollView, Alert, Vibration,
+  View, TouchableOpacity, ActivityIndicator,
+  ScrollView, Alert, Vibration, Pressable,
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency } from "@/lib/utils";
 import type { DrinkOrder, DrinkOrderItem, Drink } from "@/lib/types";
+import { Text } from "@/components/ui/text";
+import { Button } from "@/components/ui/Button";
 
 type ItemWithDrink = DrinkOrderItem & { drinks: Pick<Drink, "name" | "price"> };
 type OrderWithItems = DrinkOrder & { drink_order_items: ItemWithDrink[] };
@@ -147,9 +149,9 @@ export default function BartenderScreen() {
       <View className="flex-1 bg-background items-center justify-center px-6" style={{ paddingTop: insets.top }}>
         <Text className="text-5xl mb-4">📷</Text>
         <Text className="text-foreground text-xl font-bold mb-2">Camera Required</Text>
-        <TouchableOpacity onPress={requestPermission} className="bg-primary px-6 py-3 rounded-xl mt-4">
-          <Text className="text-white font-semibold">Grant Permission</Text>
-        </TouchableOpacity>
+        <Button onPress={requestPermission} className="mt-4">
+          <Text>Grant Permission</Text>
+        </Button>
       </View>
     );
   }
@@ -221,12 +223,12 @@ export default function BartenderScreen() {
                 <Text className="text-white font-bold text-lg">{activeOrder.guest_name ?? "Guest"}</Text>
                 <Text className="text-white/40 text-xs font-mono">{activeOrder.qr_token}</Text>
               </View>
-              <TouchableOpacity
+              <Pressable
                 onPress={() => { setScanning(true); setActiveOrder(null); cooldown.current = false; }}
-                className="bg-white/10 px-3 py-2 rounded-xl"
+                className="bg-white/10 px-3 py-2 rounded-xl active:opacity-60"
               >
-                <Text className="text-white text-sm">← Scan</Text>
-              </TouchableOpacity>
+                <Text className="text-white text-sm" style={{ color: "#fff" }}>← Scan</Text>
+              </Pressable>
             </View>
 
             {activeOrder.notes && (
@@ -240,11 +242,10 @@ export default function BartenderScreen() {
               {items.map(item => {
                 const done = !!item.fulfilled_at;
                 return (
-                  <TouchableOpacity
+                  <Pressable
                     key={item.id}
                     onPress={() => toggleItem(item.id, !done)}
-                    activeOpacity={0.8}
-                    className={`rounded-2xl p-4 flex-row items-center gap-4 border ${
+                    className={`rounded-2xl p-4 flex-row items-center gap-4 border active:opacity-80 ${
                       done
                         ? "bg-green-900/40 border-green-700/50"
                         : "bg-card border-border"
@@ -263,7 +264,7 @@ export default function BartenderScreen() {
                         × {item.quantity}  ·  {formatCurrency(item.unit_price)}
                       </Text>
                     </View>
-                  </TouchableOpacity>
+                  </Pressable>
                 );
               })}
             </View>
@@ -271,20 +272,15 @@ export default function BartenderScreen() {
 
           {/* Complete button */}
           <View className="absolute bottom-0 left-0 right-0 px-4 pb-8 pt-4 bg-black/90">
-            <TouchableOpacity
+            <Button
               onPress={completeOrder}
               disabled={!allDone || completing}
-              className={`rounded-2xl py-5 items-center ${allDone ? "bg-success" : "bg-white/10"}`}
+              loading={completing}
+              variant={allDone ? "success" : "secondary"}
+              className="w-full py-5 rounded-2xl"
             >
-              {completing
-                ? <ActivityIndicator color="#fff" />
-                : (
-                  <Text className={`font-bold text-lg ${allDone ? "text-white" : "text-white/40"}`}>
-                    {allDone ? "✅ Complete Order" : `${doneCount} / ${items.length} done`}
-                  </Text>
-                )
-              }
-            </TouchableOpacity>
+              <Text>{allDone ? "✅ Complete Order" : `${doneCount} / ${items.length} done`}</Text>
+            </Button>
           </View>
         </>
       )}

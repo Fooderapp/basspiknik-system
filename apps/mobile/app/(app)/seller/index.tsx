@@ -1,27 +1,78 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
-  View, Text, FlatList, TouchableOpacity, TextInput,
-  ActivityIndicator, ScrollView, Modal,
+  View, FlatList, ActivityIndicator, ScrollView,
+  Modal, Alert, Pressable,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  useStripeTerminal,
+  DiscoveryMethod,
+  type Reader,
+} from "@stripe/stripe-terminal-react-native";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { Button } from "@/components/ui/Button";
+import { Card, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Text } from "@/components/ui/text";
 import type { TicketType, Event } from "@/lib/types";
 
 interface CartItem { ticketType: TicketType; quantity: number }
+type PaymentMethod = "cash" | "tap";
+type TapState = "idle" | "discovering" | "connecting" | "ready" | "processing" | "success" | "error";
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
 
 export default function SellerScreen() {
   const insets = useSafeAreaInsets();
-  const [events, setEvents]             = useState<Event[]>([]);
+
+  // ── Data state ──
+  const [events, setEvents]               = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [ticketTypes, setTicketTypes]   = useState<TicketType[]>([]);
-  const [cart, setCart]                 = useState<CartItem[]>([]);
-  const [buyerName, setBuyerName]       = useState("");
-  const [buyerEmail, setBuyerEmail]     = useState("");
-  const [loading, setLoading]           = useState(true);
-  const [selling, setSelling]           = useState(false);
-  const [confirmOpen, setConfirmOpen]   = useState(false);
-  const [successInfo, setSuccessInfo]   = useState<{ total: number; ticketCount: number } | null>(null);
+  const [ticketTypes, setTicketTypes]     = useState<TicketType[]>([]);
+  const [cart, setCart]                   = useState<CartItem[]>([]);
+  const [buyerName, setBuyerName]         = useState("");
+  const [buyerEmail, setBuyerEmail]       = useState("");
+  const [loading, setLoading]             = useState(true);
+  const [selling, setSelling]             = useState(false);
+  const [confirmOpen, setConfirmOpen]     = useState(false);
+  const [successInfo, setSuccessInfo]     = useState<{ total: number; ticketCount: number } | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
+
+  // ── Stripe Terminal state ──
+  const [tapState, setTapState]   = useState<TapState>("idle");
+  const [tapMessage, setTapMessage] = useState("");
+  const [connectedReader, setConnectedReader] = useState<Reader | null>(null);
+
+  const {
+    initialize,
+    discoverReaders,
+    cancelDiscovering,
+    connectLocalMobileReader,
+    createPaymentIntent,
+    collectPaymentMethod,
+    confirmPaymentIntent,
+    cancelCollectPaymentMethod,
+    connectedReader: stripeReader,
+  } = useStripeTerminal({
+    onUpdateDiscoveredReaders: useCallback(async (readers: Reader[]) => {
+      if (readers.length === 0) return;
+      // Auto-connect to first discovered reader (local mobile = this iPhone)
+      setTapState("connecting");
+      setTapMessage("Connecting to reader…");
+      const { error } = await connectLocalMobileReader({ reader: readers[0] });
+      if (error) {
+        setTapState("error");
+        setTapMessage(error.message);
+      } else {
+        setConnectedReader(readers[0]);
+        setTapState("ready");
+        setTapMessage("Ready to accept payment");
+      }
+    }, [connectLocalMobileReader]),
+  });
 
   useEffect(() => {
     (supabase as any)
@@ -69,6 +120,22 @@ export default function SellerScreen() {
     return s + p * i.quantity;
   }, 0);
 
+  // ── Initiate Tap to Pay discovery ──
+  async function initTapToPay() {
+    setTapState("discovering");
+    setTapMessage("Looking for reader…");
+    await initialize();
+    const { error } = await discoverReaders({
+      discoveryMethod: DiscoveryMethod.LocalMobile,
+      simulated: false,
+    });
+    if (error) {
+      setTapState("error");
+      setTapMessage(error.message);
+    }
+  }
+
+  // ── Cash sale ──
   async function sellCash() {
     if (cart.length === 0 || !selectedEvent) return;
     setSelling(true);
@@ -77,22 +144,78 @@ export default function SellerScreen() {
         p_event_id:    selectedEvent.id,
         p_buyer_name:  buyerName.trim() || null,
         p_buyer_email: buyerEmail.trim() || null,
-        p_items: cart.map(c => ({
-          ticketTypeId: c.ticketType.id,
-          quantity:     c.quantity,
-        })),
+        p_items: cart.map(c => ({ ticketTypeId: c.ticketType.id, quantity: c.quantity })),
       });
-
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
-
       setSuccessInfo({ total: data.total, ticketCount: data.ticketCount });
-      setCart([]);
-      setBuyerName("");
-      setBuyerEmail("");
-      setConfirmOpen(false);
+      setCart([]); setBuyerName(""); setBuyerEmail(""); setConfirmOpen(false);
+    } catch (e: any) { Alert.alert("Error", e.message); }
+    finally { setSelling(false); }
+  }
+
+  // ── Tap to Pay sale ──
+  async function sellTap() {
+    if (cart.length === 0 || !selectedEvent) return;
+    if (tapState !== "ready") {
+      Alert.alert("Reader not ready", "Connect Tap to Pay reader first.");
+      return;
+    }
+    setSelling(true);
+    setTapState("processing");
+    setTapMessage("Processing payment…");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      // 1. Create payment intent on backend
+      const res = await fetch(`${API_URL}/api/terminal/payment-intent`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: Math.round(cartTotal * 100), // cents
+          currency: "eur",
+          metadata: {
+            event_id: selectedEvent.id,
+            buyer_name: buyerName.trim() || null,
+          },
+        }),
+      });
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
+      const { clientSecret } = await res.json();
+
+      // 2. Collect payment
+      setTapMessage("Hold card near iPhone…");
+      const { paymentIntent, error: collectError } = await collectPaymentMethod({ paymentIntentClientSecret: clientSecret });
+      if (collectError) throw new Error(collectError.message);
+      if (!paymentIntent) throw new Error("No payment intent returned");
+
+      // 3. Confirm payment
+      setTapMessage("Confirming…");
+      const { error: confirmError } = await confirmPaymentIntent({ paymentIntent });
+      if (confirmError) throw new Error(confirmError.message);
+
+      // 4. Issue tickets via RPC
+      const { data, error: rpcError } = await supabase.rpc("sell_tickets_cash", {
+        p_event_id:    selectedEvent.id,
+        p_buyer_name:  buyerName.trim() || null,
+        p_buyer_email: buyerEmail.trim() || null,
+        p_items: cart.map(c => ({ ticketTypeId: c.ticketType.id, quantity: c.quantity })),
+      });
+      if (rpcError) throw new Error(rpcError.message);
+      if (data?.error) throw new Error(data.error);
+
+      setTapState("success");
+      setTapMessage("Payment accepted!");
+      setSuccessInfo({ total: data.total, ticketCount: data.ticketCount });
+      setCart([]); setBuyerName(""); setBuyerEmail(""); setConfirmOpen(false);
     } catch (e: any) {
-      alert(e.message);
+      setTapState("ready");
+      setTapMessage("Ready to accept payment");
+      Alert.alert("Payment failed", e.message);
     } finally {
       setSelling(false);
     }
@@ -106,7 +229,7 @@ export default function SellerScreen() {
     );
   }
 
-  // Event selection screen
+  // ── Event selection ──────────────────────────────────────────────────────────
   if (!selectedEvent) {
     return (
       <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
@@ -125,43 +248,62 @@ export default function SellerScreen() {
             </View>
           }
           renderItem={({ item }) => (
-            <TouchableOpacity
+            <Button
+              variant="outline"
+              className="mb-3 h-auto py-4 px-4 items-start"
               onPress={() => selectEvent(item)}
-              activeOpacity={0.8}
-              className="bg-card border border-border rounded-2xl p-4 mb-3"
             >
-              <Text className="text-foreground font-bold text-base">{item.name}</Text>
-              {item.venue && <Text className="text-muted-foreground text-sm mt-0.5">📍 {item.venue}</Text>}
-              <Text className="text-muted-foreground text-sm mt-0.5">📅 {formatDate(item.start_date)}</Text>
-            </TouchableOpacity>
+              <View className="w-full">
+                <Text className="text-foreground font-bold text-base">{item.name}</Text>
+                {item.venue && <Text className="text-muted-foreground text-sm mt-0.5">📍 {item.venue}</Text>}
+                <Text className="text-muted-foreground text-sm mt-0.5">📅 {formatDate(item.start_date)}</Text>
+              </View>
+            </Button>
           )}
         />
       </View>
     );
   }
 
-  // POS screen
+  // ── POS screen ───────────────────────────────────────────────────────────────
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       {/* Header */}
       <View className="flex-row items-center justify-between px-5 pt-4 pb-3">
         <View className="flex-1 mr-3">
-          <TouchableOpacity onPress={() => setSelectedEvent(null)}>
-            <Text className="text-primary text-sm mb-0.5">← Events</Text>
-          </TouchableOpacity>
+          <Button variant="ghost" size="sm" className="self-start px-0" onPress={() => setSelectedEvent(null)}>
+            <Text className="text-primary text-sm">← Events</Text>
+          </Button>
           <Text className="text-foreground font-bold text-lg" numberOfLines={1}>
             {selectedEvent.name}
           </Text>
         </View>
         {cartCount > 0 && (
-          <TouchableOpacity
-            onPress={() => setConfirmOpen(true)}
-            className="bg-primary px-4 py-2.5 rounded-xl"
-          >
-            <Text className="text-white font-bold">{cartCount} · {formatCurrency(cartTotal)}</Text>
-          </TouchableOpacity>
+          <Button onPress={() => setConfirmOpen(true)} size="sm">
+            <Text>{cartCount} · {formatCurrency(cartTotal)}</Text>
+          </Button>
         )}
       </View>
+
+      {/* Tap to Pay status bar */}
+      {tapState !== "idle" && (
+        <View className={`mx-5 mb-2 px-4 py-2.5 rounded-xl flex-row items-center gap-2 ${
+          tapState === "ready" || tapState === "success" ? "bg-success/10 border border-success/30"
+          : tapState === "error" ? "bg-destructive/10 border border-destructive/30"
+          : "bg-card border border-border"
+        }`}>
+          {(tapState === "discovering" || tapState === "connecting" || tapState === "processing") && (
+            <ActivityIndicator size="small" color="#7c3aed" />
+          )}
+          <Text className={`text-sm ${
+            tapState === "ready" || tapState === "success" ? "text-success-foreground"
+            : tapState === "error" ? "text-destructive"
+            : "text-muted-foreground"
+          }`}>
+            {tapState === "ready" || tapState === "success" ? "✓ " : ""}{tapMessage}
+          </Text>
+        </View>
+      )}
 
       {/* Ticket types */}
       <FlatList
@@ -179,13 +321,11 @@ export default function SellerScreen() {
           const qty       = cart.find(c => c.ticketType.id === tt.id)?.quantity ?? 0;
           const available = tt.quantity - tt.sold;
           return (
-            <View className="bg-card border border-border rounded-2xl p-4 mb-3">
+            <Card className="mb-3">
               <View className="flex-row justify-between items-start mb-3">
                 <View className="flex-1 mr-3">
-                  <Text className="text-foreground font-bold text-base">{tt.name}</Text>
-                  {tt.description && (
-                    <Text className="text-muted-foreground text-sm mt-0.5" numberOfLines={2}>{tt.description}</Text>
-                  )}
+                  <CardTitle>{tt.name}</CardTitle>
+                  {tt.description && <CardDescription numberOfLines={2}>{tt.description}</CardDescription>}
                   <Text className="text-muted-foreground text-xs mt-1">
                     {available} available · {tt.tier}
                   </Text>
@@ -197,34 +337,34 @@ export default function SellerScreen() {
                   )}
                 </View>
               </View>
-
               <View className="flex-row justify-end">
                 {qty === 0 ? (
-                  <TouchableOpacity
-                    onPress={() => addToCart(tt)}
+                  <Button
+                    variant={available > 0 ? "default" : "secondary"}
+                    size="sm"
                     disabled={available === 0}
-                    className={`px-5 py-2.5 rounded-xl ${available > 0 ? "bg-primary" : "bg-muted"}`}
+                    onPress={() => addToCart(tt)}
                   >
-                    <Text className={`font-semibold ${available > 0 ? "text-white" : "text-muted-foreground"}`}>
-                      {available > 0 ? "+ Add" : "Sold out"}
-                    </Text>
-                  </TouchableOpacity>
+                    <Text>{available > 0 ? "+ Add" : "Sold out"}</Text>
+                  </Button>
                 ) : (
-                  <View className="flex-row items-center gap-4 bg-muted rounded-xl px-4 py-2.5">
-                    <TouchableOpacity onPress={() => adjustQty(tt.id, -1)}>
+                  <View className="flex-row items-center gap-4 bg-secondary rounded-xl px-4 py-2.5">
+                    <Button variant="ghost" size="icon" onPress={() => adjustQty(tt.id, -1)}>
                       <Text className="text-foreground font-bold text-xl">−</Text>
-                    </TouchableOpacity>
+                    </Button>
                     <Text className="text-foreground font-bold text-base w-5 text-center">{qty}</Text>
-                    <TouchableOpacity
-                      onPress={() => adjustQty(tt.id, 1)}
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       disabled={qty >= tt.max_per_order}
+                      onPress={() => adjustQty(tt.id, 1)}
                     >
-                      <Text className={`font-bold text-xl ${qty >= tt.max_per_order ? "text-white/30" : "text-foreground"}`}>+</Text>
-                    </TouchableOpacity>
+                      <Text className={qty >= tt.max_per_order ? "text-muted-foreground font-bold text-xl" : "text-foreground font-bold text-xl"}>+</Text>
+                    </Button>
                   </View>
                 )}
               </View>
-            </View>
+            </Card>
           );
         }}
       />
@@ -232,14 +372,15 @@ export default function SellerScreen() {
       {/* Checkout modal */}
       <Modal visible={confirmOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setConfirmOpen(false)}>
         <View className="flex-1 bg-background px-5 pt-6">
-          <View className="flex-row justify-between items-center mb-6">
+          <View className="flex-row justify-between items-center mb-4">
             <Text className="text-foreground text-xl font-bold">Confirm Sale</Text>
-            <TouchableOpacity onPress={() => setConfirmOpen(false)}>
+            <Button variant="ghost" size="sm" onPress={() => setConfirmOpen(false)}>
               <Text className="text-muted-foreground">Cancel</Text>
-            </TouchableOpacity>
+            </Button>
           </View>
 
-          <ScrollView className="flex-1">
+          <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+            {/* Order summary */}
             {cart.map(item => {
               const p = item.ticketType.sale_enabled && item.ticketType.sale_price
                 ? item.ticketType.sale_price : item.ticketType.price;
@@ -251,43 +392,100 @@ export default function SellerScreen() {
               );
             })}
 
-            <View className="flex-row justify-between py-4 mb-6">
+            <View className="flex-row justify-between py-4 mb-4">
               <Text className="text-foreground font-bold text-lg">Total</Text>
               <Text className="text-foreground font-bold text-lg">{formatCurrency(cartTotal)}</Text>
             </View>
 
-            <TextInput
-              className="bg-card border border-border rounded-xl px-4 py-3 text-foreground mb-3"
-              placeholder="Buyer name (optional)"
-              placeholderTextColor="#71717a"
-              value={buyerName}
-              onChangeText={setBuyerName}
-            />
-            <TextInput
-              className="bg-card border border-border rounded-xl px-4 py-3 text-foreground mb-6"
-              placeholder="Buyer email (optional)"
-              placeholderTextColor="#71717a"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={buyerEmail}
-              onChangeText={setBuyerEmail}
-            />
+            {/* Buyer info */}
+            <View className="gap-3 mb-6">
+              <Input
+                placeholder="Buyer name (optional)"
+                value={buyerName}
+                onChangeText={setBuyerName}
+              />
+              <Input
+                placeholder="Buyer email (optional)"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={buyerEmail}
+                onChangeText={setBuyerEmail}
+              />
+            </View>
+
+            {/* Payment method selector */}
+            <Text className="text-muted-foreground text-xs font-semibold mb-2 uppercase tracking-wide">
+              Payment Method
+            </Text>
+            <View className="flex-row gap-2 mb-4">
+              <Pressable
+                onPress={() => setPaymentMethod("cash")}
+                className={`flex-1 py-3 rounded-xl border items-center active:opacity-70 ${
+                  paymentMethod === "cash"
+                    ? "bg-primary border-primary"
+                    : "bg-card border-border"
+                }`}
+              >
+                <Text className={`font-semibold ${paymentMethod === "cash" ? "text-white" : "text-foreground"}`}>
+                  💵 Cash
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  setPaymentMethod("tap");
+                  if (tapState === "idle") initTapToPay();
+                }}
+                className={`flex-1 py-3 rounded-xl border items-center active:opacity-70 ${
+                  paymentMethod === "tap"
+                    ? "bg-primary border-primary"
+                    : "bg-card border-border"
+                }`}
+              >
+                <Text className={`font-semibold ${paymentMethod === "tap" ? "text-white" : "text-foreground"}`}>
+                  📱 Tap to Pay
+                </Text>
+              </Pressable>
+            </View>
+
+            {/* Tap to Pay status in modal */}
+            {paymentMethod === "tap" && tapState !== "idle" && (
+              <View className={`px-4 py-3 rounded-xl mb-4 ${
+                tapState === "ready" ? "bg-success/10 border border-success/30"
+                : tapState === "error" ? "bg-destructive/10 border border-destructive/30"
+                : "bg-card border border-border"
+              }`}>
+                <View className="flex-row items-center gap-2">
+                  {(tapState === "discovering" || tapState === "connecting") && (
+                    <ActivityIndicator size="small" color="#7c3aed" />
+                  )}
+                  <Text className={`text-sm ${
+                    tapState === "ready" ? "text-success-foreground"
+                    : tapState === "error" ? "text-destructive"
+                    : "text-muted-foreground"
+                  }`}>
+                    {tapMessage}
+                  </Text>
+                </View>
+              </View>
+            )}
           </ScrollView>
 
           <View className="py-4 gap-3">
-            <TouchableOpacity
-              onPress={sellCash}
-              disabled={selling}
-              className="bg-success rounded-xl py-4 items-center"
-            >
-              {selling
-                ? <ActivityIndicator color="#fff" />
-                : <Text className="text-white font-bold text-base">💵 Sell — Cash Payment</Text>
-              }
-            </TouchableOpacity>
-            <Text className="text-muted-foreground text-xs text-center">
-              Tap to Pay (Stripe Terminal) — coming soon
-            </Text>
+            {paymentMethod === "cash" ? (
+              <Button variant="success" className="w-full" onPress={sellCash} loading={selling} disabled={selling}>
+                <Text>💵 Collect Cash — {formatCurrency(cartTotal)}</Text>
+              </Button>
+            ) : (
+              <Button
+                variant="success"
+                className="w-full"
+                onPress={sellTap}
+                loading={selling}
+                disabled={selling || tapState !== "ready"}
+              >
+                <Text>📱 Charge {formatCurrency(cartTotal)} — Tap to Pay</Text>
+              </Button>
+            )}
           </View>
         </View>
       </Modal>
@@ -295,7 +493,7 @@ export default function SellerScreen() {
       {/* Success modal */}
       <Modal visible={!!successInfo} transparent animationType="fade">
         <View className="flex-1 bg-black/70 items-center justify-center px-6">
-          <View className="bg-card border border-border rounded-3xl p-8 w-full items-center">
+          <Card className="w-full items-center p-8">
             <Text className="text-7xl mb-4">🎉</Text>
             <Text className="text-foreground text-2xl font-bold mb-1">Sold!</Text>
             <Text className="text-muted-foreground text-sm mb-6">
@@ -304,13 +502,10 @@ export default function SellerScreen() {
             <Text className="text-foreground font-bold text-2xl mb-8">
               {formatCurrency(successInfo?.total ?? 0)}
             </Text>
-            <TouchableOpacity
-              onPress={() => setSuccessInfo(null)}
-              className="bg-primary rounded-xl px-8 py-4 w-full items-center"
-            >
-              <Text className="text-white font-bold text-base">Next Customer</Text>
-            </TouchableOpacity>
-          </View>
+            <Button className="w-full" onPress={() => { setSuccessInfo(null); setTapState(tapState === "success" ? "ready" : tapState); }}>
+              <Text>Next Customer</Text>
+            </Button>
+          </Card>
         </View>
       </Modal>
     </View>

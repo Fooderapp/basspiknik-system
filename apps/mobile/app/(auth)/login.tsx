@@ -1,17 +1,17 @@
 import { useState } from "react";
-import {
-  View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView,
-  Platform, ActivityIndicator, ScrollView,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "@/context/auth";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/input";
+import { Text } from "@/components/ui/text";
 
 export default function LoginScreen() {
   const { signIn } = useAuth();
-  const [email, setEmail] = useState("");
+  const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [error, setError]       = useState<string | null>(null);
+  const [loading, setLoading]   = useState(false);
 
   async function handleLogin() {
     if (!email || !password) { setError("Fill in all fields"); return; }
@@ -30,63 +30,54 @@ export default function LoginScreen() {
     >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
         <View className="flex-1 justify-center px-6 py-12">
-          {/* Logo / Brand */}
+
+          {/* Brand */}
           <View className="items-center mb-12">
             <View className="w-16 h-16 rounded-2xl bg-primary items-center justify-center mb-4">
-              <Text className="text-white text-3xl font-bold">E</Text>
+              <Text className="text-primary-foreground text-3xl font-bold">E</Text>
             </View>
             <Text className="text-foreground text-3xl font-bold">EventOS</Text>
             <Text className="text-muted-foreground text-sm mt-1">Sign in to continue</Text>
           </View>
 
           {/* Form */}
-          <View className="space-y-4">
-            <View>
-              <Text className="text-muted-foreground text-xs mb-1.5 uppercase tracking-wider">Email</Text>
-              <TextInput
-                className="bg-card border border-border rounded-xl px-4 py-3.5 text-foreground text-base"
-                placeholder="you@example.com"
-                placeholderTextColor="#71717a"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-                value={email}
-                onChangeText={setEmail}
-              />
-            </View>
+          <View className="gap-4">
+            <Input
+              label="Email"
+              placeholder="you@example.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+              value={email}
+              onChangeText={setEmail}
+            />
 
-            <View className="mt-4">
-              <Text className="text-muted-foreground text-xs mb-1.5 uppercase tracking-wider">Password</Text>
-              <TextInput
-                className="bg-card border border-border rounded-xl px-4 py-3.5 text-foreground text-base"
-                placeholder="••••••••"
-                placeholderTextColor="#71717a"
-                secureTextEntry
-                autoComplete="password"
-                value={password}
-                onChangeText={setPassword}
-                onSubmitEditing={handleLogin}
-              />
-            </View>
+            <Input
+              label="Password"
+              placeholder="••••••••"
+              secureTextEntry
+              autoComplete="password"
+              value={password}
+              onChangeText={setPassword}
+              onSubmitEditing={handleLogin}
+            />
 
             {error && (
-              <View className="bg-destructive/10 border border-destructive/30 rounded-lg px-4 py-3 mt-2">
+              <View className="bg-destructive/10 border border-destructive/30 rounded-xl px-4 py-3">
                 <Text className="text-destructive text-sm">{error}</Text>
               </View>
             )}
 
-            <TouchableOpacity
-              className="bg-primary rounded-xl py-4 items-center mt-6"
+            <Button
+              className="mt-2 w-full"
               onPress={handleLogin}
+              loading={loading}
               disabled={loading}
-              activeOpacity={0.8}
             >
-              {loading
-                ? <ActivityIndicator color="#fff" />
-                : <Text className="text-white font-semibold text-base">Sign In</Text>
-              }
-            </TouchableOpacity>
+              <Text>Sign In</Text>
+            </Button>
           </View>
+
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

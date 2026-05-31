@@ -1,10 +1,12 @@
 import { useEffect, useState, useRef } from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView } from "react-native";
+import { View, ActivityIndicator, ScrollView, Pressable } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency } from "@/lib/utils";
+import { Text } from "@/components/ui/text";
+import { Button } from "@/components/ui/Button";
 
 type OrderStatus = "PENDING" | "IN_PROGRESS" | "FULFILLED" | "CANCELLED";
 
@@ -82,9 +84,9 @@ export default function OrderStatusScreen() {
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       <View className="flex-row items-center px-5 py-4">
-        <TouchableOpacity onPress={() => router.replace("/(app)/menu" as never)}>
+        <Pressable onPress={() => router.replace("/(app)/menu" as never)} className="active:opacity-60">
           <Text className="text-primary text-base">← Menu</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={{ alignItems: "center", paddingHorizontal: 24, paddingBottom: 40, paddingTop: 16 }}>
@@ -119,25 +121,24 @@ export default function OrderStatusScreen() {
         )}
 
         {status === "PENDING" && (
-          <TouchableOpacity
+          <Button
             onPress={cancelOrder}
             disabled={cancelling}
-            className="border border-destructive rounded-xl px-6 py-3.5 w-full items-center mb-3"
+            loading={cancelling}
+            variant="outline"
+            className="border-destructive w-full mb-3"
           >
-            {cancelling
-              ? <ActivityIndicator color="#ef4444" />
-              : <Text className="text-destructive font-semibold">Cancel Order</Text>
-            }
-          </TouchableOpacity>
+            <Text className="text-destructive font-semibold">Cancel Order</Text>
+          </Button>
         )}
 
         {isTerminal && (
-          <TouchableOpacity
+          <Button
             onPress={() => router.replace("/(app)/menu" as never)}
-            className="bg-primary rounded-xl px-6 py-4 w-full items-center"
+            className="w-full"
           >
-            <Text className="text-white font-bold text-base">New Order</Text>
-          </TouchableOpacity>
+            <Text>New Order</Text>
+          </Button>
         )}
       </ScrollView>
     </View>

@@ -1,0 +1,11 @@
+{
+  "formatVersion": 1,
+  "passTypeIdentifier": "pass.com.eventos.mobile.ticket",
+  "serialNumber": "REPLACE_AT_RUNTIME",
+  "teamIdentifier": "REPLACE_AT_RUNTIME",
+  "organizationName": "EventOS",
+  "description": "Event Ticket",
+  "foregroundColor": "rgb(250, 250, 250)",
+  "backgroundColor": "rgb(9, 9, 11)",
+  "labelColor": "rgb(161, 161, 170)"
+}

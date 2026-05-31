@@ -1,73 +1,84 @@
-import { TouchableOpacity, Text, ActivityIndicator, View } from "react-native";
+import { cva, type VariantProps } from "class-variance-authority";
+import * as React from "react";
+import { ActivityIndicator, Pressable, View } from "react-native";
 import { cn } from "@/lib/utils";
+import { TextClassContext } from "@/components/ui/text";
 
-interface Props {
-  onPress?: () => void;
-  children: React.ReactNode;
-  variant?: "primary" | "outline" | "ghost" | "destructive" | "success";
-  size?: "sm" | "md" | "lg";
-  disabled?: boolean;
-  loading?: boolean;
-  fullWidth?: boolean;
-  icon?: React.ReactNode;
-}
+const buttonVariants = cva(
+  "flex flex-row items-center justify-center rounded-xl active:opacity-80",
+  {
+    variants: {
+      variant: {
+        default:     "bg-primary",
+        destructive: "bg-destructive",
+        outline:     "border border-border bg-transparent",
+        secondary:   "bg-secondary",
+        ghost:       "bg-transparent",
+        success:     "bg-success",
+      },
+      size: {
+        default: "h-12 px-5",
+        sm:      "h-9 px-4 rounded-lg",
+        lg:      "h-14 px-8",
+        icon:    "h-10 w-10",
+      },
+    },
+    defaultVariants: { variant: "default", size: "default" },
+  }
+);
 
-const variantClasses = {
-  primary:     "bg-primary border border-primary",
-  outline:     "bg-transparent border border-border",
-  ghost:       "bg-transparent border border-transparent",
-  destructive: "bg-destructive border border-destructive",
-  success:     "bg-success border border-success",
-};
+const buttonTextVariants = cva("font-semibold", {
+  variants: {
+    variant: {
+      default:     "text-primary-foreground",
+      destructive: "text-destructive-foreground",
+      outline:     "text-foreground",
+      secondary:   "text-secondary-foreground",
+      ghost:       "text-foreground",
+      success:     "text-success-foreground",
+    },
+    size: {
+      default: "text-base",
+      sm:      "text-sm",
+      lg:      "text-lg",
+      icon:    "text-base",
+    },
+  },
+  defaultVariants: { variant: "default", size: "default" },
+});
 
-const textClasses = {
-  primary:     "text-white",
-  outline:     "text-foreground",
-  ghost:       "text-foreground",
-  destructive: "text-white",
-  success:     "text-white",
-};
+type ButtonProps = React.ComponentPropsWithoutRef<typeof Pressable> &
+  VariantProps<typeof buttonVariants> & {
+    loading?: boolean;
+    icon?: React.ReactNode;
+  };
 
-const sizeClasses = {
-  sm: "px-3 py-2 rounded-lg",
-  md: "px-4 py-3 rounded-xl",
-  lg: "px-5 py-4 rounded-xl",
-};
-
-const textSizeClasses = {
-  sm: "text-sm",
-  md: "text-base",
-  lg: "text-base",
-};
-
-export function Button({
-  onPress, children, variant = "primary", size = "md",
-  disabled, loading, fullWidth, icon,
-}: Props) {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      disabled={disabled || loading}
-      activeOpacity={0.75}
-      className={cn(
-        "flex-row items-center justify-center gap-2",
-        variantClasses[variant],
-        sizeClasses[size],
-        fullWidth && "w-full",
-        (disabled || loading) && "opacity-50",
-      )}
-    >
-      {loading
-        ? <ActivityIndicator size="small" color="#fff" />
-        : (
+const Button = React.forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>(
+  ({ className, variant, size, loading, icon, disabled, children, ...props }, ref) => (
+    <TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
+      <Pressable
+        ref={ref}
+        role="button"
+        disabled={disabled || loading}
+        className={cn(
+          buttonVariants({ variant, size, className }),
+          (disabled || loading) && "opacity-50",
+        )}
+        {...props}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
           <>
-            {icon && <View>{icon}</View>}
-            <Text className={cn("font-semibold", textClasses[variant], textSizeClasses[size])}>
-              {children}
-            </Text>
+            {icon && <View className="mr-2">{icon}</View>}
+            {children}
           </>
-        )
-      }
-    </TouchableOpacity>
-  );
-}
+        )}
+      </Pressable>
+    </TextClassContext.Provider>
+  )
+);
+Button.displayName = "Button";
+
+export { Button, buttonVariants, buttonTextVariants };
+export type { ButtonProps };

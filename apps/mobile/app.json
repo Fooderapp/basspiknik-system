@@ -17,7 +17,11 @@
       "bundleIdentifier": "com.eventos.mobile",
       "infoPlist": {
         "NSCameraUsageDescription": "Used to scan QR codes for tickets and drink orders.",
-        "NSMicrophoneUsageDescription": "Required by camera."
+        "NSMicrophoneUsageDescription": "Required by camera.",
+        "NSLocationWhenInUseUsageDescription": "Required by Stripe Terminal for fraud prevention."
+      },
+      "entitlements": {
+        "com.apple.developer.proximity-reader.payment.acceptance": true
       }
     },
     "android": {
@@ -40,6 +44,13 @@
         "expo-camera",
         {
           "cameraPermission": "Used to scan QR codes for tickets and drink orders."
+        }
+      ],
+      [
+        "@stripe/stripe-terminal-react-native",
+        {
+          "bluetoothBackgroundMode": false,
+          "locationWhenInUsePermission": "Required by Stripe Terminal for fraud prevention."
         }
       ]
     ],

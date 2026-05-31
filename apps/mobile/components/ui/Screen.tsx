@@ -1,5 +1,6 @@
-import { View, Text, ScrollView } from "react-native";
+import { ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Text } from "@/components/ui/text";
 
 interface Props {
   title?: string;

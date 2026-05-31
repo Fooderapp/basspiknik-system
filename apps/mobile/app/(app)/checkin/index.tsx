@@ -1,10 +1,12 @@
 import { useState, useRef } from "react";
-import { View, Text, TouchableOpacity, Modal, Vibration } from "react-native";
+import { View, TouchableOpacity, Modal, Vibration, Pressable } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth";
 import { formatDate } from "@/lib/utils";
+import { Text } from "@/components/ui/text";
+import { Button } from "@/components/ui/Button";
 
 interface ScanResult {
   success: boolean;
@@ -51,9 +53,9 @@ export default function CheckInScreen() {
         <Text className="text-muted-foreground text-sm text-center mb-6">
           Camera is needed to scan ticket QR codes
         </Text>
-        <TouchableOpacity onPress={requestPermission} className="bg-primary px-6 py-3 rounded-xl">
-          <Text className="text-white font-semibold">Grant Permission</Text>
-        </TouchableOpacity>
+        <Button onPress={requestPermission}>
+          <Text>Grant Permission</Text>
+        </Button>
       </View>
     );
   }
@@ -82,7 +84,7 @@ export default function CheckInScreen() {
 
       {/* Result modal */}
       <Modal visible={!!result} transparent animationType="slide" onRequestClose={dismiss}>
-        <TouchableOpacity className="flex-1 justify-end" activeOpacity={1} onPress={dismiss}>
+        <Pressable className="flex-1 justify-end" onPress={dismiss}>
           <View className={`mx-4 mb-8 rounded-3xl p-6 ${
             result?.success
               ? "bg-green-900 border border-green-700"
@@ -106,14 +108,14 @@ export default function CheckInScreen() {
               <Text className="text-red-200 text-sm text-center mt-2">{result.message}</Text>
             )}
 
-            <TouchableOpacity
+            <Pressable
               onPress={dismiss}
-              className="mt-5 bg-white/20 rounded-xl py-3 items-center"
+              className="mt-5 bg-white/20 rounded-xl py-3 items-center active:opacity-60"
             >
               <Text className="text-white font-semibold">Scan Next</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
-        </TouchableOpacity>
+        </Pressable>
       </Modal>
     </View>
   );
@@ -123,7 +125,7 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <View className="flex-row justify-between">
       <Text className="text-white/60 text-sm">{label}</Text>
-      <Text className="text-white font-medium text-sm">{value}</Text>
+      <Text className="text-white font-medium text-sm" style={{ color: "#fff" }}>{value}</Text>
     </View>
   );
 }

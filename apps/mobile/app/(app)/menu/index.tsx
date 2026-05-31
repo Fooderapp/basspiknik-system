@@ -1,28 +1,30 @@
 import { useEffect, useState, useMemo } from "react";
-import {
-  View, Text, FlatList, TouchableOpacity, TextInput,
-  ActivityIndicator, RefreshControl, Modal, ScrollView,
-} from "react-native";
+import { ActivityIndicator, FlatList, Modal, Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "@/lib/supabase";
 import type { Drink, DrinkCategoryRow } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
+import { Button } from "@/components/ui/Button";
+import { Card, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Input } from "@/components/ui/input";
+import { Text } from "@/components/ui/text";
+import { Separator } from "@/components/ui/separator";
 
 interface CartItem { drink: Drink; quantity: number }
 
 export default function MenuScreen() {
   const insets = useSafeAreaInsets();
-  const [drinks, setDrinks]       = useState<Drink[]>([]);
+  const [drinks, setDrinks]         = useState<Drink[]>([]);
   const [categories, setCategories] = useState<DrinkCategoryRow[]>([]);
-  const [loading, setLoading]     = useState(true);
+  const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeCat, setActiveCat] = useState<string>("ALL");
-  const [cart, setCart]           = useState<CartItem[]>([]);
-  const [cartOpen, setCartOpen]   = useState(false);
-  const [guestName, setGuestName] = useState("");
-  const [notes, setNotes]         = useState("");
-  const [placing, setPlacing]     = useState(false);
+  const [activeCat, setActiveCat]   = useState<string>("ALL");
+  const [cart, setCart]             = useState<CartItem[]>([]);
+  const [cartOpen, setCartOpen]     = useState(false);
+  const [guestName, setGuestName]   = useState("");
+  const [notes, setNotes]           = useState("");
+  const [placing, setPlacing]       = useState(false);
 
   async function load() {
     const [{ data: d }, { data: c }] = await Promise.all([
@@ -34,7 +36,6 @@ export default function MenuScreen() {
   }
 
   useEffect(() => { load().finally(() => setLoading(false)); }, []);
-
   async function onRefresh() { setRefreshing(true); await load(); setRefreshing(false); }
 
   const categoryTabs = useMemo(() =>
@@ -77,20 +78,11 @@ export default function MenuScreen() {
       const { data, error } = await supabase.rpc("place_bar_order", {
         p_guest_name: guestName.trim() || null,
         p_notes:      notes.trim() || null,
-        p_items:      cart.map(c => ({
-          drinkId:  c.drink.id,
-          quantity: c.quantity,
-          notes:    null,
-        })),
+        p_items:      cart.map(c => ({ drinkId: c.drink.id, quantity: c.quantity, notes: null })),
       });
-
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
-
-      setCart([]);
-      setCartOpen(false);
-      setGuestName("");
-      setNotes("");
+      setCart([]); setCartOpen(false); setGuestName(""); setNotes("");
       router.push(`/(app)/menu/order?orderId=${data.id}&qrToken=${data.qrToken}` as never);
     } catch (e: any) {
       alert(e.message);
@@ -116,12 +108,9 @@ export default function MenuScreen() {
           <Text className="text-muted-foreground text-sm">{drinks.length} items available</Text>
         </View>
         {cartCount > 0 && (
-          <TouchableOpacity
-            onPress={() => setCartOpen(true)}
-            className="bg-primary px-4 py-2.5 rounded-xl flex-row items-center gap-2"
-          >
-            <Text className="text-white font-bold">🛒 {cartCount}  ·  {formatCurrency(cartTotal)}</Text>
-          </TouchableOpacity>
+          <Button size="sm" onPress={() => setCartOpen(true)}>
+            <Text>🛒 {cartCount} · {formatCurrency(cartTotal)}</Text>
+          </Button>
         )}
       </View>
 
@@ -132,21 +121,25 @@ export default function MenuScreen() {
         className="px-5 mb-2"
         contentContainerStyle={{ gap: 8, paddingRight: 20 }}
       >
-        <TouchableOpacity
+        <Pressable
           onPress={() => setActiveCat("ALL")}
           className={`px-3 py-1.5 rounded-full ${activeCat === "ALL" ? "bg-primary" : "bg-card border border-border"}`}
         >
-          <Text className={activeCat === "ALL" ? "text-white font-medium text-sm" : "text-muted-foreground text-sm"}>All</Text>
-        </TouchableOpacity>
+          <Text className={activeCat === "ALL" ? "text-primary-foreground font-medium text-sm" : "text-muted-foreground text-sm"}>
+            All
+          </Text>
+        </Pressable>
         {categoryTabs.map(c => (
-          <TouchableOpacity
+          <Pressable
             key={c.id}
             onPress={() => setActiveCat(c.id)}
             className={`px-3 py-1.5 rounded-full flex-row items-center gap-1 ${activeCat === c.id ? "bg-primary" : "bg-card border border-border"}`}
           >
             <Text className="text-sm">{c.emoji}</Text>
-            <Text className={activeCat === c.id ? "text-white font-medium text-sm" : "text-muted-foreground text-sm"}>{c.name}</Text>
-          </TouchableOpacity>
+            <Text className={activeCat === c.id ? "text-primary-foreground font-medium text-sm" : "text-muted-foreground text-sm"}>
+              {c.name}
+            </Text>
+          </Pressable>
         ))}
       </ScrollView>
 
@@ -160,17 +153,15 @@ export default function MenuScreen() {
           const price = drink.sale_enabled && drink.sale_price ? drink.sale_price : drink.price;
           const qty   = getQty(drink.id);
           return (
-            <View className="bg-card border border-border rounded-2xl p-4 mb-3">
+            <Card className="mb-3">
               <View className="flex-row items-start justify-between mb-3">
                 <View className="flex-1 mr-3">
-                  <Text className="text-foreground font-semibold text-base">{drink.name}</Text>
-                  {drink.description && (
-                    <Text className="text-muted-foreground text-xs mt-0.5" numberOfLines={2}>{drink.description}</Text>
-                  )}
+                  <CardTitle>{drink.name}</CardTitle>
+                  {drink.description && <CardDescription numberOfLines={2}>{drink.description}</CardDescription>}
                   {drink.allergens?.length > 0 && (
                     <Text className="text-muted-foreground text-xs mt-1">⚠️ {drink.allergens.join(", ")}</Text>
                   )}
-                  {drink.is_popular && <Text className="text-warning text-xs mt-0.5">⭐ Popular</Text>}
+                  {drink.is_popular && <Text className="text-xs mt-0.5" style={{ color: "#f59e0b" }}>⭐ Popular</Text>}
                 </View>
                 <View className="items-end">
                   <Text className="text-foreground font-bold text-base">{formatCurrency(price)}</Text>
@@ -181,22 +172,22 @@ export default function MenuScreen() {
               </View>
               <View className="flex-row justify-end">
                 {qty === 0 ? (
-                  <TouchableOpacity onPress={() => addToCart(drink)} className="bg-primary px-5 py-2 rounded-xl">
-                    <Text className="text-white font-semibold text-sm">+ Add</Text>
-                  </TouchableOpacity>
+                  <Button size="sm" onPress={() => addToCart(drink)}>
+                    <Text>+ Add</Text>
+                  </Button>
                 ) : (
-                  <View className="flex-row items-center gap-3 bg-muted rounded-xl px-4 py-2">
-                    <TouchableOpacity onPress={() => adjustQty(drink.id, -1)}>
+                  <View className="flex-row items-center gap-3 bg-secondary rounded-xl px-4 py-2">
+                    <Pressable onPress={() => adjustQty(drink.id, -1)} className="active:opacity-60">
                       <Text className="text-foreground font-bold text-xl">−</Text>
-                    </TouchableOpacity>
+                    </Pressable>
                     <Text className="text-foreground font-bold w-6 text-center">{qty}</Text>
-                    <TouchableOpacity onPress={() => adjustQty(drink.id, 1)}>
+                    <Pressable onPress={() => adjustQty(drink.id, 1)} className="active:opacity-60">
                       <Text className="text-foreground font-bold text-xl">+</Text>
-                    </TouchableOpacity>
+                    </Pressable>
                   </View>
                 )}
               </View>
-            </View>
+            </Card>
           );
         }}
       />
@@ -206,9 +197,9 @@ export default function MenuScreen() {
         <View className="flex-1 bg-background px-5 pt-6">
           <View className="flex-row items-center justify-between mb-6">
             <Text className="text-foreground text-xl font-bold">🛒 Your Order</Text>
-            <TouchableOpacity onPress={() => setCartOpen(false)}>
+            <Button variant="ghost" size="sm" onPress={() => setCartOpen(false)}>
               <Text className="text-muted-foreground">Close</Text>
-            </TouchableOpacity>
+            </Button>
           </View>
 
           <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -221,13 +212,13 @@ export default function MenuScreen() {
                     <Text className="text-muted-foreground text-sm">{formatCurrency(p)} × {item.quantity}</Text>
                   </View>
                   <View className="flex-row items-center gap-2">
-                    <TouchableOpacity onPress={() => adjustQty(item.drink.id, -1)} className="w-8 h-8 bg-muted rounded-lg items-center justify-center">
+                    <Pressable onPress={() => adjustQty(item.drink.id, -1)} className="w-8 h-8 bg-secondary rounded-lg items-center justify-center active:opacity-60">
                       <Text className="text-foreground font-bold">−</Text>
-                    </TouchableOpacity>
+                    </Pressable>
                     <Text className="text-foreground font-bold w-5 text-center">{item.quantity}</Text>
-                    <TouchableOpacity onPress={() => adjustQty(item.drink.id, 1)} className="w-8 h-8 bg-muted rounded-lg items-center justify-center">
+                    <Pressable onPress={() => adjustQty(item.drink.id, 1)} className="w-8 h-8 bg-secondary rounded-lg items-center justify-center active:opacity-60">
                       <Text className="text-foreground font-bold">+</Text>
-                    </TouchableOpacity>
+                    </Pressable>
                     <Text className="text-foreground font-semibold w-16 text-right">{formatCurrency(p * item.quantity)}</Text>
                   </View>
                 </View>
@@ -235,40 +226,20 @@ export default function MenuScreen() {
             })}
 
             <View className="mt-5 gap-3">
-              <TextInput
-                className="bg-card border border-border rounded-xl px-4 py-3 text-foreground"
-                placeholder="Your name (optional)"
-                placeholderTextColor="#71717a"
-                value={guestName}
-                onChangeText={setGuestName}
-              />
-              <TextInput
-                className="bg-card border border-border rounded-xl px-4 py-3 text-foreground"
-                placeholder="Notes, e.g. no ice"
-                placeholderTextColor="#71717a"
-                value={notes}
-                onChangeText={setNotes}
-                multiline
-                numberOfLines={2}
-              />
+              <Input placeholder="Your name (optional)" value={guestName} onChangeText={setGuestName} />
+              <Input placeholder="Notes, e.g. no ice" value={notes} onChangeText={setNotes} multiline numberOfLines={2} />
             </View>
           </ScrollView>
 
-          <View className="py-4 border-t border-border">
+          <View className="py-4">
+            <Separator className="mb-4" />
             <View className="flex-row justify-between mb-4">
               <Text className="text-foreground font-bold text-lg">Total</Text>
               <Text className="text-foreground font-bold text-lg">{formatCurrency(cartTotal)}</Text>
             </View>
-            <TouchableOpacity
-              onPress={placeOrder}
-              disabled={placing}
-              className="bg-primary rounded-xl py-4 items-center"
-            >
-              {placing
-                ? <ActivityIndicator color="#fff" />
-                : <Text className="text-white font-bold text-base">Place Order</Text>
-              }
-            </TouchableOpacity>
+            <Button className="w-full" onPress={placeOrder} loading={placing} disabled={placing}>
+              <Text>Place Order</Text>
+            </Button>
           </View>
         </View>
       </Modal>

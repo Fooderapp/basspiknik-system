@@ -1,23 +1,27 @@
 import { useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from "react-native";
 import { router } from "expo-router";
 import { Screen } from "@/components/ui/Screen";
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/badge";
+import { Text } from "@/components/ui/text";
+import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth";
 import type { Ticket } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
-const STATUS_COLOR: Record<string, string> = {
-  VALID:     "#22c55e",
-  USED:      "#71717a",
-  CANCELLED: "#ef4444",
-  REFUNDED:  "#f59e0b",
+const STATUS_VARIANT: Record<string, "success" | "muted" | "destructive" | "secondary"> = {
+  VALID:     "success",
+  USED:      "muted",
+  CANCELLED: "destructive",
+  REFUNDED:  "secondary",
 };
 
 export default function TicketsScreen() {
   const { session } = useAuth();
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [tickets, setTickets]     = useState<Ticket[]>([]);
+  const [loading, setLoading]     = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   async function load() {
@@ -49,7 +53,12 @@ export default function TicketsScreen() {
   }
 
   return (
-    <Screen title="My Tickets" subtitle={`${tickets.length} ticket${tickets.length !== 1 ? "s" : ""}`} scroll={false} padded={false}>
+    <Screen
+      title="My Tickets"
+      subtitle={`${tickets.length} ticket${tickets.length !== 1 ? "s" : ""}`}
+      scroll={false}
+      padded={false}
+    >
       <FlatList
         data={tickets}
         keyExtractor={t => t.id}
@@ -63,34 +72,27 @@ export default function TicketsScreen() {
           </View>
         }
         renderItem={({ item }) => (
-          <TouchableOpacity
+          <Pressable
             onPress={() => router.push(`/(app)/tickets/${item.id}` as never)}
-            activeOpacity={0.8}
-            className="bg-card border border-border rounded-2xl p-4 mb-3"
+            className="mb-3 active:opacity-75"
           >
-            <View className="flex-row items-start justify-between mb-2">
-              <View className="flex-1">
-                <Text className="text-foreground font-semibold text-base" numberOfLines={1}>
-                  {item.ticket_name ?? "Ticket"}
-                </Text>
-                <Text className="text-muted-foreground text-xs mt-0.5">{formatDate(item.created_at)}</Text>
+            <Card>
+              <View className="flex-row items-start justify-between mb-2">
+                <View className="flex-1 mr-3">
+                  <Text className="text-foreground font-semibold text-base" numberOfLines={1}>
+                    {item.ticket_name ?? "Ticket"}
+                  </Text>
+                  <Text className="text-muted-foreground text-xs mt-0.5">{formatDate(item.created_at)}</Text>
+                </View>
+                <Badge label={item.status} variant={STATUS_VARIANT[item.status] ?? "secondary"} />
               </View>
-              <View
-                className="px-2 py-1 rounded-md ml-3"
-                style={{ backgroundColor: STATUS_COLOR[item.status] + "22" }}
-              >
-                <Text className="text-xs font-semibold" style={{ color: STATUS_COLOR[item.status] }}>
-                  {item.status}
-                </Text>
-              </View>
-            </View>
-            {item.holder_name && (
-              <Text className="text-muted-foreground text-sm">👤 {item.holder_name}</Text>
-            )}
-            <View className="mt-3 border-t border-border pt-3">
+              {item.holder_name && (
+                <Text className="text-muted-foreground text-sm">👤 {item.holder_name}</Text>
+              )}
+              <Separator className="mt-3 mb-3" />
               <Text className="text-muted-foreground text-xs">Tap to view QR code →</Text>
-            </View>
-          </TouchableOpacity>
+            </Card>
+          </Pressable>
         )}
       />
     </Screen>
