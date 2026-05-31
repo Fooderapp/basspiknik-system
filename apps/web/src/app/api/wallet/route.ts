@@ -103,7 +103,9 @@ export async function GET(req: Request) {
         wwdr,
         signerCert,
         signerKey,
-        signerKeyPassphrase: PASS_PHRASE,
+        // Only pass passphrase if non-empty; keys exported with -nodes are
+        // unencrypted and passkit-generator rejects an empty string.
+        ...(PASS_PHRASE ? { signerKeyPassphrase: PASS_PHRASE } : {}),
       },
       {
         serialNumber:       walletToken,
