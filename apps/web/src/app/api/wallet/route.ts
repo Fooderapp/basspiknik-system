@@ -119,28 +119,31 @@ export async function GET(req: Request) {
         organizationName:   "EventOS",
         passTypeIdentifier: PASS_TYPE_ID,
         teamIdentifier:     TEAM_ID,
-        foregroundColor:    "rgb(250, 250, 250)",
-        backgroundColor:    "rgb(9, 9, 11)",
-        labelColor:         "rgb(161, 161, 170)",
+        // Dark background below the strip (matches the grass vibe)
+        foregroundColor: "rgb(255, 255, 255)",
+        backgroundColor: "rgb(8, 18, 8)",
+        labelColor:      "rgb(160, 200, 160)",
       },
     );
 
-    pass.type = "eventTicket";
+    // storeCard: strip image is shown crisp (never blurred by iOS Wallet).
+    // eventTicket blurs background.png — storeCard + strip avoids that entirely.
+    pass.type = "storeCard";
 
     pass.primaryFields.push({
       key:   "holder",
-      label: "PASS",
+      label: "NAME",
       value: holderName,
     });
 
     pass.secondaryFields.push({
       key:   "tickets",
-      label: "TICKETS",
+      label: "VALID TICKETS",
       value: String(validCount ?? 0),
     });
 
     pass.backFields.push(
-      { key: "info",    label: "How it works", value: "Show this pass at any EventOS check-in. The scanner admits your ticket for that event." },
+      { key: "info",    label: "How it works", value: "Show this pass at any BASS PIKNIK check-in. The scanner admits your next valid ticket for that event." },
       { key: "support", label: "Support",      value: APP_URL },
     );
 
@@ -156,13 +159,14 @@ export async function GET(req: Request) {
     pass.addBuffer("icon@2x.png", ICON_2X);
     pass.addBuffer("icon@3x.png", ICON_3X);
 
-    // Background: grass photo + large centred BASSPIKNIK logo composited in
+    // Strip image: grass photo + large centred BASSPIKNIK logo, fully sharp.
+    // storeCard strips are NEVER blurred by iOS Wallet.
     const assetsDir = path.join(process.cwd(), "src/app/api/wallet");
     try {
-      pass.addBuffer("background.png",    fs.readFileSync(path.join(assetsDir, "background.png")));
-      pass.addBuffer("background@2x.png", fs.readFileSync(path.join(assetsDir, "background@2x.png")));
+      pass.addBuffer("strip.png",    fs.readFileSync(path.join(assetsDir, "strip.png")));
+      pass.addBuffer("strip@2x.png", fs.readFileSync(path.join(assetsDir, "strip@2x.png")));
     } catch {
-      // Assets missing in dev — pass renders without background
+      // Missing in dev — pass renders without strip
     }
 
     const buf = pass.getAsBuffer();

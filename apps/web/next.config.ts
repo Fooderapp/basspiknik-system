@@ -4,7 +4,8 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@event/types"],
   // Explicitly include the composited background PNGs used by /api/wallet
   outputFileTracingIncludes: {
-    "/api/wallet": ["./src/app/api/wallet/*.png"],
+    // strip.png / strip@2x.png are read at runtime by the wallet route
+    "/api/wallet": ["./src/app/api/wallet/strip*.png"],
   },
   // The serverless function size blew past Vercel's limit because the file
   // tracer pulled large build-time / native packages into the bundle. None of

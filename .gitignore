@@ -18,3 +18,4 @@ apps/mobile/.env
 # Apple Wallet certs — never commit
 apps/web/certs/*.pem
 apps/web/certs/*.p12
+.vercel
