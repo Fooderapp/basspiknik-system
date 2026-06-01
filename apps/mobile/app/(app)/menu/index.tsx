@@ -119,28 +119,35 @@ export default function MenuScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        className="px-5 mb-2"
-        contentContainerStyle={{ gap: 8, paddingRight: 20 }}
+        style={{ height: 44, marginBottom: 8 }}
+        contentContainerStyle={{ gap: 8, paddingHorizontal: 20, alignItems: "center" }}
       >
         <Pressable
           onPress={() => setActiveCat("ALL")}
-          className={`px-3 py-1.5 rounded-full ${activeCat === "ALL" ? "bg-primary" : "bg-card border border-border"}`}
+          style={activeCat === "ALL" ? { backgroundColor: "#0A0A0A" } : undefined}
+          className={`px-3 py-1.5 rounded-full flex-row items-center ${activeCat === "ALL" ? "" : "bg-card border border-border"}`}
         >
-          <Text className={activeCat === "ALL" ? "text-primary-foreground font-medium text-sm" : "text-muted-foreground text-sm"}>
+          <Text style={activeCat === "ALL" ? { color: "#fff", fontWeight: "600", fontSize: 13 } : { fontSize: 13 }}
+            className={activeCat === "ALL" ? "" : "text-muted-foreground"}>
             All
           </Text>
         </Pressable>
-        {categoryTabs.map(c => (
-          <Pressable
-            key={c.id}
-            onPress={() => setActiveCat(c.id)}
-            className={`px-3 py-1.5 rounded-full flex-row items-center gap-1 ${activeCat === c.id ? "bg-primary" : "bg-card border border-border"}`}
-          >
-            <Text className={activeCat === c.id ? "text-primary-foreground font-medium text-sm" : "text-muted-foreground text-sm"}>
-              {c.name}
-            </Text>
-          </Pressable>
-        ))}
+        {categoryTabs.map(c => {
+          const active = activeCat === c.id;
+          return (
+            <Pressable
+              key={c.id}
+              onPress={() => setActiveCat(c.id)}
+              style={active ? { backgroundColor: c.color } : { borderColor: c.color + "55" }}
+              className={`px-3 py-1.5 rounded-full flex-row items-center gap-1.5 ${active ? "" : "bg-card border"}`}
+            >
+              <Text style={{ fontSize: 13 }}>{c.emoji}</Text>
+              <Text style={active ? { color: "#fff", fontWeight: "600", fontSize: 13 } : { color: c.color, fontWeight: "500", fontSize: 13 }}>
+                {c.name}
+              </Text>
+            </Pressable>
+          );
+        })}
       </ScrollView>
 
       {/* Drink list */}

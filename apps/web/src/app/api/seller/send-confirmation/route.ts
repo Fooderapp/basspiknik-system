@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 import { sendTicketConfirmation } from "@/lib/email";
 import { getSettings } from "@/lib/settings";
 
@@ -8,11 +8,20 @@ export async function POST(req: Request) {
   const accessToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
   if (!accessToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const supabase = await createClient();
+  // Verify Bearer token (mobile pattern — no cookies)
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  );
   const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
   if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data: caller } = await supabase
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { data: caller } = await supabaseAdmin
     .from("profiles")
     .select("role")
     .eq("id", user.id)
@@ -25,29 +34,33 @@ export async function POST(req: Request) {
   const { orderId } = await req.json();
   if (!orderId) return NextResponse.json({ error: "orderId required" }, { status: 400 });
 
-  const admin = await createAdminClient() as any;
-
-  const { data: order } = await admin
+  const { data: order } = await supabaseAdmin
     .from("orders")
     .select("*, events(name, start_date, venue)")
     .eq("id", orderId)
-    .single();
+    .single() as any;
 
   if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
 
-  const buyerEmail = order.guest_email
-    ?? (order.user_id
-      ? (await admin.from("profiles").select("email").eq("id", order.user_id).single()).data?.email
-      : null);
+  // Resolve buyer email: guest_email or linked profile
+  let buyerEmail = order.guest_email ?? null;
+  if (!buyerEmail && order.user_id) {
+    const { data: buyerProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("email")
+      .eq("id", order.user_id)
+      .single() as any;
+    buyerEmail = buyerProfile?.email ?? null;
+  }
 
   if (!buyerEmail) {
     return NextResponse.json({ skipped: true, reason: "no_email" });
   }
 
-  const { data: tickets } = await admin
+  const { data: tickets } = await supabaseAdmin
     .from("tickets")
     .select("*")
-    .eq("order_id", orderId);
+    .eq("order_id", orderId) as any;
 
   if (!tickets?.length) return NextResponse.json({ error: "No tickets found" }, { status: 404 });
 

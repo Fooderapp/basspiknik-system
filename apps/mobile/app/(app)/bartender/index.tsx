@@ -166,13 +166,13 @@ export default function BartenderScreen() {
         <Text className="text-white text-xl font-bold tracking-tight">Bartender</Text>
         <View className="flex-row gap-2">
           {pending > 0 && (
-            <View className="border border-white/30 px-2.5 py-1 rounded-lg">
+            <View style={{ backgroundColor: "#F59E0B" }} className="px-2.5 py-1 rounded-lg">
               <Text className="text-white text-xs font-bold">{pending} pending</Text>
             </View>
           )}
           {inProg > 0 && (
-            <View className="bg-white px-2.5 py-1 rounded-lg">
-              <Text className="text-black text-xs font-bold">{inProg} active</Text>
+            <View style={{ backgroundColor: "#3B82F6" }} className="px-2.5 py-1 rounded-lg">
+              <Text className="text-white text-xs font-bold">{inProg} active</Text>
             </View>
           )}
         </View>
@@ -205,7 +205,10 @@ export default function BartenderScreen() {
               >
                 {queue.slice(0, 12).map(o => (
                   <View key={o.id} className="bg-black/70 border border-white/20 rounded-xl px-3 py-2 items-center">
-                    <View className={`w-2 h-2 rounded-full mb-1 ${o.status === "IN_PROGRESS" ? "bg-white" : "bg-white/40"}`} />
+                    <View
+                      style={{ backgroundColor: o.status === "IN_PROGRESS" ? "#3B82F6" : "#F59E0B" }}
+                      className="w-2 h-2 rounded-full mb-1"
+                    />
                     <Text className="text-white text-xs font-mono">{o.qr_token?.slice(-4)}</Text>
                     <Text className="text-white/50 text-xs">{formatCurrency(o.total)}</Text>
                   </View>
@@ -250,16 +253,16 @@ export default function BartenderScreen() {
                   <Pressable
                     key={item.id}
                     onPress={() => toggleItem(item.id, !done)}
+                    style={done ? { backgroundColor: "#22C55E18", borderColor: "#22C55E55" } : undefined}
                     className={`rounded-2xl p-4 flex-row items-center gap-4 border active:opacity-80 ${
-                      done
-                        ? "bg-white/5 border-white/30"
-                        : "bg-card border-border"
+                      done ? "" : "bg-card border-border"
                     }`}
                   >
-                    <View className={`w-9 h-9 rounded-full border-2 items-center justify-center ${
-                      done ? "bg-white border-white" : "border-border"
-                    }`}>
-                      {done && <Check size={18} color="#000000" strokeWidth={2.5} />}
+                    <View
+                      style={done ? { backgroundColor: "#22C55E", borderColor: "#22C55E" } : undefined}
+                      className={`w-9 h-9 rounded-full border-2 items-center justify-center ${done ? "" : "border-border"}`}
+                    >
+                      {done && <Check size={18} color="#ffffff" strokeWidth={2.5} />}
                     </View>
                     <View className="flex-1">
                       <Text className={`font-semibold text-base ${done ? "text-white/40 line-through" : "text-white"}`}>

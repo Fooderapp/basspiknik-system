@@ -1,7 +1,7 @@
 import { Pressable, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ticket, Wine, ScanLine, Beer, CreditCard, type LucideIcon } from "lucide-react-native";
+import { Ticket, Wine, ScanLine, Beer, CreditCard, UserCircle, type LucideIcon } from "lucide-react-native";
 import { useAuth } from "@/context/auth";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/badge";
@@ -40,13 +40,17 @@ export default function HomeScreen() {
     >
       {/* Header */}
       <View className="flex-row items-center justify-between mb-6">
-        <View className="flex-1 mr-3">
+        <Pressable className="flex-1 mr-3 active:opacity-70" onPress={() => router.push("/(app)/profile")}>
           <Text className="text-muted-foreground text-sm">Welcome back</Text>
           <Text className="text-foreground text-2xl font-bold">{profile.name}</Text>
-          <View className="mt-1.5 self-start">
+          <View className="flex-row items-center gap-2 mt-1.5">
             <Badge label={profile.role} variant="default" />
+            <View className="flex-row items-center gap-1">
+              <UserCircle size={12} color="#8f8f8f" strokeWidth={1.75} />
+              <Text className="text-muted-foreground text-xs">My Profile</Text>
+            </View>
           </View>
-        </View>
+        </Pressable>
         <Button variant="outline" size="sm" onPress={signOut}>
           <Text>Sign out</Text>
         </Button>

@@ -18,6 +18,7 @@ export default function AppLayout() {
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#000000" } }}>
       <Stack.Screen name="index" />
+      <Stack.Screen name="profile" />
       <Stack.Screen name="tickets/[id]" options={{ presentation: "modal" }} />
       <Stack.Screen name="menu/order" options={{ presentation: "modal" }} />
       <Stack.Screen name="bartender/[orderId]" options={{ presentation: "modal" }} />

@@ -157,17 +157,16 @@ export default function CheckInScreen() {
       {/* Result modal */}
       <Modal visible={!!result} transparent animationType="slide" onRequestClose={dismiss}>
         <Pressable className="flex-1 justify-end" onPress={dismiss}>
-          <View className={`mx-4 mb-8 rounded-3xl p-6 ${
-            result?.success
-              ? "bg-white"
-              : "bg-card border border-border"
-          }`}>
+          <View
+            style={{ backgroundColor: result?.success ? "#22C55E" : "#EF4444" }}
+            className="mx-4 mb-8 rounded-3xl p-6"
+          >
             <View className="items-center mb-3">
               {result?.success
-                ? <CheckCircle2 size={48} color="#000000" strokeWidth={1.75} />
-                : <XCircle size={48} color="#fafafa" strokeWidth={1.75} />}
+                ? <CheckCircle2 size={52} color="#fff" strokeWidth={1.75} />
+                : <XCircle size={52} color="#fff" strokeWidth={1.75} />}
             </View>
-            <Text className={`text-xl font-bold text-center mb-1 tracking-tight ${result?.success ? "text-black" : "text-white"}`}>
+            <Text className="text-white text-xl font-bold text-center mb-1 tracking-tight">
               {result?.success ? "Checked In!" : "Rejected"}
             </Text>
 
@@ -184,14 +183,15 @@ export default function CheckInScreen() {
             )}
 
             {!result?.success && result?.message && (
-              <Text className="text-muted-foreground text-sm text-center mt-2">{result.message}</Text>
+              <Text className="text-white/80 text-sm text-center mt-2">{result.message}</Text>
             )}
 
             <Pressable
               onPress={dismiss}
-              className={`mt-5 rounded-xl py-3 items-center active:opacity-60 ${result?.success ? "bg-black" : "bg-white"}`}
+              className="mt-5 rounded-xl py-3 items-center active:opacity-60"
+              style={{ backgroundColor: "rgba(0,0,0,0.2)" }}
             >
-              <Text className={`font-semibold ${result?.success ? "text-white" : "text-black"}`}>Scan Next</Text>
+              <Text className="text-white font-semibold">Scan Next</Text>
             </Pressable>
           </View>
         </Pressable>
@@ -203,8 +203,8 @@ export default function CheckInScreen() {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <View className="flex-row justify-between">
-      <Text className="text-black/50 text-sm">{label}</Text>
-      <Text className="text-black font-medium text-sm">{value}</Text>
+      <Text className="text-white/60 text-sm">{label}</Text>
+      <Text className="text-white font-semibold text-sm">{value}</Text>
     </View>
   );
 }

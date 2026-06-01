@@ -16,6 +16,7 @@ export interface Profile {
   avatar_url: string | null;
   loyalty_discount: boolean;
   vip_notes: string | null;
+  wallet_token: string | null;
   created_at: string;
   updated_at: string;
 }
