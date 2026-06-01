@@ -1,14 +1,15 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   View, FlatList, ActivityIndicator, ScrollView,
-  Modal, Alert, Pressable,
+  Modal, Alert, Pressable, StyleSheet,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   useStripeTerminal,
   type Reader,
 } from "@stripe/stripe-terminal-react-native";
-import { Tent, Ticket as TicketIcon, ChevronLeft, MapPin, Calendar, Check, Banknote, Smartphone, PartyPopper, Plus, Minus } from "lucide-react-native";
+import { CameraView } from "expo-camera";
+import { Tent, Ticket as TicketIcon, ChevronLeft, MapPin, Calendar, Check, Banknote, Smartphone, PartyPopper, Plus, Minus, QrCode, User, UserCheck, X } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
@@ -20,8 +21,10 @@ import { Text } from "@/components/ui/text";
 import type { TicketType, Event } from "@/lib/types";
 
 interface CartItem { ticketType: TicketType; quantity: number }
+interface ResolvedProfile { id: string; name: string; email: string }
 type PaymentMethod = "cash" | "tap";
 type TapState = "idle" | "discovering" | "connecting" | "ready" | "processing" | "success" | "error";
+type BuyerMode = "guest" | "registered";
 
 const API_URL     = process.env.EXPO_PUBLIC_API_URL ?? "";
 const LOCATION_ID = process.env.EXPO_PUBLIC_STRIPE_LOCATION_ID ?? "";
@@ -34,18 +37,37 @@ export default function SellerScreen() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [ticketTypes, setTicketTypes]     = useState<TicketType[]>([]);
   const [cart, setCart]                   = useState<CartItem[]>([]);
+  const [buyerMode, setBuyerMode]         = useState<BuyerMode>("guest");
   const [buyerName, setBuyerName]         = useState("");
   const [buyerEmail, setBuyerEmail]       = useState("");
+  const [registeredProfile, setRegisteredProfile] = useState<ResolvedProfile | null>(null);
+  const [scannerOpen, setScannerOpen]     = useState(false);
+  const [resolving, setResolving]         = useState(false);
   const [loading, setLoading]             = useState(true);
   const [selling, setSelling]             = useState(false);
   const [confirmOpen, setConfirmOpen]     = useState(false);
   const [successInfo, setSuccessInfo]     = useState<{ total: number; ticketCount: number } | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
+  const scanCooldown = useRef(false);
 
   // ── Stripe Terminal state ──
   const [tapState, setTapState]   = useState<TapState>("idle");
   const [tapMessage, setTapMessage] = useState("");
   const [connectedReader, setConnectedReader] = useState<Reader | null>(null);
+  const tapStateRef = useRef<TapState>("idle");
+  const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => { tapStateRef.current = tapState; }, [tapState]);
+
+  // Sync SDK's persisted reader connection to local state on mount / reconnect.
+  // Tap to Pay uses the iPhone itself as reader — the SDK keeps it connected
+  // across app restarts, so React state must reflect that immediately.
+  useEffect(() => {
+    if (stripeReader && tapState !== "ready" && tapState !== "processing" && tapState !== "success") {
+      setConnectedReader(stripeReader as unknown as Reader | null);
+      setTapState("ready");
+      setTapMessage("Ready to accept payment");
+    }
+  }, [stripeReader]);
 
   const {
     initialize,
@@ -53,6 +75,7 @@ export default function SellerScreen() {
     cancelDiscovering,
     connectReader,
     createPaymentIntent,
+    retrievePaymentIntent,
     collectPaymentMethod,
     confirmPaymentIntent,
     cancelCollectPaymentMethod,
@@ -63,11 +86,11 @@ export default function SellerScreen() {
       setTapState("connecting");
       setTapMessage("Connecting to reader…");
       const { error } = await connectReader({
-        // TODO: switch to "tapToPay" once Apple entitlement approved
-        discoveryMethod: "bluetoothScan",
+        discoveryMethod: "tapToPay",
         reader: readers[0],
         locationId: LOCATION_ID,
       });
+      if (watchdogRef.current) clearTimeout(watchdogRef.current);
       if (error) {
         setTapState("error");
         setTapMessage(error.message);
@@ -127,26 +150,107 @@ export default function SellerScreen() {
 
   // ── Initiate Tap to Pay discovery ──
   async function initTapToPay() {
+    // SDK already has a connected reader (persisted from previous session) — skip discovery.
+    if (stripeReader) {
+      setConnectedReader(stripeReader as unknown as Reader | null);
+      setTapState("ready");
+      setTapMessage("Ready to accept payment");
+      return;
+    }
+
     setTapState("discovering");
     setTapMessage("Looking for reader…");
+
+    // Watchdog: Tap to Pay discovery can hang forever if the connection-token
+    // endpoint is unreachable or the device/network can't reach Stripe.
+    // Surface a real error after 30s instead of spinning indefinitely.
+    if (watchdogRef.current) clearTimeout(watchdogRef.current);
+    watchdogRef.current = setTimeout(() => {
+      if (tapStateRef.current === "discovering" || tapStateRef.current === "connecting") {
+        setTapState("error");
+        setTapMessage("Reader not found. Check internet connection, that the connection-token API is reachable, and that this iPhone supports Tap to Pay (XS or newer, iOS 16.7+).");
+      }
+    }, 30000);
+
     // initialize() is called by StripeTerminalProvider on mount.
     // Call it here too — SDK ignores duplicate inits gracefully.
     const initResult = await initialize();
     if (initResult?.error) {
+      if (watchdogRef.current) clearTimeout(watchdogRef.current);
       setTapState("error");
       setTapMessage(initResult.error.message ?? "SDK init failed");
       return;
     }
     const { error } = await discoverReaders({
-      // TODO: switch to "tapToPay" + simulated:false once Apple entitlement approved
-      discoveryMethod: "bluetoothScan",
-      simulated: true,
+      discoveryMethod: "tapToPay",
+      simulated: false,
     });
     if (error) {
+      if (watchdogRef.current) clearTimeout(watchdogRef.current);
+      // SDK reports "already connected" when a reader persisted from a previous
+      // session is still active but stripeReader hadn't populated yet.
+      // Treat it as ready — the useEffect will sync the reader state.
+      if (error.message?.toLowerCase().includes("already connected")) {
+        setTapState("ready");
+        setTapMessage("Ready to accept payment");
+        return;
+      }
       setTapState("error");
       setTapMessage(error.message);
     }
   }
+
+  // ── Resolve registered buyer from wallet QR ──
+  async function resolveWalletToken(token: string) {
+    if (resolving) return;
+    scanCooldown.current = true;
+    setResolving(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      const res = await fetch(`${API_URL}/api/seller/resolve-buyer`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ walletToken: token }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      if (!res.ok) {
+        const e = await res.json();
+        Alert.alert("Not found", e.error ?? "User not found");
+        return;
+      }
+      const profile: ResolvedProfile = await res.json();
+      setRegisteredProfile(profile);
+      setScannerOpen(false);
+    } catch (e: any) {
+      Alert.alert("Error", e.message);
+    } finally {
+      setResolving(false);
+      setTimeout(() => { scanCooldown.current = false; }, 2000);
+    }
+  }
+
+  function openScanner() {
+    scanCooldown.current = false;
+    setScannerOpen(true);
+  }
+
+  function resetBuyerMode(mode: BuyerMode) {
+    setBuyerMode(mode);
+    setRegisteredProfile(null);
+    setBuyerName("");
+    setBuyerEmail("");
+  }
+
+  const effectiveName  = buyerMode === "registered" ? (registeredProfile?.name  ?? "") : buyerName;
+  const effectiveEmail = buyerMode === "registered" ? (registeredProfile?.email ?? "") : buyerEmail;
+  const effectiveUserId = buyerMode === "registered" ? (registeredProfile?.id ?? null) : null;
 
   // ── Cash sale ──
   async function sellCash() {
@@ -154,15 +258,16 @@ export default function SellerScreen() {
     setSelling(true);
     try {
       const { data, error } = await supabase.rpc("sell_tickets_cash", {
-        p_event_id:    selectedEvent.id,
-        p_buyer_name:  buyerName.trim() || null,
-        p_buyer_email: buyerEmail.trim() || null,
+        p_event_id:       selectedEvent.id,
+        p_buyer_name:     effectiveName || null,
+        p_buyer_email:    effectiveEmail || null,
+        p_buyer_user_id:  effectiveUserId,
         p_items: cart.map(c => ({ ticketTypeId: c.ticketType.id, quantity: c.quantity })),
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
       setSuccessInfo({ total: data.total, ticketCount: data.ticketCount });
-      setCart([]); setBuyerName(""); setBuyerEmail(""); setConfirmOpen(false);
+      setCart([]); setBuyerName(""); setBuyerEmail(""); setRegisteredProfile(null); setConfirmOpen(false);
     } catch (e: any) { Alert.alert("Error", e.message); }
     finally { setSelling(false); }
   }
@@ -190,7 +295,10 @@ export default function SellerScreen() {
         },
         body: JSON.stringify({
           amount: Math.round(cartTotal * 100), // cents
-          currency: "eur",
+          // TODO: currency must match Stripe account country's default currency.
+          // Currently GBP for UK Ltd account. Switch to EUR (Eurozone account)
+          // or HUF (Hungarian account) once the Stripe entity is confirmed.
+          currency: "gbp",
           metadata: {
             event_id: selectedEvent.id,
             buyer_name: buyerName.trim() || null,
@@ -200,22 +308,29 @@ export default function SellerScreen() {
       if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
       const { clientSecret } = await res.json();
 
-      // 2. Collect payment
-      setTapMessage("Hold card near iPhone…");
-      const { paymentIntent, error: collectError } = await collectPaymentMethod({ paymentIntentClientSecret: clientSecret });
-      if (collectError) throw new Error(collectError.message);
-      if (!paymentIntent) throw new Error("No payment intent returned");
+      // 2. Retrieve PaymentIntent object from client secret
+      // SDK requires the full PaymentIntent.Type object, not the client secret string.
+      const { paymentIntent: retrieved, error: retrieveError } = await retrievePaymentIntent(clientSecret);
+      if (retrieveError) throw new Error(retrieveError.message);
+      if (!retrieved) throw new Error("Failed to retrieve payment intent");
 
-      // 3. Confirm payment
+      // 3. Collect payment (tap card to iPhone)
+      setTapMessage("Hold card near iPhone…");
+      const { paymentIntent: collected, error: collectError } = await collectPaymentMethod({ paymentIntent: retrieved });
+      if (collectError) throw new Error(collectError.message);
+      if (!collected) throw new Error("No payment intent after collect");
+
+      // 4. Confirm payment
       setTapMessage("Confirming…");
-      const { error: confirmError } = await confirmPaymentIntent({ paymentIntent });
+      const { error: confirmError } = await confirmPaymentIntent({ paymentIntent: collected });
       if (confirmError) throw new Error(confirmError.message);
 
       // 4. Issue tickets via RPC
       const { data, error: rpcError } = await supabase.rpc("sell_tickets_cash", {
-        p_event_id:    selectedEvent.id,
-        p_buyer_name:  buyerName.trim() || null,
-        p_buyer_email: buyerEmail.trim() || null,
+        p_event_id:      selectedEvent.id,
+        p_buyer_name:    effectiveName || null,
+        p_buyer_email:   effectiveEmail || null,
+        p_buyer_user_id: effectiveUserId,
         p_items: cart.map(c => ({ ticketTypeId: c.ticketType.id, quantity: c.quantity })),
       });
       if (rpcError) throw new Error(rpcError.message);
@@ -224,7 +339,7 @@ export default function SellerScreen() {
       setTapState("success");
       setTapMessage("Payment accepted!");
       setSuccessInfo({ total: data.total, ticketCount: data.ticketCount });
-      setCart([]); setBuyerName(""); setBuyerEmail(""); setConfirmOpen(false);
+      setCart([]); setBuyerName(""); setBuyerEmail(""); setRegisteredProfile(null); setConfirmOpen(false);
     } catch (e: any) {
       setTapState("ready");
       setTapMessage("Ready to accept payment");
@@ -424,21 +539,106 @@ export default function SellerScreen() {
               <Text className="text-foreground font-bold text-lg">{formatCurrency(cartTotal)}</Text>
             </View>
 
-            {/* Buyer info */}
-            <View className="gap-3 mb-6">
-              <Input
-                placeholder="Buyer name (optional)"
-                value={buyerName}
-                onChangeText={setBuyerName}
-              />
-              <Input
-                placeholder="Buyer email (optional)"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={buyerEmail}
-                onChangeText={setBuyerEmail}
-              />
+            {/* Buyer type */}
+            <Text className="text-muted-foreground text-xs font-semibold mb-2 uppercase tracking-wide">
+              Buyer
+            </Text>
+            <View className="flex-row gap-2 mb-4">
+              <Pressable
+                onPress={() => resetBuyerMode("guest")}
+                className={`flex-1 py-3 rounded-xl border flex-row items-center justify-center gap-2 active:opacity-70 ${
+                  buyerMode === "guest" ? "bg-primary border-primary" : "bg-card border-border"
+                }`}
+              >
+                <User size={15} color={buyerMode === "guest" ? "#000000" : "#fafafa"} strokeWidth={1.75} />
+                <Text className={`font-semibold text-sm ${buyerMode === "guest" ? "text-primary-foreground" : "text-foreground"}`}>
+                  Guest
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => resetBuyerMode("registered")}
+                className={`flex-1 py-3 rounded-xl border flex-row items-center justify-center gap-2 active:opacity-70 ${
+                  buyerMode === "registered" ? "bg-primary border-primary" : "bg-card border-border"
+                }`}
+              >
+                <QrCode size={15} color={buyerMode === "registered" ? "#000000" : "#fafafa"} strokeWidth={1.75} />
+                <Text className={`font-semibold text-sm ${buyerMode === "registered" ? "text-primary-foreground" : "text-foreground"}`}>
+                  Registered
+                </Text>
+              </Pressable>
             </View>
+
+            {buyerMode === "guest" ? (
+              <View className="gap-3 mb-6">
+                <Input
+                  placeholder="Buyer name (optional)"
+                  value={buyerName}
+                  onChangeText={setBuyerName}
+                />
+                <Input
+                  placeholder="Buyer email (optional)"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={buyerEmail}
+                  onChangeText={setBuyerEmail}
+                />
+              </View>
+            ) : (
+              <View className="mb-6">
+                {registeredProfile ? (
+                  <View className="flex-row items-center gap-3 px-4 py-3 rounded-xl bg-card border border-border">
+                    <View className="w-10 h-10 rounded-full bg-muted items-center justify-center">
+                      <UserCheck size={18} color="#fafafa" strokeWidth={1.75} />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-foreground font-semibold">{registeredProfile.name}</Text>
+                      <Text className="text-muted-foreground text-xs">{registeredProfile.email}</Text>
+                    </View>
+                    <Pressable onPress={() => setRegisteredProfile(null)} className="active:opacity-70 p-1">
+                      <X size={16} color="#8f8f8f" strokeWidth={1.75} />
+                    </Pressable>
+                  </View>
+                ) : scannerOpen ? (
+                  <View style={{ height: 260, borderRadius: 16, overflow: "hidden", position: "relative" }}>
+                    <CameraView
+                      style={StyleSheet.absoluteFill}
+                      facing="back"
+                      barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+                      onBarcodeScanned={({ data }) => {
+                        if (scanCooldown.current || !data) return;
+                        resolveWalletToken(data);
+                      }}
+                    />
+                    {/* Aim frame */}
+                    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }} pointerEvents="none">
+                      <View style={{ width: 160, height: 160, borderRadius: 12, borderWidth: 2, borderColor: "#ffffff" }} />
+                    </View>
+                    {/* Close */}
+                    <Pressable
+                      onPress={() => setScannerOpen(false)}
+                      style={{ position: "absolute", top: 10, right: 10, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 20, padding: 6 }}
+                    >
+                      <X size={18} color="#ffffff" strokeWidth={1.75} />
+                    </Pressable>
+                    {resolving && (
+                      <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(0,0,0,0.6)", alignItems: "center", justifyContent: "center", borderRadius: 16 }]}>
+                        <ActivityIndicator size="large" color="#ffffff" />
+                      </View>
+                    )}
+                  </View>
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onPress={openScanner}
+                    loading={resolving}
+                    icon={<QrCode size={16} color="#fafafa" strokeWidth={1.75} />}
+                  >
+                    <Text>Scan Customer QR</Text>
+                  </Button>
+                )}
+              </View>
+            )}
 
             {/* Payment method selector */}
             <Text className="text-muted-foreground text-xs font-semibold mb-2 uppercase tracking-wide">
