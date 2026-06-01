@@ -17,6 +17,7 @@ export interface Profile {
   loyalty_discount: boolean;
   vip_notes: string | null;
   wallet_token: string | null;
+  display_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -65,6 +66,7 @@ export interface Ticket {
   used_at: string | null;
   holder_name: string | null;
   holder_email: string | null;
+  transferred_to_user_id: string | null;
   created_at: string;
 }
 

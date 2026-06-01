@@ -1,7 +1,7 @@
 import { View, Image, ScrollView } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ChevronLeft, User, Mail, Shield } from "lucide-react-native";
+import { ChevronLeft, User, Mail, Shield, Hash } from "lucide-react-native";
 import { useAuth } from "@/context/auth";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -69,6 +69,20 @@ export default function ProfileScreen() {
             </View>
           </View>
         </View>
+        {profile.display_id && (
+          <>
+            <Separator />
+            <View className="flex-row items-center gap-3">
+              <View className="w-9 h-9 rounded-full bg-muted items-center justify-center">
+                <Hash size={16} color="#8f8f8f" strokeWidth={1.75} />
+              </View>
+              <View className="flex-1">
+                <Text className="text-muted-foreground text-xs">Bass-ID</Text>
+                <Text className="text-foreground font-mono font-semibold">{profile.display_id}</Text>
+              </View>
+            </View>
+          </>
+        )}
       </Card>
 
       {/* Wallet QR pass */}
@@ -87,6 +101,13 @@ export default function ProfileScreen() {
             <Text className="text-muted-foreground text-xs text-center px-6">
               Show this QR code at the entrance or to a seller. Same code as your Apple Wallet pass.
             </Text>
+            {profile.display_id && (
+              <Text className="text-muted-foreground text-xs text-center px-6 mt-2">
+                Share your Bass-ID{" "}
+                <Text className="text-foreground font-mono">{profile.display_id}</Text>
+                {" "}to receive ticket transfers.
+              </Text>
+            )}
           </Card>
         </>
       )}

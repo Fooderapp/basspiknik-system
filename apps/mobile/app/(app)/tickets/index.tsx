@@ -63,12 +63,26 @@ export default function TicketsScreen() {
 
   async function load() {
     if (!session) return;
-    const { data } = await (supabase as any)
+    // Fetch tickets from original orders
+    const { data: owned } = await (supabase as any)
       .from("tickets")
       .select("*, orders!inner(user_id)")
       .eq("orders.user_id", session.user.id)
       .order("created_at", { ascending: false });
-    setTickets((data ?? []) as Ticket[]);
+
+    // Fetch tickets transferred to me
+    const { data: transferred } = await (supabase as any)
+      .from("tickets")
+      .select("*")
+      .eq("transferred_to_user_id", session.user.id)
+      .order("created_at", { ascending: false });
+
+    // Merge and deduplicate by id
+    const merged = [...(owned ?? []), ...(transferred ?? [])];
+    const seen = new Set<string>();
+    const unique = merged.filter(t => { if (seen.has(t.id)) return false; seen.add(t.id); return true; });
+    unique.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    setTickets(unique as Ticket[]);
   }
 
   useEffect(() => { load().finally(() => setLoading(false)); }, []);

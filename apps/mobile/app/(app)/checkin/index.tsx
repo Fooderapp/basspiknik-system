@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Modal, Pressable, Vibration, View } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Calendar, Camera, CheckCircle2, XCircle } from "lucide-react-native";
+import { Calendar, Camera, CheckCircle2, XCircle, RefreshCw } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth";
 import type { Event } from "@/lib/types";
@@ -30,6 +30,20 @@ export default function CheckInScreen() {
   const [event, setEvent] = useState<Event | null>(null);
   const [result, setResult] = useState<ScanResult | null>(null);
   const cooldown = useRef(false);
+
+  // ── Border color: idle=white, success=green, multi-entry=blue, fail=red ──
+  function borderColor(): string {
+    if (!result) return "rgba(255,255,255,0.6)";
+    if (!result.success) return "#EF4444";
+    if (typeof result.remaining === "number") return "#3B82F6";
+    return "#22C55E";
+  }
+
+  function modalColor(): string {
+    if (!result?.success) return "#EF4444";
+    if (typeof result.remaining === "number") return "#3B82F6";
+    return "#22C55E";
+  }
 
   useEffect(() => {
     (supabase as any)
@@ -148,9 +162,9 @@ export default function CheckInScreen() {
         onBarcodeScanned={({ data }) => handleScan(data)}
       />
 
-      {/* Scan frame overlay */}
+      {/* Scan frame overlay — border changes colour on result */}
       <View className="absolute inset-0 items-center justify-center">
-        <View className="w-64 h-64 border-2 border-white/60 rounded-2xl" />
+        <View style={{ width: 256, height: 256, borderWidth: 3, borderRadius: 16, borderColor: borderColor() }} />
         <Text className="text-white/70 text-sm mt-4">Scan the attendee's Wallet pass</Text>
       </View>
 
@@ -158,16 +172,22 @@ export default function CheckInScreen() {
       <Modal visible={!!result} transparent animationType="slide" onRequestClose={dismiss}>
         <Pressable className="flex-1 justify-end" onPress={dismiss}>
           <View
-            style={{ backgroundColor: result?.success ? "#22C55E" : "#EF4444" }}
+            style={{ backgroundColor: modalColor() }}
             className="mx-4 mb-8 rounded-3xl p-6"
           >
             <View className="items-center mb-3">
               {result?.success
-                ? <CheckCircle2 size={52} color="#fff" strokeWidth={1.75} />
+                ? typeof result.remaining === "number"
+                  ? <RefreshCw size={52} color="#fff" strokeWidth={1.75} />
+                  : <CheckCircle2 size={52} color="#fff" strokeWidth={1.75} />
                 : <XCircle size={52} color="#fff" strokeWidth={1.75} />}
             </View>
             <Text className="text-white text-xl font-bold text-center mb-1 tracking-tight">
-              {result?.success ? "Checked In!" : "Rejected"}
+              {result?.success
+                ? typeof result.remaining === "number"
+                  ? `Re-entry — ${result.remaining} left`
+                  : "Checked In!"
+                : "Rejected"}
             </Text>
 
             {result?.success && (

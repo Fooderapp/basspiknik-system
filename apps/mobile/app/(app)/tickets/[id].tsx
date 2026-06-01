@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ChevronLeft, Ban } from "lucide-react-native";
+import { ChevronLeft, Ban, ArrowRightLeft } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
 import type { Ticket } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Text } from "@/components/ui/text";
 import { Separator } from "@/components/ui/separator";
@@ -88,11 +89,24 @@ export default function TicketDetailScreen() {
           <Row label="Tier" value={ticket.tier} />
           <Row label="Issued" value={formatDate(ticket.created_at)} />
           {ticket.used_at && <Row label="Used" value={formatDate(ticket.used_at)} />}
+          {ticket.transferred_to_user_id && <Row label="Transferred" value="Yes" />}
           <Separator />
           <Text className="text-muted-foreground text-xs font-mono" numberOfLines={1}>
             {ticket.qr_code}
           </Text>
         </Card>
+
+        {/* Transfer button — only for VALID tickets */}
+        {ticket.status === "VALID" && (
+          <Button
+            variant="outline"
+            className="w-full"
+            onPress={() => router.push(`/(app)/transfer?ticketId=${ticket.id}` as never)}
+            icon={<ArrowRightLeft size={16} color="#fafafa" strokeWidth={1.75} />}
+          >
+            <Text>Transfer Ticket</Text>
+          </Button>
+        )}
       </View>
     </View>
   );
