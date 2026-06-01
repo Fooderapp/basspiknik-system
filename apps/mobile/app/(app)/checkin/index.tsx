@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Modal, Pressable, Vibration, View } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Calendar, Camera, CheckCircle2, XCircle } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth";
 import type { Event } from "@/lib/types";
@@ -66,13 +67,13 @@ export default function CheckInScreen() {
     return (
       <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
         <View className="px-5 py-4">
-          <Text className="text-foreground text-2xl font-bold">Check-In</Text>
+          <Text className="text-foreground text-2xl font-bold tracking-tight">Check-In</Text>
           <Text className="text-muted-foreground text-sm mt-1">Pick the event for this door</Text>
         </View>
 
         {loadingEvents ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color="#7c3aed" />
+            <ActivityIndicator size="large" color="#fafafa" />
           </View>
         ) : (
           <FlatList
@@ -81,14 +82,16 @@ export default function CheckInScreen() {
             contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}
             ListEmptyComponent={
               <View className="items-center py-20">
-                <Text className="text-5xl mb-4">📅</Text>
-                <Text className="text-foreground font-semibold text-lg">No published events</Text>
+                <View className="w-14 h-14 rounded-2xl items-center justify-center mb-4 border border-border bg-muted">
+                  <Calendar size={24} color="#8f8f8f" strokeWidth={1.75} />
+                </View>
+                <Text className="text-foreground font-semibold text-lg tracking-tight">No published events</Text>
               </View>
             }
             renderItem={({ item }) => (
               <Pressable onPress={() => setEvent(item)} className="mb-3 active:opacity-75">
                 <Card>
-                  <Text className="text-foreground font-semibold text-base" numberOfLines={1}>
+                  <Text className="text-foreground font-semibold text-base tracking-tight" numberOfLines={1}>
                     {item.name}
                   </Text>
                   <Text className="text-muted-foreground text-xs mt-1">
@@ -109,8 +112,10 @@ export default function CheckInScreen() {
   if (!permission.granted) {
     return (
       <View className="flex-1 bg-background items-center justify-center px-6" style={{ paddingTop: insets.top }}>
-        <Text className="text-5xl mb-4">📷</Text>
-        <Text className="text-foreground text-xl font-bold mb-2">Camera Access</Text>
+        <View className="w-16 h-16 rounded-2xl items-center justify-center mb-4 border border-border bg-muted">
+          <Camera size={28} color="#fafafa" strokeWidth={1.75} />
+        </View>
+        <Text className="text-foreground text-xl font-bold mb-2 tracking-tight">Camera Access</Text>
         <Text className="text-muted-foreground text-sm text-center mb-6">
           Camera is needed to scan Wallet passes
         </Text>
@@ -154,11 +159,15 @@ export default function CheckInScreen() {
         <Pressable className="flex-1 justify-end" onPress={dismiss}>
           <View className={`mx-4 mb-8 rounded-3xl p-6 ${
             result?.success
-              ? "bg-green-900 border border-green-700"
-              : "bg-red-900 border border-red-700"
+              ? "bg-white"
+              : "bg-card border border-border"
           }`}>
-            <Text className="text-5xl text-center mb-3">{result?.success ? "✅" : "❌"}</Text>
-            <Text className="text-white text-xl font-bold text-center mb-1">
+            <View className="items-center mb-3">
+              {result?.success
+                ? <CheckCircle2 size={48} color="#000000" strokeWidth={1.75} />
+                : <XCircle size={48} color="#fafafa" strokeWidth={1.75} />}
+            </View>
+            <Text className={`text-xl font-bold text-center mb-1 tracking-tight ${result?.success ? "text-black" : "text-white"}`}>
               {result?.success ? "Checked In!" : "Rejected"}
             </Text>
 
@@ -175,14 +184,14 @@ export default function CheckInScreen() {
             )}
 
             {!result?.success && result?.message && (
-              <Text className="text-red-200 text-sm text-center mt-2">{result.message}</Text>
+              <Text className="text-muted-foreground text-sm text-center mt-2">{result.message}</Text>
             )}
 
             <Pressable
               onPress={dismiss}
-              className="mt-5 bg-white/20 rounded-xl py-3 items-center active:opacity-60"
+              className={`mt-5 rounded-xl py-3 items-center active:opacity-60 ${result?.success ? "bg-black" : "bg-white"}`}
             >
-              <Text className="text-white font-semibold">Scan Next</Text>
+              <Text className={`font-semibold ${result?.success ? "text-white" : "text-black"}`}>Scan Next</Text>
             </Pressable>
           </View>
         </Pressable>
@@ -194,8 +203,8 @@ export default function CheckInScreen() {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <View className="flex-row justify-between">
-      <Text className="text-white/60 text-sm">{label}</Text>
-      <Text className="text-white font-medium text-sm" style={{ color: "#fff" }}>{value}</Text>
+      <Text className="text-black/50 text-sm">{label}</Text>
+      <Text className="text-black font-medium text-sm">{value}</Text>
     </View>
   );
 }

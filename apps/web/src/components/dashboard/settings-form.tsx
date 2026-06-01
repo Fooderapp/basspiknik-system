@@ -16,9 +16,9 @@ const CURRENCIES: { value: Currency; label: string; symbol: string; note?: strin
   { value: "HUF", label: "Hungarian Forint", symbol: "Ft" },
 ];
 
-const LANGUAGES: { value: Language; label: string; flag: string }[] = [
-  { value: "en", label: "English",   flag: "🇬🇧" },
-  { value: "hu", label: "Hungarian", flag: "🇭🇺" },
+const LANGUAGES: { value: Language; label: string; code: string }[] = [
+  { value: "en", label: "English",   code: "EN" },
+  { value: "hu", label: "Hungarian", code: "HU" },
 ];
 
 interface SettingsFormProps {
@@ -78,7 +78,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                 <SelectValue>
                   {selectedLanguage && (
                     <span className="flex items-center gap-2">
-                      <span>{selectedLanguage.flag}</span>
+                      <span className="text-[10px] font-mono font-semibold border border-border rounded px-1 py-0.5">{selectedLanguage.code}</span>
                       <span>{selectedLanguage.label}</span>
                     </span>
                   )}
@@ -88,7 +88,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                 {LANGUAGES.map((l) => (
                   <SelectItem key={l.value} value={l.value}>
                     <span className="flex items-center gap-2">
-                      <span>{l.flag}</span>
+                      <span className="text-[10px] font-mono font-semibold border border-border rounded px-1 py-0.5">{l.code}</span>
                       <span>{l.label}</span>
                     </span>
                   </SelectItem>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ChevronLeft, Ban } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
 import type { Ticket } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
@@ -36,7 +37,7 @@ export default function TicketDetailScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-background items-center justify-center">
-        <ActivityIndicator size="large" color="#7c3aed" />
+        <ActivityIndicator size="large" color="#fafafa" />
       </View>
     );
   }
@@ -45,8 +46,9 @@ export default function TicketDetailScreen() {
     return (
       <View className="flex-1 bg-background items-center justify-center px-6 gap-4">
         <Text className="text-foreground text-lg">Ticket not found</Text>
-        <Pressable onPress={() => router.back()} className="active:opacity-60">
-          <Text className="text-primary">← Go back</Text>
+        <Pressable onPress={() => router.back()} className="active:opacity-60 flex-row items-center gap-1">
+          <ChevronLeft size={16} color="#fafafa" strokeWidth={1.75} />
+          <Text className="text-foreground">Go back</Text>
         </Pressable>
       </View>
     );
@@ -56,10 +58,11 @@ export default function TicketDetailScreen() {
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       {/* Header */}
       <View className="flex-row items-center px-5 py-4 gap-4">
-        <Pressable onPress={() => router.back()} className="active:opacity-60">
-          <Text className="text-primary text-base">← Back</Text>
+        <Pressable onPress={() => router.back()} className="active:opacity-60 flex-row items-center gap-0.5">
+          <ChevronLeft size={18} color="#fafafa" strokeWidth={1.75} />
+          <Text className="text-foreground text-base">Back</Text>
         </Pressable>
-        <Text className="text-foreground font-bold text-lg flex-1" numberOfLines={1}>
+        <Text className="text-foreground font-bold text-lg flex-1 tracking-tight" numberOfLines={1}>
           {ticket.ticket_name ?? "Ticket"}
         </Text>
         <Badge label={ticket.status} variant={STATUS_VARIANT[ticket.status] ?? "secondary"} />
@@ -71,8 +74,8 @@ export default function TicketDetailScreen() {
           {ticket.status === "VALID" ? (
             <QRCode value={ticket.qr_code} size={220} />
           ) : (
-            <View className="w-56 h-56 items-center justify-center bg-muted rounded-2xl">
-              <Text className="text-5xl mb-2">🚫</Text>
+            <View className="w-56 h-56 items-center justify-center bg-muted rounded-2xl gap-3">
+              <Ban size={40} color="#8f8f8f" strokeWidth={1.5} />
               <Text className="text-muted-foreground text-sm">{ticket.status}</Text>
             </View>
           )}

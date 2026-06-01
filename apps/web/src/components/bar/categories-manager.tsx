@@ -27,8 +27,7 @@ interface EditState {
 }
 
 const PRESET_COLORS = [
-  "#db2777","#d97706","#dc2626","#ea580c","#0891b2","#9333ea","#6b7280",
-  "#16a34a","#2563eb","#7c3aed","#be123c","#b45309",
+  "#ffffff","#d4d4d4","#a3a3a3","#737373","#525252","#404040","#262626","#000000",
 ];
 
 export function CategoriesManager({ initialCategories, dict }: Props) {
@@ -126,9 +125,8 @@ export function CategoriesManager({ initialCategories, dict }: Props) {
                 ) : (
                   <div className="flex items-center gap-3 rounded-lg border bg-card p-3 group">
                     <GripVertical className="h-4 w-4 text-muted-foreground/30 flex-shrink-0" />
-                    <span className="text-2xl w-8 text-center">{cat.emoji}</span>
                     <div
-                      className="h-3 w-3 rounded-full flex-shrink-0"
+                      className="h-3 w-3 rounded-full flex-shrink-0 border border-border"
                       style={{ backgroundColor: cat.color }}
                     />
                     <div className="flex-1 min-w-0">
@@ -191,15 +189,9 @@ function CategoryForm({ form, setForm, saving, onSave, onCancel, dict, presetCol
           <Input value={form.name_hu} onChange={e => setForm(f => ({ ...f, name_hu: e.target.value }))} placeholder="Sör" />
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <Label className="text-xs">{t("cat.emoji")}</Label>
-          <Input value={form.emoji} onChange={e => setForm(f => ({ ...f, emoji: e.target.value }))} className="text-lg" maxLength={4} />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">{t("cat.sort")}</Label>
-          <Input type="number" value={form.sort_order} onChange={e => setForm(f => ({ ...f, sort_order: Number(e.target.value) }))} min={0} />
-        </div>
+      <div className="space-y-1">
+        <Label className="text-xs">{t("cat.sort")}</Label>
+        <Input type="number" value={form.sort_order} onChange={e => setForm(f => ({ ...f, sort_order: Number(e.target.value) }))} min={0} />
       </div>
       {/* Color picker */}
       <div className="space-y-1.5">

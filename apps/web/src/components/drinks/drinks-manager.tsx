@@ -15,7 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Wine, Star, Eye, EyeOff } from "lucide-react";
+import { Plus, Pencil, Trash2, Wine, Star, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import type { Drink, DrinkCategoryRow } from "@/lib/supabase/types";
 
 const schema = z.object({
@@ -193,8 +193,8 @@ export function DrinksManager({ initialDrinks, initialCategories = [] }: Props) 
                       {cat.emoji} {cat.name}
                     </span>
                   )}
-                  {drink.is_popular && <Badge className="text-[11px] bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200 border-0"><Star className="h-2.5 w-2.5 mr-0.5" />Popular</Badge>}
-                  {drink.sale_enabled && <Badge className="text-[11px] bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200 border-0">Sale</Badge>}
+                  {drink.is_popular && <Badge className="text-[11px] bg-muted text-foreground border border-border"><Star className="h-2.5 w-2.5 mr-0.5 fill-current" />Popular</Badge>}
+                  {drink.sale_enabled && <Badge className="text-[11px] bg-foreground text-background border-0">Sale</Badge>}
                   {!drink.available && <Badge variant="secondary" className="text-[11px]">Unavailable</Badge>}
                 </div>
 
@@ -211,7 +211,7 @@ export function DrinksManager({ initialDrinks, initialCategories = [] }: Props) 
                 </div>
 
                 {drink.allergens?.length > 0 && (
-                  <p className="text-[11px] text-muted-foreground">⚠️ {drink.allergens.join(", ")}</p>
+                  <p className="text-[11px] text-muted-foreground flex items-center gap-1"><AlertTriangle className="h-3 w-3 shrink-0" /> {drink.allergens.join(", ")}</p>
                 )}
 
                 <div className="absolute top-3 right-3 flex gap-1">

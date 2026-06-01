@@ -8,46 +8,51 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // ── Brand ──────────────────────────────────────────────────────────
+        // ── Monochrome design system ───────────────────────────────────────
+        // Pure black/white. No accent hues. Hierarchy via tone + borders.
+
+        // Primary = high-contrast white on black (inverted emphasis)
         primary: {
-          DEFAULT: "#7c3aed",
-          foreground: "#ffffff",
+          DEFAULT: "#ffffff",
+          foreground: "#000000",
         },
         // ── Surfaces ───────────────────────────────────────────────────────
-        background: "#09090b",
+        background: "#000000",
         foreground: "#fafafa",
         card: {
-          DEFAULT: "#18181b",
+          DEFAULT: "#0a0a0a",
           foreground: "#fafafa",
         },
         // ── Muted ──────────────────────────────────────────────────────────
         muted: {
-          DEFAULT: "#27272a",
-          foreground: "#a1a1aa",
+          DEFAULT: "#171717",
+          foreground: "#8f8f8f",
         },
-        // ── Semantic ───────────────────────────────────────────────────────
-        border: "#27272a",
-        input: "#27272a",
-        ring: "#7c3aed",
+        // ── Semantic (mono) ────────────────────────────────────────────────
+        border: "#262626",
+        input: "#262626",
+        ring: "#ffffff",
         secondary: {
-          DEFAULT: "#27272a",
+          DEFAULT: "#171717",
           foreground: "#fafafa",
         },
         accent: {
-          DEFAULT: "#27272a",
+          DEFAULT: "#1f1f1f",
           foreground: "#fafafa",
         },
+        // Destructive/success/warning kept mono so existing classes stay B&W.
+        // Meaning is carried by icons + copy, not colour.
         destructive: {
-          DEFAULT: "#ef4444",
-          foreground: "#fafafa",
+          DEFAULT: "#fafafa",
+          foreground: "#000000",
         },
         success: {
-          DEFAULT: "#22c55e",
-          foreground: "#ffffff",
+          DEFAULT: "#fafafa",
+          foreground: "#000000",
         },
         warning: {
-          DEFAULT: "#f59e0b",
-          foreground: "#ffffff",
+          DEFAULT: "#171717",
+          foreground: "#fafafa",
         },
       },
     },

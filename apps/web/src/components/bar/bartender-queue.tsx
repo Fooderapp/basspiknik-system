@@ -7,7 +7,7 @@ import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wine, Clock, CheckCircle2, XCircle, Loader2, RefreshCw } from "lucide-react";
+import { Wine, Clock, CheckCircle2, XCircle, Loader2, RefreshCw, Star, MessageSquare } from "lucide-react";
 import type { DrinkOrderStatus } from "@/lib/supabase/types";
 import type { Dictionary } from "@/lib/i18n";
 import type { Currency } from "@/lib/settings";
@@ -41,10 +41,10 @@ interface Props {
 }
 
 const STATUS_COLORS: Record<DrinkOrderStatus, string> = {
-  PENDING:     "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
-  IN_PROGRESS: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  FULFILLED:   "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-  CANCELLED:   "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
+  PENDING:     "bg-muted text-foreground border border-border",
+  IN_PROGRESS: "bg-secondary text-foreground border border-border",
+  FULFILLED:   "bg-foreground text-background",
+  CANCELLED:   "bg-muted text-muted-foreground",
 };
 
 function timeAgo(iso: string): string {
@@ -98,7 +98,7 @@ export function BartenderQueue({ initialOrders, dict, currency }: Props) {
               const newOrder = await res.json();
               setOrders((prev) => {
                 if (prev.some((o) => o.id === newOrder.id)) return prev;
-                if (newOrder.is_vip) toast.success(`⭐ VIP order: ${newOrder.guest_name ?? "Guest"}`);
+                if (newOrder.is_vip) toast.success(`VIP order: ${newOrder.guest_name ?? "Guest"}`);
                 else toast.info(`New order: ${newOrder.guest_name ?? "Guest"} · ${fmt(newOrder.total)}`);
                 return [newOrder, ...prev];
               });
@@ -150,10 +150,10 @@ export function BartenderQueue({ initialOrders, dict, currency }: Props) {
   function OrderCard({ order }: { order: DrinkOrder }) {
     const isUpdating = updating === order.id;
     return (
-      <div className={`rounded-xl border bg-card overflow-hidden ${order.is_vip ? "border-amber-400 dark:border-amber-500" : ""}`}>
+      <div className={`rounded-xl border bg-card overflow-hidden ${order.is_vip ? "border-foreground" : ""}`}>
         {order.is_vip && (
-          <div className="bg-amber-400 dark:bg-amber-500 px-4 py-1 flex items-center gap-1.5 text-amber-950 dark:text-amber-950 text-xs font-bold">
-            ⭐ {t("bar.vip")}
+          <div className="bg-foreground px-4 py-1 flex items-center gap-1.5 text-background text-xs font-bold">
+            <Star className="h-3 w-3 fill-current" /> {t("bar.vip")}
           </div>
         )}
         <div className="p-4 space-y-3">
@@ -186,8 +186,8 @@ export function BartenderQueue({ initialOrders, dict, currency }: Props) {
 
           {/* Order notes */}
           {order.notes && (
-            <p className="text-xs bg-muted rounded px-2 py-1 text-muted-foreground italic">
-              💬 {order.notes}
+            <p className="text-xs bg-muted rounded px-2 py-1 text-muted-foreground italic flex items-center gap-1.5">
+              <MessageSquare className="h-3 w-3 shrink-0" /> {order.notes}
             </p>
           )}
 
@@ -221,7 +221,7 @@ export function BartenderQueue({ initialOrders, dict, currency }: Props) {
           {order.status === "IN_PROGRESS" && (
             <div className="flex gap-2">
               <Button
-                size="sm" className="flex-1 gap-1.5 bg-green-600 hover:bg-green-700 text-white"
+                size="sm" className="flex-1 gap-1.5"
                 disabled={isUpdating}
                 onClick={() => updateStatus(order.id, "FULFILLED")}
               >
@@ -284,7 +284,7 @@ export function BartenderQueue({ initialOrders, dict, currency }: Props) {
             <TabsTrigger value="in_progress" className="gap-2">
               {t("bar.tab_in_progress")}
               {inProgress.length > 0 && (
-                <Badge className="h-5 px-1.5 text-xs bg-blue-500 text-white">{inProgress.length}</Badge>
+                <Badge variant="secondary" className="h-5 px-1.5 text-xs">{inProgress.length}</Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="done">{t("bar.tab_done")}</TabsTrigger>

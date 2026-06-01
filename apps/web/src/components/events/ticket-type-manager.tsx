@@ -26,12 +26,12 @@ const TIER_LABELS: Record<string, string> = {
   DOOR: "Door", VIP: "VIP", FREE: "Free",
 };
 const TIER_COLORS: Record<string, string> = {
-  EARLY_BIRD: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  GENERAL:    "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
-  LATE:       "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-  DOOR:       "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-  VIP:        "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-  FREE:       "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+  EARLY_BIRD: "bg-muted text-foreground",
+  GENERAL:    "bg-muted text-foreground",
+  LATE:       "bg-muted text-foreground",
+  DOOR:       "bg-muted text-foreground",
+  VIP:        "bg-foreground text-background",
+  FREE:       "bg-muted text-muted-foreground",
 };
 
 const schema = z.object({
@@ -221,7 +221,7 @@ export function TicketTypeManager({ eventId, initialTicketTypes }: Props) {
                       </Badge>
                     )}
                     {tt.sale_enabled && tt.sale_price != null && (
-                      <Badge className="text-[11px] bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200 border-0">Sale</Badge>
+                      <Badge className="text-[11px] bg-foreground text-background border-0">Sale</Badge>
                     )}
                   </div>
                   <CardTitle className="text-base mt-1">{tt.name}</CardTitle>
@@ -241,7 +241,7 @@ export function TicketTypeManager({ eventId, initialTicketTypes }: Props) {
                   </div>
                   <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all ${pct >= 100 ? "bg-destructive" : pct >= 80 ? "bg-amber-500" : "bg-primary"}`}
+                      className={`h-full rounded-full transition-all ${pct >= 100 ? "bg-destructive" : pct >= 80 ? "bg-muted-foreground" : "bg-primary"}`}
                       style={{ width: `${Math.min(pct, 100)}%` }}
                     />
                   </div>

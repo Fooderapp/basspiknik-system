@@ -6,9 +6,9 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   useStripeTerminal,
-  DiscoveryMethod,
   type Reader,
 } from "@stripe/stripe-terminal-react-native";
+import { Tent, Ticket as TicketIcon, ChevronLeft, MapPin, Calendar, Check, Banknote, Smartphone, PartyPopper, Plus, Minus } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
@@ -23,7 +23,8 @@ interface CartItem { ticketType: TicketType; quantity: number }
 type PaymentMethod = "cash" | "tap";
 type TapState = "idle" | "discovering" | "connecting" | "ready" | "processing" | "success" | "error";
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
+const API_URL     = process.env.EXPO_PUBLIC_API_URL ?? "";
+const LOCATION_ID = process.env.EXPO_PUBLIC_STRIPE_LOCATION_ID ?? "";
 
 export default function SellerScreen() {
   const insets = useSafeAreaInsets();
@@ -50,19 +51,23 @@ export default function SellerScreen() {
     initialize,
     discoverReaders,
     cancelDiscovering,
-    connectLocalMobileReader,
+    connectReader,
     createPaymentIntent,
     collectPaymentMethod,
     confirmPaymentIntent,
     cancelCollectPaymentMethod,
     connectedReader: stripeReader,
   } = useStripeTerminal({
-    onUpdateDiscoveredReaders: useCallback(async (readers: Reader[]) => {
+    onUpdateDiscoveredReaders: useCallback(async (readers: Reader.Type[]) => {
       if (readers.length === 0) return;
-      // Auto-connect to first discovered reader (local mobile = this iPhone)
       setTapState("connecting");
       setTapMessage("Connecting to reader…");
-      const { error } = await connectLocalMobileReader({ reader: readers[0] });
+      const { error } = await connectReader({
+        // TODO: switch to "tapToPay" once Apple entitlement approved
+        discoveryMethod: "bluetoothScan",
+        reader: readers[0],
+        locationId: LOCATION_ID,
+      });
       if (error) {
         setTapState("error");
         setTapMessage(error.message);
@@ -71,7 +76,7 @@ export default function SellerScreen() {
         setTapState("ready");
         setTapMessage("Ready to accept payment");
       }
-    }, [connectLocalMobileReader]),
+    }, [connectReader]),
   });
 
   useEffect(() => {
@@ -124,10 +129,18 @@ export default function SellerScreen() {
   async function initTapToPay() {
     setTapState("discovering");
     setTapMessage("Looking for reader…");
-    await initialize();
+    // initialize() is called by StripeTerminalProvider on mount.
+    // Call it here too — SDK ignores duplicate inits gracefully.
+    const initResult = await initialize();
+    if (initResult?.error) {
+      setTapState("error");
+      setTapMessage(initResult.error.message ?? "SDK init failed");
+      return;
+    }
     const { error } = await discoverReaders({
-      discoveryMethod: DiscoveryMethod.LocalMobile,
-      simulated: false,
+      // TODO: switch to "tapToPay" + simulated:false once Apple entitlement approved
+      discoveryMethod: "bluetoothScan",
+      simulated: true,
     });
     if (error) {
       setTapState("error");
@@ -224,7 +237,7 @@ export default function SellerScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-background items-center justify-center">
-        <ActivityIndicator size="large" color="#7c3aed" />
+        <ActivityIndicator size="large" color="#fafafa" />
       </View>
     );
   }
@@ -234,7 +247,7 @@ export default function SellerScreen() {
     return (
       <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
         <View className="px-5 pt-4 pb-3">
-          <Text className="text-foreground text-2xl font-bold">💳 Sell Tickets</Text>
+          <Text className="text-foreground text-2xl font-bold tracking-tight">Sell Tickets</Text>
           <Text className="text-muted-foreground text-sm">Select an event</Text>
         </View>
         <FlatList
@@ -243,7 +256,9 @@ export default function SellerScreen() {
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}
           ListEmptyComponent={
             <View className="items-center py-20">
-              <Text className="text-5xl mb-3">🎪</Text>
+              <View className="w-14 h-14 rounded-2xl items-center justify-center mb-4 border border-border bg-muted">
+                <Tent size={24} color="#8f8f8f" strokeWidth={1.75} />
+              </View>
               <Text className="text-muted-foreground">No published events</Text>
             </View>
           }
@@ -254,9 +269,17 @@ export default function SellerScreen() {
               onPress={() => selectEvent(item)}
             >
               <View className="w-full">
-                <Text className="text-foreground font-bold text-base">{item.name}</Text>
-                {item.venue && <Text className="text-muted-foreground text-sm mt-0.5">📍 {item.venue}</Text>}
-                <Text className="text-muted-foreground text-sm mt-0.5">📅 {formatDate(item.start_date)}</Text>
+                <Text className="text-foreground font-bold text-base tracking-tight">{item.name}</Text>
+                {item.venue && (
+                  <View className="flex-row items-center gap-1.5 mt-1">
+                    <MapPin size={13} color="#8f8f8f" strokeWidth={1.75} />
+                    <Text className="text-muted-foreground text-sm">{item.venue}</Text>
+                  </View>
+                )}
+                <View className="flex-row items-center gap-1.5 mt-1">
+                  <Calendar size={13} color="#8f8f8f" strokeWidth={1.75} />
+                  <Text className="text-muted-foreground text-sm">{formatDate(item.start_date)}</Text>
+                </View>
               </View>
             </Button>
           )}
@@ -271,10 +294,10 @@ export default function SellerScreen() {
       {/* Header */}
       <View className="flex-row items-center justify-between px-5 pt-4 pb-3">
         <View className="flex-1 mr-3">
-          <Button variant="ghost" size="sm" className="self-start px-0" onPress={() => setSelectedEvent(null)}>
-            <Text className="text-primary text-sm">← Events</Text>
+          <Button variant="ghost" size="sm" className="self-start px-0" onPress={() => setSelectedEvent(null)} icon={<ChevronLeft size={15} color="#fafafa" strokeWidth={1.75} />}>
+            <Text className="text-foreground text-sm">Events</Text>
           </Button>
-          <Text className="text-foreground font-bold text-lg" numberOfLines={1}>
+          <Text className="text-foreground font-bold text-lg tracking-tight" numberOfLines={1}>
             {selectedEvent.name}
           </Text>
         </View>
@@ -287,20 +310,15 @@ export default function SellerScreen() {
 
       {/* Tap to Pay status bar */}
       {tapState !== "idle" && (
-        <View className={`mx-5 mb-2 px-4 py-2.5 rounded-xl flex-row items-center gap-2 ${
-          tapState === "ready" || tapState === "success" ? "bg-success/10 border border-success/30"
-          : tapState === "error" ? "bg-destructive/10 border border-destructive/30"
-          : "bg-card border border-border"
-        }`}>
+        <View className="mx-5 mb-2 px-4 py-2.5 rounded-xl flex-row items-center gap-2 bg-card border border-border">
           {(tapState === "discovering" || tapState === "connecting" || tapState === "processing") && (
-            <ActivityIndicator size="small" color="#7c3aed" />
+            <ActivityIndicator size="small" color="#fafafa" />
           )}
-          <Text className={`text-sm ${
-            tapState === "ready" || tapState === "success" ? "text-success-foreground"
-            : tapState === "error" ? "text-destructive"
-            : "text-muted-foreground"
-          }`}>
-            {tapState === "ready" || tapState === "success" ? "✓ " : ""}{tapMessage}
+          {(tapState === "ready" || tapState === "success") && (
+            <Check size={14} color="#fafafa" strokeWidth={2} />
+          )}
+          <Text className={`text-sm ${tapState === "error" ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+            {tapMessage}
           </Text>
         </View>
       )}
@@ -312,7 +330,9 @@ export default function SellerScreen() {
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120 }}
         ListEmptyComponent={
           <View className="items-center py-16">
-            <Text className="text-4xl mb-3">🎟️</Text>
+            <View className="w-14 h-14 rounded-2xl items-center justify-center mb-4 border border-border bg-muted">
+              <TicketIcon size={24} color="#8f8f8f" strokeWidth={1.75} />
+            </View>
             <Text className="text-muted-foreground">No ticket types for this event</Text>
           </View>
         }
@@ -345,12 +365,19 @@ export default function SellerScreen() {
                     disabled={available === 0}
                     onPress={() => addToCart(tt)}
                   >
-                    <Text>{available > 0 ? "+ Add" : "Sold out"}</Text>
+                    {available > 0 ? (
+                      <View className="flex-row items-center gap-1.5">
+                        <Plus size={15} color="#000000" strokeWidth={2.25} />
+                        <Text>Add</Text>
+                      </View>
+                    ) : (
+                      <Text>Sold out</Text>
+                    )}
                   </Button>
                 ) : (
-                  <View className="flex-row items-center gap-4 bg-secondary rounded-xl px-4 py-2.5">
+                  <View className="flex-row items-center gap-4 bg-secondary border border-border rounded-xl px-4 py-2.5">
                     <Button variant="ghost" size="icon" onPress={() => adjustQty(tt.id, -1)}>
-                      <Text className="text-foreground font-bold text-xl">−</Text>
+                      <Minus size={18} color="#fafafa" strokeWidth={2} />
                     </Button>
                     <Text className="text-foreground font-bold text-base w-5 text-center">{qty}</Text>
                     <Button
@@ -359,7 +386,7 @@ export default function SellerScreen() {
                       disabled={qty >= tt.max_per_order}
                       onPress={() => adjustQty(tt.id, 1)}
                     >
-                      <Text className={qty >= tt.max_per_order ? "text-muted-foreground font-bold text-xl" : "text-foreground font-bold text-xl"}>+</Text>
+                      <Plus size={18} color={qty >= tt.max_per_order ? "#6b6b6b" : "#fafafa"} strokeWidth={2} />
                     </Button>
                   </View>
                 )}
@@ -373,7 +400,7 @@ export default function SellerScreen() {
       <Modal visible={confirmOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setConfirmOpen(false)}>
         <View className="flex-1 bg-background px-5 pt-6">
           <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-foreground text-xl font-bold">Confirm Sale</Text>
+            <Text className="text-foreground text-xl font-bold tracking-tight">Confirm Sale</Text>
             <Button variant="ghost" size="sm" onPress={() => setConfirmOpen(false)}>
               <Text className="text-muted-foreground">Cancel</Text>
             </Button>
@@ -420,14 +447,15 @@ export default function SellerScreen() {
             <View className="flex-row gap-2 mb-4">
               <Pressable
                 onPress={() => setPaymentMethod("cash")}
-                className={`flex-1 py-3 rounded-xl border items-center active:opacity-70 ${
+                className={`flex-1 py-3 rounded-xl border flex-row items-center justify-center gap-2 active:opacity-70 ${
                   paymentMethod === "cash"
                     ? "bg-primary border-primary"
                     : "bg-card border-border"
                 }`}
               >
-                <Text className={`font-semibold ${paymentMethod === "cash" ? "text-white" : "text-foreground"}`}>
-                  💵 Cash
+                <Banknote size={16} color={paymentMethod === "cash" ? "#000000" : "#fafafa"} strokeWidth={1.75} />
+                <Text className={`font-semibold ${paymentMethod === "cash" ? "text-primary-foreground" : "text-foreground"}`}>
+                  Cash
                 </Text>
               </Pressable>
               <Pressable
@@ -435,34 +463,28 @@ export default function SellerScreen() {
                   setPaymentMethod("tap");
                   if (tapState === "idle") initTapToPay();
                 }}
-                className={`flex-1 py-3 rounded-xl border items-center active:opacity-70 ${
+                className={`flex-1 py-3 rounded-xl border flex-row items-center justify-center gap-2 active:opacity-70 ${
                   paymentMethod === "tap"
                     ? "bg-primary border-primary"
                     : "bg-card border-border"
                 }`}
               >
-                <Text className={`font-semibold ${paymentMethod === "tap" ? "text-white" : "text-foreground"}`}>
-                  📱 Tap to Pay
+                <Smartphone size={16} color={paymentMethod === "tap" ? "#000000" : "#fafafa"} strokeWidth={1.75} />
+                <Text className={`font-semibold ${paymentMethod === "tap" ? "text-primary-foreground" : "text-foreground"}`}>
+                  Tap to Pay
                 </Text>
               </Pressable>
             </View>
 
             {/* Tap to Pay status in modal */}
             {paymentMethod === "tap" && tapState !== "idle" && (
-              <View className={`px-4 py-3 rounded-xl mb-4 ${
-                tapState === "ready" ? "bg-success/10 border border-success/30"
-                : tapState === "error" ? "bg-destructive/10 border border-destructive/30"
-                : "bg-card border border-border"
-              }`}>
+              <View className="px-4 py-3 rounded-xl mb-4 bg-card border border-border">
                 <View className="flex-row items-center gap-2">
                   {(tapState === "discovering" || tapState === "connecting") && (
-                    <ActivityIndicator size="small" color="#7c3aed" />
+                    <ActivityIndicator size="small" color="#fafafa" />
                   )}
-                  <Text className={`text-sm ${
-                    tapState === "ready" ? "text-success-foreground"
-                    : tapState === "error" ? "text-destructive"
-                    : "text-muted-foreground"
-                  }`}>
+                  {tapState === "ready" && <Check size={14} color="#fafafa" strokeWidth={2} />}
+                  <Text className={`text-sm ${tapState === "error" ? "text-foreground font-medium" : "text-muted-foreground"}`}>
                     {tapMessage}
                   </Text>
                 </View>
@@ -472,8 +494,8 @@ export default function SellerScreen() {
 
           <View className="py-4 gap-3">
             {paymentMethod === "cash" ? (
-              <Button variant="success" className="w-full" onPress={sellCash} loading={selling} disabled={selling}>
-                <Text>💵 Collect Cash — {formatCurrency(cartTotal)}</Text>
+              <Button variant="success" className="w-full" onPress={sellCash} loading={selling} disabled={selling} icon={<Banknote size={18} color="#000000" strokeWidth={1.75} />}>
+                <Text>Collect Cash — {formatCurrency(cartTotal)}</Text>
               </Button>
             ) : (
               <Button
@@ -482,8 +504,9 @@ export default function SellerScreen() {
                 onPress={sellTap}
                 loading={selling}
                 disabled={selling || tapState !== "ready"}
+                icon={<Smartphone size={18} color="#000000" strokeWidth={1.75} />}
               >
-                <Text>📱 Charge {formatCurrency(cartTotal)} — Tap to Pay</Text>
+                <Text>Charge {formatCurrency(cartTotal)} — Tap to Pay</Text>
               </Button>
             )}
           </View>
@@ -494,8 +517,10 @@ export default function SellerScreen() {
       <Modal visible={!!successInfo} transparent animationType="fade">
         <View className="flex-1 bg-black/70 items-center justify-center px-6">
           <Card className="w-full items-center p-8">
-            <Text className="text-7xl mb-4">🎉</Text>
-            <Text className="text-foreground text-2xl font-bold mb-1">Sold!</Text>
+            <View className="w-20 h-20 rounded-3xl items-center justify-center mb-5 border border-border bg-muted">
+              <PartyPopper size={36} color="#fafafa" strokeWidth={1.5} />
+            </View>
+            <Text className="text-foreground text-2xl font-bold mb-1 tracking-tight">Sold!</Text>
             <Text className="text-muted-foreground text-sm mb-6">
               {successInfo?.ticketCount} ticket{(successInfo?.ticketCount ?? 0) > 1 ? "s" : ""} issued
             </Text>

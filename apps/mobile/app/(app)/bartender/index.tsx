@@ -5,6 +5,7 @@ import {
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Camera, ChevronLeft, StickyNote, Check } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency } from "@/lib/utils";
 import type { DrinkOrder, DrinkOrderItem, Drink } from "@/lib/types";
@@ -147,8 +148,10 @@ export default function BartenderScreen() {
   if (!permission?.granted) {
     return (
       <View className="flex-1 bg-background items-center justify-center px-6" style={{ paddingTop: insets.top }}>
-        <Text className="text-5xl mb-4">📷</Text>
-        <Text className="text-foreground text-xl font-bold mb-2">Camera Required</Text>
+        <View className="w-16 h-16 rounded-2xl items-center justify-center mb-4 border border-border bg-muted">
+          <Camera size={28} color="#fafafa" strokeWidth={1.75} />
+        </View>
+        <Text className="text-foreground text-xl font-bold mb-2 tracking-tight">Camera Required</Text>
         <Button onPress={requestPermission} className="mt-4">
           <Text>Grant Permission</Text>
         </Button>
@@ -160,16 +163,16 @@ export default function BartenderScreen() {
     <View className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
       {/* Header */}
       <View className="flex-row items-center justify-between px-5 pt-4 pb-2">
-        <Text className="text-white text-xl font-bold">🍺 Bartender</Text>
+        <Text className="text-white text-xl font-bold tracking-tight">Bartender</Text>
         <View className="flex-row gap-2">
           {pending > 0 && (
-            <View className="bg-warning/20 px-2.5 py-1 rounded-lg">
-              <Text className="text-warning text-xs font-bold">{pending} pending</Text>
+            <View className="border border-white/30 px-2.5 py-1 rounded-lg">
+              <Text className="text-white text-xs font-bold">{pending} pending</Text>
             </View>
           )}
           {inProg > 0 && (
-            <View className="bg-blue-500/20 px-2.5 py-1 rounded-lg">
-              <Text className="text-blue-400 text-xs font-bold">{inProg} active</Text>
+            <View className="bg-white px-2.5 py-1 rounded-lg">
+              <Text className="text-black text-xs font-bold">{inProg} active</Text>
             </View>
           )}
         </View>
@@ -202,7 +205,7 @@ export default function BartenderScreen() {
               >
                 {queue.slice(0, 12).map(o => (
                   <View key={o.id} className="bg-black/70 border border-white/20 rounded-xl px-3 py-2 items-center">
-                    <View className={`w-2 h-2 rounded-full mb-1 ${o.status === "IN_PROGRESS" ? "bg-blue-400" : "bg-warning"}`} />
+                    <View className={`w-2 h-2 rounded-full mb-1 ${o.status === "IN_PROGRESS" ? "bg-white" : "bg-white/40"}`} />
                     <Text className="text-white text-xs font-mono">{o.qr_token?.slice(-4)}</Text>
                     <Text className="text-white/50 text-xs">{formatCurrency(o.total)}</Text>
                   </View>
@@ -220,20 +223,22 @@ export default function BartenderScreen() {
             {/* Order header */}
             <View className="flex-row items-center justify-between py-4 border-b border-white/10 mb-4">
               <View>
-                <Text className="text-white font-bold text-lg">{activeOrder.guest_name ?? "Guest"}</Text>
+                <Text className="text-white font-bold text-lg tracking-tight">{activeOrder.guest_name ?? "Guest"}</Text>
                 <Text className="text-white/40 text-xs font-mono">{activeOrder.qr_token}</Text>
               </View>
               <Pressable
                 onPress={() => { setScanning(true); setActiveOrder(null); cooldown.current = false; }}
-                className="bg-white/10 px-3 py-2 rounded-xl active:opacity-60"
+                className="bg-white/10 px-3 py-2 rounded-xl active:opacity-60 flex-row items-center gap-1"
               >
-                <Text className="text-white text-sm" style={{ color: "#fff" }}>← Scan</Text>
+                <ChevronLeft size={15} color="#ffffff" strokeWidth={1.75} />
+                <Text className="text-white text-sm">Scan</Text>
               </Pressable>
             </View>
 
             {activeOrder.notes && (
-              <View className="bg-warning/10 border border-warning/30 rounded-xl px-4 py-3 mb-4">
-                <Text className="text-warning text-sm">📝 {activeOrder.notes}</Text>
+              <View className="bg-card border border-border rounded-xl px-4 py-3 mb-4 flex-row items-center gap-2">
+                <StickyNote size={15} color="#8f8f8f" strokeWidth={1.75} />
+                <Text className="text-muted-foreground text-sm flex-1">{activeOrder.notes}</Text>
               </View>
             )}
 
@@ -247,14 +252,14 @@ export default function BartenderScreen() {
                     onPress={() => toggleItem(item.id, !done)}
                     className={`rounded-2xl p-4 flex-row items-center gap-4 border active:opacity-80 ${
                       done
-                        ? "bg-green-900/40 border-green-700/50"
+                        ? "bg-white/5 border-white/30"
                         : "bg-card border-border"
                     }`}
                   >
                     <View className={`w-9 h-9 rounded-full border-2 items-center justify-center ${
-                      done ? "bg-success border-success" : "border-border"
+                      done ? "bg-white border-white" : "border-border"
                     }`}>
-                      {done && <Text className="text-white font-bold">✓</Text>}
+                      {done && <Check size={18} color="#000000" strokeWidth={2.5} />}
                     </View>
                     <View className="flex-1">
                       <Text className={`font-semibold text-base ${done ? "text-white/40 line-through" : "text-white"}`}>
@@ -279,7 +284,7 @@ export default function BartenderScreen() {
               variant={allDone ? "success" : "secondary"}
               className="w-full py-5 rounded-2xl"
             >
-              <Text>{allDone ? "✅ Complete Order" : `${doneCount} / ${items.length} done`}</Text>
+              <Text>{allDone ? "Complete Order" : `${doneCount} / ${items.length} done`}</Text>
             </Button>
           </View>
         </>

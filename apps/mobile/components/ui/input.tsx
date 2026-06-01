@@ -23,7 +23,7 @@ const Input = React.forwardRef<React.ElementRef<typeof TextInput>, InputProps>(
           props.editable === false && "opacity-50",
           className,
         )}
-        placeholderTextColor="#71717a"
+        placeholderTextColor="#6b6b6b"
         {...props}
       />
       {error && (

@@ -121,6 +121,12 @@ export async function GET(req: Request) {
       state: "ACTIVE",
     };
 
+    // ── Class definition (auto-created by Google on first save) ───────────
+    const genericClass = {
+      id: classId,
+      issuerName: "BASSPIKNIK",
+    };
+
     // ── Sign JWT ───────────────────────────────────────────────────────────
     const claims = {
       iss: SA_EMAIL,
@@ -129,6 +135,7 @@ export async function GET(req: Request) {
       iat: Math.floor(Date.now() / 1000),
       origins: [APP_URL],
       payload: {
+        genericClasses: [genericClass],
         genericObjects: [genericObject],
       },
     };

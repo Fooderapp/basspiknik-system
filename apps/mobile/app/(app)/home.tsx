@@ -1,6 +1,7 @@
 import { Pressable, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ticket, Wine, ScanLine, Beer, CreditCard, type LucideIcon } from "lucide-react-native";
 import { useAuth } from "@/context/auth";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/badge";
@@ -9,20 +10,19 @@ import { Text } from "@/components/ui/text";
 import { Separator } from "@/components/ui/separator";
 
 interface NavTile {
-  icon: string;
+  icon: LucideIcon;
   label: string;
   sub: string;
   route: string;
-  color: string;
   roles?: string[];
 }
 
 const TILES: NavTile[] = [
-  { icon: "🎟️", label: "My Tickets",    sub: "View & scan your tickets",   route: "/(app)/tickets",   color: "#7c3aed" },
-  { icon: "🍹", label: "Bar Menu",      sub: "Order drinks",                route: "/(app)/menu",      color: "#0891b2" },
-  { icon: "📷", label: "Check-In",      sub: "Scan ticket QR codes",        route: "/(app)/checkin",   color: "#059669", roles: ["ADMIN","EDITOR","STAFF","SELLER","BARTENDER"] },
-  { icon: "🍺", label: "Bartender POS", sub: "Process drink orders",        route: "/(app)/bartender", color: "#d97706", roles: ["ADMIN","EDITOR","BARTENDER"] },
-  { icon: "💳", label: "Sell Tickets",  sub: "POS ticket selling",          route: "/(app)/seller",    color: "#db2777", roles: ["ADMIN","EDITOR","SELLER"] },
+  { icon: Ticket,     label: "My Tickets",    sub: "View & scan your tickets",   route: "/(app)/tickets" },
+  { icon: Wine,       label: "Bar Menu",      sub: "Order drinks",                route: "/(app)/menu" },
+  { icon: ScanLine,   label: "Check-In",      sub: "Scan ticket QR codes",        route: "/(app)/checkin",   roles: ["ADMIN","EDITOR","STAFF","SELLER","BARTENDER"] },
+  { icon: Beer,       label: "Bartender POS", sub: "Process drink orders",        route: "/(app)/bartender", roles: ["ADMIN","EDITOR","BARTENDER"] },
+  { icon: CreditCard, label: "Sell Tickets",  sub: "POS ticket selling",          route: "/(app)/seller",    roles: ["ADMIN","EDITOR","SELLER"] },
 ];
 
 export default function HomeScreen() {
@@ -56,7 +56,9 @@ export default function HomeScreen() {
 
       {/* Nav tiles */}
       <View className="flex-row flex-wrap gap-4">
-        {tiles.map(tile => (
+        {tiles.map(tile => {
+          const Icon = tile.icon;
+          return (
           <Pressable
             key={tile.route}
             onPress={() => router.push(tile.route as never)}
@@ -64,17 +66,15 @@ export default function HomeScreen() {
             style={{ width: tiles.length === 1 ? "100%" : "47%" }}
           >
             <Card className="p-5">
-              <View
-                className="w-12 h-12 rounded-xl items-center justify-center mb-3"
-                style={{ backgroundColor: tile.color + "22" }}
-              >
-                <Text className="text-3xl">{tile.icon}</Text>
+              <View className="w-11 h-11 rounded-xl items-center justify-center mb-4 border border-border bg-muted">
+                <Icon size={20} color="#fafafa" strokeWidth={1.75} />
               </View>
-              <Text className="text-foreground font-semibold text-base">{tile.label}</Text>
-              <Text className="text-muted-foreground text-xs mt-0.5">{tile.sub}</Text>
+              <Text className="text-foreground font-semibold text-base tracking-tight">{tile.label}</Text>
+              <Text className="text-muted-foreground text-xs mt-1">{tile.sub}</Text>
             </Card>
           </Pressable>
-        ))}
+          );
+        })}
       </View>
     </ScrollView>
   );

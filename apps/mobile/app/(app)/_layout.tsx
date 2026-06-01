@@ -8,7 +8,7 @@ export default function AppLayout() {
   if (loading) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color="#7c3aed" />
+        <ActivityIndicator size="large" color="#fafafa" />
       </View>
     );
   }
@@ -16,7 +16,7 @@ export default function AppLayout() {
   if (!session) return <Redirect href="/(auth)/login" />;
 
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#09090b" } }}>
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#000000" } }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="tickets/[id]" options={{ presentation: "modal" }} />
       <Stack.Screen name="menu/order" options={{ presentation: "modal" }} />

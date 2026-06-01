@@ -50,7 +50,7 @@ export function EmbedSnippet({ slug }: Props) {
             className="absolute top-2 right-2 h-7 w-7"
             onClick={copy}
           >
-            {copied ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+            {copied ? <CheckCircle2 className="h-4 w-4 text-foreground" /> : <Copy className="h-4 w-4" />}
           </Button>
         </div>
         <Button variant="outline" size="sm" asChild>

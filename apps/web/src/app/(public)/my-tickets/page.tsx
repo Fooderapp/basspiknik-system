@@ -14,12 +14,12 @@ import { getDictionary, t } from "@/lib/i18n";
 export const metadata = { title: "My Tickets" };
 
 const TIER_COLORS: Record<string, string> = {
-  VIP:        "bg-purple-100 text-purple-800 border-purple-200",
-  EARLY_BIRD: "bg-blue-100 text-blue-800 border-blue-200",
-  GENERAL:    "bg-gray-100 text-gray-800 border-gray-200",
-  LATE:       "bg-orange-100 text-orange-800 border-orange-200",
-  DOOR:       "bg-amber-100 text-amber-800 border-amber-200",
-  FREE:       "bg-green-100 text-green-800 border-green-200",
+  VIP:        "bg-foreground text-background border-transparent",
+  EARLY_BIRD: "bg-muted text-foreground border-border",
+  GENERAL:    "bg-muted text-foreground border-border",
+  LATE:       "bg-muted text-foreground border-border",
+  DOOR:       "bg-muted text-foreground border-border",
+  FREE:       "bg-muted text-muted-foreground border-border",
 };
 
 export default async function MyTicketsPage() {

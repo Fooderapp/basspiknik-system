@@ -50,10 +50,10 @@ export default async function AnalyticsPage() {
   }, {} as Record<string, number>);
 
   const cards = [
-    { title: t(dict, "analytics.gross"),   value: fmt(gross),   icon: TrendingUp, color: "text-green-500",  desc: t(dict, "analytics.gross_desc") },
-    { title: t(dict, "analytics.fees"),    value: fmt(fees),    icon: CreditCard, color: "text-orange-500", desc: t(dict, "analytics.fees_desc") },
-    { title: t(dict, "analytics.payout"),  value: fmt(payout),  icon: DollarSign, color: "text-blue-500",   desc: t(dict, "analytics.payout_desc") },
-    { title: t(dict, "analytics.refunds"), value: fmt(refunds), icon: Percent,    color: "text-red-500",    desc: t(dict, "analytics.refunds_desc") },
+    { title: t(dict, "analytics.gross"),   value: fmt(gross),   icon: TrendingUp, color: "text-muted-foreground",  desc: t(dict, "analytics.gross_desc") },
+    { title: t(dict, "analytics.fees"),    value: fmt(fees),    icon: CreditCard, color: "text-muted-foreground", desc: t(dict, "analytics.fees_desc") },
+    { title: t(dict, "analytics.payout"),  value: fmt(payout),  icon: DollarSign, color: "text-muted-foreground",   desc: t(dict, "analytics.payout_desc") },
+    { title: t(dict, "analytics.refunds"), value: fmt(refunds), icon: Percent,    color: "text-muted-foreground",    desc: t(dict, "analytics.refunds_desc") },
   ];
 
   return (

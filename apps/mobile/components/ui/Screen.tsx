@@ -20,7 +20,7 @@ export function Screen({ title, subtitle, children, scroll = true, padded = true
       {title && (
         <View className="flex-row items-center justify-between px-5 pt-4 pb-3">
           <View className="flex-1">
-            <Text className="text-foreground text-2xl font-bold">{title}</Text>
+            <Text className="text-foreground text-2xl font-bold tracking-tight">{title}</Text>
             {subtitle && <Text className="text-muted-foreground text-sm mt-0.5">{subtitle}</Text>}
           </View>
           {right}

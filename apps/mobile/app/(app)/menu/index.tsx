@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { ActivityIndicator, FlatList, Modal, Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ShoppingBag, AlertTriangle, Star, Plus, Minus } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
 import type { Drink, DrinkCategoryRow } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
@@ -94,7 +95,7 @@ export default function MenuScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-background items-center justify-center">
-        <ActivityIndicator size="large" color="#7c3aed" />
+        <ActivityIndicator size="large" color="#fafafa" />
       </View>
     );
   }
@@ -104,12 +105,12 @@ export default function MenuScreen() {
       {/* Header */}
       <View className="flex-row items-center justify-between px-5 pt-4 pb-2">
         <View>
-          <Text className="text-foreground text-2xl font-bold">🍹 Bar Menu</Text>
+          <Text className="text-foreground text-2xl font-bold tracking-tight">Bar Menu</Text>
           <Text className="text-muted-foreground text-sm">{drinks.length} items available</Text>
         </View>
         {cartCount > 0 && (
-          <Button size="sm" onPress={() => setCartOpen(true)}>
-            <Text>🛒 {cartCount} · {formatCurrency(cartTotal)}</Text>
+          <Button size="sm" onPress={() => setCartOpen(true)} icon={<ShoppingBag size={15} color="#000000" strokeWidth={2} />}>
+            <Text>{cartCount} · {formatCurrency(cartTotal)}</Text>
           </Button>
         )}
       </View>
@@ -135,7 +136,6 @@ export default function MenuScreen() {
             onPress={() => setActiveCat(c.id)}
             className={`px-3 py-1.5 rounded-full flex-row items-center gap-1 ${activeCat === c.id ? "bg-primary" : "bg-card border border-border"}`}
           >
-            <Text className="text-sm">{c.emoji}</Text>
             <Text className={activeCat === c.id ? "text-primary-foreground font-medium text-sm" : "text-muted-foreground text-sm"}>
               {c.name}
             </Text>
@@ -148,7 +148,7 @@ export default function MenuScreen() {
         data={filtered}
         keyExtractor={d => d.id}
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7c3aed" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fafafa" />}
         renderItem={({ item: drink }) => {
           const price = drink.sale_enabled && drink.sale_price ? drink.sale_price : drink.price;
           const qty   = getQty(drink.id);
@@ -159,9 +159,17 @@ export default function MenuScreen() {
                   <CardTitle>{drink.name}</CardTitle>
                   {drink.description && <CardDescription numberOfLines={2}>{drink.description}</CardDescription>}
                   {drink.allergens?.length > 0 && (
-                    <Text className="text-muted-foreground text-xs mt-1">⚠️ {drink.allergens.join(", ")}</Text>
+                    <View className="flex-row items-center gap-1 mt-1">
+                      <AlertTriangle size={12} color="#8f8f8f" strokeWidth={1.75} />
+                      <Text className="text-muted-foreground text-xs">{drink.allergens.join(", ")}</Text>
+                    </View>
                   )}
-                  {drink.is_popular && <Text className="text-xs mt-0.5" style={{ color: "#f59e0b" }}>⭐ Popular</Text>}
+                  {drink.is_popular && (
+                    <View className="flex-row items-center gap-1 mt-0.5">
+                      <Star size={12} color="#fafafa" strokeWidth={1.75} fill="#fafafa" />
+                      <Text className="text-xs text-foreground">Popular</Text>
+                    </View>
+                  )}
                 </View>
                 <View className="items-end">
                   <Text className="text-foreground font-bold text-base">{formatCurrency(price)}</Text>
@@ -172,17 +180,17 @@ export default function MenuScreen() {
               </View>
               <View className="flex-row justify-end">
                 {qty === 0 ? (
-                  <Button size="sm" onPress={() => addToCart(drink)}>
-                    <Text>+ Add</Text>
+                  <Button size="sm" onPress={() => addToCart(drink)} icon={<Plus size={15} color="#000000" strokeWidth={2.25} />}>
+                    <Text>Add</Text>
                   </Button>
                 ) : (
-                  <View className="flex-row items-center gap-3 bg-secondary rounded-xl px-4 py-2">
+                  <View className="flex-row items-center gap-4 bg-secondary border border-border rounded-xl px-4 py-2">
                     <Pressable onPress={() => adjustQty(drink.id, -1)} className="active:opacity-60">
-                      <Text className="text-foreground font-bold text-xl">−</Text>
+                      <Minus size={18} color="#fafafa" strokeWidth={2} />
                     </Pressable>
                     <Text className="text-foreground font-bold w-6 text-center">{qty}</Text>
                     <Pressable onPress={() => adjustQty(drink.id, 1)} className="active:opacity-60">
-                      <Text className="text-foreground font-bold text-xl">+</Text>
+                      <Plus size={18} color="#fafafa" strokeWidth={2} />
                     </Pressable>
                   </View>
                 )}
@@ -196,7 +204,7 @@ export default function MenuScreen() {
       <Modal visible={cartOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setCartOpen(false)}>
         <View className="flex-1 bg-background px-5 pt-6">
           <View className="flex-row items-center justify-between mb-6">
-            <Text className="text-foreground text-xl font-bold">🛒 Your Order</Text>
+            <Text className="text-foreground text-xl font-bold tracking-tight">Your Order</Text>
             <Button variant="ghost" size="sm" onPress={() => setCartOpen(false)}>
               <Text className="text-muted-foreground">Close</Text>
             </Button>
@@ -212,12 +220,12 @@ export default function MenuScreen() {
                     <Text className="text-muted-foreground text-sm">{formatCurrency(p)} × {item.quantity}</Text>
                   </View>
                   <View className="flex-row items-center gap-2">
-                    <Pressable onPress={() => adjustQty(item.drink.id, -1)} className="w-8 h-8 bg-secondary rounded-lg items-center justify-center active:opacity-60">
-                      <Text className="text-foreground font-bold">−</Text>
+                    <Pressable onPress={() => adjustQty(item.drink.id, -1)} className="w-8 h-8 bg-secondary border border-border rounded-lg items-center justify-center active:opacity-60">
+                      <Minus size={15} color="#fafafa" strokeWidth={2} />
                     </Pressable>
                     <Text className="text-foreground font-bold w-5 text-center">{item.quantity}</Text>
-                    <Pressable onPress={() => adjustQty(item.drink.id, 1)} className="w-8 h-8 bg-secondary rounded-lg items-center justify-center active:opacity-60">
-                      <Text className="text-foreground font-bold">+</Text>
+                    <Pressable onPress={() => adjustQty(item.drink.id, 1)} className="w-8 h-8 bg-secondary border border-border rounded-lg items-center justify-center active:opacity-60">
+                      <Plus size={15} color="#fafafa" strokeWidth={2} />
                     </Pressable>
                     <Text className="text-foreground font-semibold w-16 text-right">{formatCurrency(p * item.quantity)}</Text>
                   </View>

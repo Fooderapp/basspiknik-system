@@ -41,10 +41,10 @@ export default async function DashboardPage() {
   const events = (eventsRaw as EventWithTickets[] | null) ?? [];
 
   const statCards = [
-    { title: t(dict, "dash.total_events"),  value: String(eventCount ?? 0),  icon: CalendarDays, color: "text-blue-500" },
-    { title: t(dict, "dash.revenue"),       value: fmt(totalRevenue),         icon: TrendingUp,   color: "text-green-500" },
-    { title: t(dict, "dash.tickets_sold"),  value: String(ticketCount ?? 0),  icon: Ticket,       color: "text-purple-500" },
-    { title: t(dict, "dash.guests"),        value: String(guestCount ?? 0),   icon: Users,        color: "text-orange-500" },
+    { title: t(dict, "dash.total_events"),  value: String(eventCount ?? 0),  icon: CalendarDays, color: "text-muted-foreground" },
+    { title: t(dict, "dash.revenue"),       value: fmt(totalRevenue),         icon: TrendingUp,   color: "text-muted-foreground" },
+    { title: t(dict, "dash.tickets_sold"),  value: String(ticketCount ?? 0),  icon: Ticket,       color: "text-muted-foreground" },
+    { title: t(dict, "dash.guests"),        value: String(guestCount ?? 0),   icon: Users,        color: "text-muted-foreground" },
   ];
 
   return (

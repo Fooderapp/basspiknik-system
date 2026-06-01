@@ -27,18 +27,18 @@ interface ScanResult {
 
 const BORDER_COLOR: Record<ScanStatus, string> = {
   idle:         "",
-  ok:           "border-green-400  shadow-[0_0_0_4px_rgba(74,222,128,0.3)]",
-  already_used: "border-amber-400  shadow-[0_0_0_4px_rgba(251,191,36,0.3)]",
-  invalid:      "border-red-500    shadow-[0_0_0_4px_rgba(239,68,68,0.3)]",
-  cancelled:    "border-red-700    shadow-[0_0_0_4px_rgba(185,28,28,0.3)]",
+  ok:           "border-white    shadow-[0_0_0_4px_rgba(255,255,255,0.3)]",
+  already_used: "border-white/60 shadow-[0_0_0_4px_rgba(255,255,255,0.15)]",
+  invalid:      "border-white/40 shadow-[0_0_0_4px_rgba(115,115,115,0.3)]",
+  cancelled:    "border-white/30 shadow-[0_0_0_4px_rgba(115,115,115,0.3)]",
 };
 
 const POPUP_CONFIG: Record<ScanStatus, { bar: string; icon: React.ReactNode; label: string; labelColor: string }> = {
-  idle:         { bar: "",               icon: null,                                               label: "",           labelColor: "" },
-  ok:           { bar: "bg-green-500",   icon: <CheckCircle2 className="h-5 w-5 text-green-400"/>, label: "ADMITTED",   labelColor: "text-green-400" },
-  already_used: { bar: "bg-amber-500",   icon: <AlertCircle  className="h-5 w-5 text-amber-400"/>, label: "ALREADY IN", labelColor: "text-amber-400" },
-  invalid:      { bar: "bg-red-500",     icon: <XCircle      className="h-5 w-5 text-red-400"/>,   label: "INVALID",    labelColor: "text-red-400" },
-  cancelled:    { bar: "bg-red-700",     icon: <XCircle      className="h-5 w-5 text-red-400"/>,   label: "CANCELLED",  labelColor: "text-red-400" },
+  idle:         { bar: "",            icon: null,                                              label: "",           labelColor: "" },
+  ok:           { bar: "bg-white",    icon: <CheckCircle2 className="h-5 w-5 text-white"/>,    label: "ADMITTED",   labelColor: "text-white" },
+  already_used: { bar: "bg-white/60", icon: <AlertCircle  className="h-5 w-5 text-white/70"/>, label: "ALREADY IN", labelColor: "text-white/70" },
+  invalid:      { bar: "bg-white/40", icon: <XCircle      className="h-5 w-5 text-white/60"/>, label: "INVALID",    labelColor: "text-white/60" },
+  cancelled:    { bar: "bg-white/30", icon: <XCircle      className="h-5 w-5 text-white/60"/>, label: "CANCELLED",  labelColor: "text-white/60" },
 };
 
 const CORNER_CLASSES = [
@@ -234,7 +234,7 @@ export function CheckinScanner() {
                               {status === "ok" && (result.ticket.entriesAllowed ?? 1) > 1 && (
                                 <div className="flex items-center gap-1.5 mt-2">
                                   {Array.from({ length: result.ticket.entriesAllowed! }).map((_, i) => (
-                                    <div key={i} className={cn("h-2 w-2 rounded-full", i < (result.ticket!.entriesUsed ?? 0) ? "bg-green-400" : "bg-white/20")} />
+                                    <div key={i} className={cn("h-2 w-2 rounded-full", i < (result.ticket!.entriesUsed ?? 0) ? "bg-white" : "bg-white/20")} />
                                   ))}
                                   <span className="text-[10px] text-white/50 ml-1">{result.ticket.entriesLeft} left</span>
                                 </div>
@@ -353,7 +353,7 @@ export function CheckinScanner() {
 
         <Button
           variant="ghost" size="icon"
-          className={cn("hover:bg-white/10", torch ? "text-yellow-400" : "text-white/40", !torchSupported && "opacity-0 pointer-events-none")}
+          className={cn("hover:bg-white/10", torch ? "text-white" : "text-white/40", !torchSupported && "opacity-0 pointer-events-none")}
           onClick={toggleTorch}
         >
           {torch ? <Flashlight className="h-5 w-5" /> : <FlashlightOff className="h-5 w-5" />}

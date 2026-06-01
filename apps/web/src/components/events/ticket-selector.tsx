@@ -100,7 +100,7 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency }: TicketS
                     </Badge>
                   )}
                   {ticket.saleEnabled && (
-                    <Badge className="text-xs bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200 border-0">
+                    <Badge className="text-xs bg-foreground text-background border-0">
                       {dict["ticket.sale"]}
                     </Badge>
                   )}

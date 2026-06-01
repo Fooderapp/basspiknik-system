@@ -10,16 +10,7 @@ const Card = React.forwardRef<
   <View
     ref={ref}
     className={cn("bg-card border border-border rounded-2xl p-4", className)}
-    style={[
-      {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 8,
-        elevation: 4,
-      },
-      style,
-    ]}
+    style={style}
     {...props}
   />
 ));
@@ -39,7 +30,7 @@ const CardTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <Text
     ref={ref}
-    className={cn("text-foreground font-semibold text-base", className)}
+    className={cn("text-foreground font-semibold text-base tracking-tight", className)}
     {...props}
   />
 ));

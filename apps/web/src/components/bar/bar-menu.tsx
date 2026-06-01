@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
-import { ShoppingCart, Plus, Minus, Trash2, Wine, CheckCircle2, RefreshCw, Pencil, X, Clock, Loader2 } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Trash2, Wine, CheckCircle2, RefreshCw, Pencil, X, Clock, Loader2, AlertTriangle } from "lucide-react";
 import type { Drink, DrinkCategory, DrinkCategoryRow } from "@/lib/supabase/types";
 import type { Dictionary } from "@/lib/i18n";
 import type { Currency } from "@/lib/settings";
@@ -34,20 +34,9 @@ const ENUM_LABEL: Record<DrinkCategory, keyof Dictionary> = {
   OTHER:      "menu.cat_other",
 };
 
-const ENUM_EMOJI: Record<DrinkCategory, string> = {
-  COCKTAIL:   "🍹",
-  BEER:       "🍺",
-  WINE:       "🍷",
-  SPIRIT:     "🥃",
-  SOFT_DRINK: "🥤",
-  SHOT:       "🥊",
-  OTHER:      "🍶",
-};
-
 interface CategoryTab {
   key: string;
   label: string;
-  emoji: string;
   color?: string;
 }
 
@@ -80,7 +69,7 @@ export function BarMenu({ drinks, categories, dict, currency }: Props) {
     for (const cat of categories) {
       if (drinks.some(d => d.category_id === cat.id)) {
         seenDbIds.add(cat.id);
-        tabs.push({ key: `db:${cat.id}`, label: cat.name, emoji: cat.emoji, color: cat.color });
+        tabs.push({ key: `db:${cat.id}`, label: cat.name, color: cat.color });
       }
     }
 
@@ -88,7 +77,7 @@ export function BarMenu({ drinks, categories, dict, currency }: Props) {
     for (const drink of drinks) {
       if (!drink.category_id && !seenEnums.has(drink.category)) {
         seenEnums.add(drink.category);
-        tabs.push({ key: `enum:${drink.category}`, label: t(ENUM_LABEL[drink.category]), emoji: ENUM_EMOJI[drink.category] });
+        tabs.push({ key: `enum:${drink.category}`, label: t(ENUM_LABEL[drink.category]) });
       }
     }
 
@@ -249,15 +238,13 @@ export function BarMenu({ drinks, categories, dict, currency }: Props) {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 gap-6 max-w-sm mx-auto">
         {/* Status icon */}
         <div className={`rounded-full p-5 ${
-          isFulfilled  ? "bg-green-100 dark:bg-green-900"
-          : isCancelled ? "bg-gray-100 dark:bg-gray-800"
-          : isInProgress ? "bg-blue-100 dark:bg-blue-900"
-          : "bg-amber-100 dark:bg-amber-900"
+          isFulfilled  ? "bg-foreground"
+          : "bg-muted"
         }`}>
-          {isFulfilled  ? <CheckCircle2 className="h-12 w-12 text-green-600 dark:text-green-400" />
-          : isCancelled ? <X className="h-12 w-12 text-gray-500" />
-          : isInProgress ? <Loader2 className="h-12 w-12 text-blue-500 animate-spin" />
-          : <Clock className="h-12 w-12 text-amber-600 dark:text-amber-400" />}
+          {isFulfilled  ? <CheckCircle2 className="h-12 w-12 text-background" />
+          : isCancelled ? <X className="h-12 w-12 text-muted-foreground" />
+          : isInProgress ? <Loader2 className="h-12 w-12 text-foreground animate-spin" />
+          : <Clock className="h-12 w-12 text-foreground" />}
         </div>
 
         {/* Status text */}
@@ -284,13 +271,13 @@ export function BarMenu({ drinks, categories, dict, currency }: Props) {
             <p className="text-xs text-muted-foreground font-mono">{orderResult.qrToken}</p>
             <p className="text-sm font-semibold">{t("menu.total")}: {fmt(orderResult.total)}</p>
             {isPending && (
-              <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Clock className="h-3.5 w-3.5" />
                 {t("menu.status_pending")}
               </div>
             )}
             {isInProgress && (
-              <div className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 {t("menu.status_progress")}
               </div>
@@ -380,7 +367,6 @@ export function BarMenu({ drinks, categories, dict, currency }: Props) {
                   : "bg-muted text-muted-foreground hover:bg-muted/80"
               }`}
             >
-              <span>{tab.emoji}</span>
               {tab.label}
             </button>
           ))}
@@ -429,8 +415,8 @@ export function BarMenu({ drinks, categories, dict, currency }: Props) {
                     </div>
 
                     {drink.allergens && drink.allergens.length > 0 && (
-                      <p className="text-[11px] text-muted-foreground">
-                        ⚠️ {drink.allergens.join(", ")}
+                      <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3 shrink-0" /> {drink.allergens.join(", ")}
                       </p>
                     )}
 

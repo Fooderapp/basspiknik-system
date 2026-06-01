@@ -134,7 +134,7 @@ export default async function EventDetailPage({
               {label === "Capacity" && totalCapacity > 0 && (
                 <div className="h-1 rounded-full bg-muted mt-2 overflow-hidden">
                   <div
-                    className={`h-full rounded-full ${capacityPct >= 100 ? "bg-destructive" : capacityPct >= 80 ? "bg-amber-500" : "bg-primary"}`}
+                    className={`h-full rounded-full ${capacityPct >= 100 ? "bg-destructive" : capacityPct >= 80 ? "bg-muted-foreground" : "bg-primary"}`}
                     style={{ width: `${Math.min(capacityPct, 100)}%` }}
                   />
                 </div>

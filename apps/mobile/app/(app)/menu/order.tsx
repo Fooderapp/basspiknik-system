@@ -3,6 +3,7 @@ import { View, ActivityIndicator, ScrollView, Pressable } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
+import { ChevronLeft, Clock, Loader, CheckCircle2, XCircle, type LucideIcon } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency } from "@/lib/utils";
 import { Text } from "@/components/ui/text";
@@ -10,17 +11,11 @@ import { Button } from "@/components/ui/Button";
 
 type OrderStatus = "PENDING" | "IN_PROGRESS" | "FULFILLED" | "CANCELLED";
 
-const STATUS_COLOR: Record<OrderStatus, string> = {
-  PENDING:     "#f59e0b",
-  IN_PROGRESS: "#3b82f6",
-  FULFILLED:   "#22c55e",
-  CANCELLED:   "#ef4444",
-};
-const STATUS_EMOJI: Record<OrderStatus, string> = {
-  PENDING:     "⏳",
-  IN_PROGRESS: "🔄",
-  FULFILLED:   "✅",
-  CANCELLED:   "❌",
+const STATUS_ICON: Record<OrderStatus, LucideIcon> = {
+  PENDING:     Clock,
+  IN_PROGRESS: Loader,
+  FULFILLED:   CheckCircle2,
+  CANCELLED:   XCircle,
 };
 const STATUS_LABEL: Record<OrderStatus, string> = {
   PENDING:     "Order Placed!",
@@ -78,24 +73,27 @@ export default function OrderStatusScreen() {
     setCancelling(false);
   }
 
-  const color      = STATUS_COLOR[status];
+  const StatusIcon = STATUS_ICON[status];
   const isTerminal = status === "FULFILLED" || status === "CANCELLED";
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       <View className="flex-row items-center px-5 py-4">
-        <Pressable onPress={() => router.replace("/(app)/menu" as never)} className="active:opacity-60">
-          <Text className="text-primary text-base">← Menu</Text>
+        <Pressable onPress={() => router.replace("/(app)/menu" as never)} className="active:opacity-60 flex-row items-center gap-0.5">
+          <ChevronLeft size={18} color="#fafafa" strokeWidth={1.75} />
+          <Text className="text-foreground text-base">Menu</Text>
         </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={{ alignItems: "center", paddingHorizontal: 24, paddingBottom: 40, paddingTop: 16 }}>
-        <Text className="text-6xl mb-4">{STATUS_EMOJI[status]}</Text>
+        <View className="w-20 h-20 rounded-3xl items-center justify-center mb-5 border border-border bg-muted">
+          <StatusIcon size={36} color="#fafafa" strokeWidth={1.5} />
+        </View>
 
-        <Text className="text-foreground text-2xl font-bold mb-2 text-center">{STATUS_LABEL[status]}</Text>
+        <Text className="text-foreground text-2xl font-bold mb-3 text-center tracking-tight">{STATUS_LABEL[status]}</Text>
 
-        <View className="px-4 py-1.5 rounded-full mb-8" style={{ backgroundColor: color + "22" }}>
-          <Text className="font-semibold text-sm" style={{ color }}>{status.replace("_", " ")}</Text>
+        <View className="px-4 py-1.5 rounded-full mb-8 border border-border">
+          <Text className="text-muted-foreground font-semibold text-xs tracking-wide">{status.replace("_", " ")}</Text>
         </View>
 
         {/* QR code */}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, FlatList, Linking, Platform, Pressable, RefreshControl, View } from "react-native";
 import { router } from "expo-router";
+import { Apple, Wallet, Ticket as TicketIcon, User, ChevronRight } from "lucide-react-native";
 import { Screen } from "@/components/ui/Screen";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/badge";
@@ -26,21 +27,35 @@ export default function TicketsScreen() {
   const [tickets, setTickets]     = useState<Ticket[]>([]);
   const [loading, setLoading]     = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [addingWallet, setAddingWallet] = useState(false);
+  const [addingWallet, setAddingWallet]       = useState(false);
+  const [addingGoogleWallet, setAddingGoogleWallet] = useState(false);
 
   async function addToAppleWallet() {
     setAddingWallet(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
-      // Single per-user pass — open in Safari so iOS prompts "Add to Apple Wallet"
-      // for the .pkpass response. Token goes in the query (browser sends no headers).
       const url = `${API_URL}/api/wallet?token=${encodeURIComponent(session.access_token)}`;
       await Linking.openURL(url);
     } catch (e: any) {
       Alert.alert("Error", e.message);
     } finally {
       setAddingWallet(false);
+    }
+  }
+
+  async function addToGoogleWallet() {
+    setAddingGoogleWallet(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+      // Opens in browser → redirects to Google Wallet save URL
+      const url = `${API_URL}/api/google-wallet?token=${encodeURIComponent(session.access_token)}`;
+      await Linking.openURL(url);
+    } catch (e: any) {
+      Alert.alert("Error", e.message);
+    } finally {
+      setAddingGoogleWallet(false);
     }
   }
 
@@ -68,7 +83,7 @@ export default function TicketsScreen() {
     return (
       <Screen title="My Tickets">
         <View className="flex-1 items-center justify-center py-20">
-          <ActivityIndicator size="large" color="#7c3aed" />
+          <ActivityIndicator size="large" color="#fafafa" />
         </View>
       </Screen>
     );
@@ -85,24 +100,41 @@ export default function TicketsScreen() {
         data={tickets}
         keyExtractor={t => t.id}
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32, paddingTop: 8 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7c3aed" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fafafa" />}
         ListHeaderComponent={
-          Platform.OS === "ios" && hasValid ? (
-            <Button
-              variant="secondary"
-              className="w-full mb-4"
-              onPress={addToAppleWallet}
-              loading={addingWallet}
-              disabled={addingWallet}
-            >
-              <Text className="font-semibold">🍎 Add to Apple Wallet</Text>
-            </Button>
+          hasValid ? (
+            <View className="gap-2 mb-4">
+              {Platform.OS === "ios" && (
+                <Button
+                  variant="secondary"
+                  className="w-full"
+                  onPress={addToAppleWallet}
+                  loading={addingWallet}
+                  disabled={addingWallet}
+                  icon={<Apple size={18} color="#fafafa" strokeWidth={1.75} />}
+                >
+                  <Text className="font-semibold">Add to Apple Wallet</Text>
+                </Button>
+              )}
+              <Button
+                variant="secondary"
+                className="w-full"
+                onPress={addToGoogleWallet}
+                loading={addingGoogleWallet}
+                disabled={addingGoogleWallet}
+                icon={<Wallet size={18} color="#fafafa" strokeWidth={1.75} />}
+              >
+                <Text className="font-semibold">Add to Google Wallet</Text>
+              </Button>
+            </View>
           ) : null
         }
         ListEmptyComponent={
           <View className="items-center py-20">
-            <Text className="text-5xl mb-4">🎟️</Text>
-            <Text className="text-foreground font-semibold text-lg">No tickets yet</Text>
+            <View className="w-14 h-14 rounded-2xl items-center justify-center mb-4 border border-border bg-muted">
+              <TicketIcon size={24} color="#8f8f8f" strokeWidth={1.75} />
+            </View>
+            <Text className="text-foreground font-semibold text-lg tracking-tight">No tickets yet</Text>
             <Text className="text-muted-foreground text-sm mt-1">Your purchased tickets appear here</Text>
           </View>
         }
@@ -114,7 +146,7 @@ export default function TicketsScreen() {
             <Card>
               <View className="flex-row items-start justify-between mb-2">
                 <View className="flex-1 mr-3">
-                  <Text className="text-foreground font-semibold text-base" numberOfLines={1}>
+                  <Text className="text-foreground font-semibold text-base tracking-tight" numberOfLines={1}>
                     {item.ticket_name ?? "Ticket"}
                   </Text>
                   <Text className="text-muted-foreground text-xs mt-0.5">{formatDate(item.created_at)}</Text>
@@ -122,10 +154,16 @@ export default function TicketsScreen() {
                 <Badge label={item.status} variant={STATUS_VARIANT[item.status] ?? "secondary"} />
               </View>
               {item.holder_name && (
-                <Text className="text-muted-foreground text-sm">👤 {item.holder_name}</Text>
+                <View className="flex-row items-center gap-1.5">
+                  <User size={13} color="#8f8f8f" strokeWidth={1.75} />
+                  <Text className="text-muted-foreground text-sm">{item.holder_name}</Text>
+                </View>
               )}
               <Separator className="mt-3 mb-3" />
-              <Text className="text-muted-foreground text-xs">Tap to view QR code →</Text>
+              <View className="flex-row items-center justify-between">
+                <Text className="text-muted-foreground text-xs">View QR code</Text>
+                <ChevronRight size={14} color="#8f8f8f" strokeWidth={1.75} />
+              </View>
             </Card>
           </Pressable>
         )}

@@ -108,8 +108,8 @@ export function SellerApp({ events }: Props) {
   if (lastReceipt) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[80vh] gap-6 p-6 text-center">
-        <div className="rounded-full bg-green-100 dark:bg-green-900 p-6">
-          <CheckCircle2 className="h-16 w-16 text-green-600 dark:text-green-400" />
+        <div className="rounded-full bg-muted p-6">
+          <CheckCircle2 className="h-16 w-16 text-foreground" />
         </div>
         <div>
           <h2 className="text-2xl font-bold mb-1">Sale Complete!</h2>

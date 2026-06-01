@@ -211,7 +211,7 @@ export function PromoManager({ eventId, eventName, initialPromos }: Props) {
                     >
                       {p.code}
                       {copied === p.code
-                        ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                        ? <CheckCircle2 className="h-3.5 w-3.5 text-foreground" />
                         : <Copy className="h-3 w-3 text-muted-foreground" />}
                     </button>
 
@@ -223,7 +223,7 @@ export function PromoManager({ eventId, eventName, initialPromos }: Props) {
 
                     {expired && <Badge variant="destructive" className="text-xs">Expired</Badge>}
                     {exhausted && !expired && <Badge variant="destructive" className="text-xs">Exhausted</Badge>}
-                    {!inactive && <Badge variant="outline" className="text-xs bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">Active</Badge>}
+                    {!inactive && <Badge variant="outline" className="text-xs">Active</Badge>}
                   </div>
 
                   <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">

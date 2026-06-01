@@ -60,8 +60,8 @@ export default async function SuccessPage({
         {/* Success header */}
         <div className="text-center space-y-3">
           <div className="flex justify-center">
-            <div className="rounded-full bg-green-100 dark:bg-green-900 p-5">
-              <CheckCircle2 className="h-14 w-14 text-green-600 dark:text-green-400" />
+            <div className="rounded-full bg-muted p-5">
+              <CheckCircle2 className="h-14 w-14 text-foreground" />
             </div>
           </div>
           <h1 className="text-3xl font-bold">{t(dict, "success.heading")}</h1>

@@ -5,14 +5,14 @@ import { cn } from "@/lib/utils";
 import { TextClassContext } from "@/components/ui/text";
 
 const buttonVariants = cva(
-  "flex flex-row items-center justify-center rounded-xl active:opacity-80",
+  "flex flex-row items-center justify-center rounded-xl active:opacity-70",
   {
     variants: {
       variant: {
         default:     "bg-primary",
         destructive: "bg-destructive",
         outline:     "border border-border bg-transparent",
-        secondary:   "bg-secondary",
+        secondary:   "bg-secondary border border-border",
         ghost:       "bg-transparent",
         success:     "bg-success",
       },
@@ -27,7 +27,7 @@ const buttonVariants = cva(
   }
 );
 
-const buttonTextVariants = cva("font-semibold", {
+const buttonTextVariants = cva("font-semibold tracking-tight", {
   variants: {
     variant: {
       default:     "text-primary-foreground",
@@ -54,7 +54,13 @@ type ButtonProps = React.ComponentPropsWithoutRef<typeof Pressable> &
   };
 
 const Button = React.forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>(
-  ({ className, variant, size, loading, icon, disabled, children, ...props }, ref) => (
+  ({ className, variant, size, loading, icon, disabled, children, ...props }, ref) => {
+    // White-bg variants need a dark spinner; dark variants need a light one.
+    const spinnerColor =
+      variant === "outline" || variant === "secondary" || variant === "ghost"
+        ? "#fafafa"
+        : "#000000";
+    return (
     <TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
       <Pressable
         ref={ref}
@@ -62,12 +68,12 @@ const Button = React.forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>
         disabled={disabled || loading}
         className={cn(
           buttonVariants({ variant, size, className }),
-          (disabled || loading) && "opacity-50",
+          (disabled || loading) && "opacity-40",
         )}
         {...props}
       >
         {loading ? (
-          <ActivityIndicator size="small" color="#fff" />
+          <ActivityIndicator size="small" color={spinnerColor} />
         ) : (
           <>
             {icon && <View className="mr-2">{icon}</View>}
@@ -76,7 +82,8 @@ const Button = React.forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>
         )}
       </Pressable>
     </TextClassContext.Provider>
-  )
+    );
+  }
 );
 Button.displayName = "Button";
 

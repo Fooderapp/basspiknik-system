@@ -12,8 +12,9 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  ScanLine, Clock, CheckCircle2, XCircle, Loader2,
-  Minus, Plus, Trash2, Wine, ChevronLeft, Keyboard, Flashlight, FlashlightOff, RotateCcw
+  ScanLine, CheckCircle2, XCircle, Loader2, AlertTriangle,
+  Minus, Plus, Trash2, Wine, ChevronLeft, Keyboard, Flashlight, FlashlightOff, RotateCcw,
+  Star, MessageSquare
 } from "lucide-react";
 import jsQR from "jsqr";
 import type { Dictionary } from "@/lib/i18n";
@@ -105,7 +106,7 @@ export function BartenderApp({ initialOrders, dict, currency }: Props) {
           if (res.ok) {
             const o: DrinkOrder = await res.json();
             setOrders(prev => prev.some(x => x.id === o.id) ? prev : [o, ...prev]);
-            if (o.is_vip) toast.success(`⭐ VIP order — ${o.guest_name ?? "Guest"}`);
+            if (o.is_vip) toast.success(`VIP order — ${o.guest_name ?? "Guest"}`);
           }
         } else if (payload.eventType === "UPDATE") {
           const upd = payload.new as DrinkOrder;
@@ -413,7 +414,7 @@ export function BartenderApp({ initialOrders, dict, currency }: Props) {
         {/* Pending */}
         {pending.length > 0 && (
           <div className="px-1.5 pt-2">
-            <p className="text-[9px] font-bold uppercase tracking-wider text-amber-400 px-1 mb-1">
+            <p className="text-[9px] font-bold uppercase tracking-wider text-white/60 px-1 mb-1">
               {pending.length} NEW
             </p>
             {pending.map(o => (
@@ -425,7 +426,7 @@ export function BartenderApp({ initialOrders, dict, currency }: Props) {
         {/* In Progress */}
         {inProgress.length > 0 && (
           <div className="px-1.5 pt-2">
-            <p className="text-[9px] font-bold uppercase tracking-wider text-blue-400 px-1 mb-1">
+            <p className="text-[9px] font-bold uppercase tracking-wider text-white/40 px-1 mb-1">
               {inProgress.length} ACTIVE
             </p>
             {inProgress.map(o => (
@@ -506,14 +507,14 @@ function QueueCard({ order, active, onClick, fmt }: {
       className={cn(
         "w-full text-left rounded-lg p-1.5 mb-1 transition-colors",
         active ? "bg-white/15" : "bg-white/5 hover:bg-white/10",
-        order.is_vip && "border border-amber-500/50"
+        order.is_vip && "border border-white/40"
       )}
     >
       <div className="flex items-center gap-1 mb-0.5">
-        {order.is_vip && <span className="text-[9px]">⭐</span>}
+        {order.is_vip && <Star className="h-2.5 w-2.5 fill-current text-white" />}
         <span className={cn(
           "h-1.5 w-1.5 rounded-full flex-shrink-0",
-          order.status === "PENDING" ? "bg-amber-400" : "bg-blue-400"
+          order.status === "PENDING" ? "bg-white" : "bg-white/40"
         )} />
         <span className="text-[10px] font-mono text-white/50 truncate">{order.qr_token.slice(0, 6)}</span>
       </div>
@@ -531,21 +532,21 @@ function QueueCard({ order, active, onClick, fmt }: {
 const SCAN_BG: Record<ScanState, string> = {
   idle:             "",
   loading:          "",
-  found:            "border-green-400 shadow-[0_0_0_6px_rgba(74,222,128,0.2)]",
-  in_progress_warn: "border-amber-400 shadow-[0_0_0_6px_rgba(251,191,36,0.2)]",
-  not_found:        "border-red-500   shadow-[0_0_0_6px_rgba(239,68,68,0.2)]",
-  done:             "border-green-400 shadow-[0_0_0_6px_rgba(74,222,128,0.2)]",
-  cancelled:        "border-red-700   shadow-[0_0_0_6px_rgba(185,28,28,0.2)]",
+  found:            "border-white   shadow-[0_0_0_6px_rgba(255,255,255,0.2)]",
+  in_progress_warn: "border-white/60 shadow-[0_0_0_6px_rgba(255,255,255,0.12)]",
+  not_found:        "border-white/40 shadow-[0_0_0_6px_rgba(115,115,115,0.2)]",
+  done:             "border-white   shadow-[0_0_0_6px_rgba(255,255,255,0.2)]",
+  cancelled:        "border-white/40 shadow-[0_0_0_6px_rgba(115,115,115,0.2)]",
 };
 
-const SCAN_LABEL: Record<ScanState, { text: string; color: string }> = {
-  idle:             { text: "",                    color: "" },
-  loading:          { text: "Looking up…",          color: "text-white/60" },
-  found:            { text: "✓ Order started",      color: "text-green-400" },
-  in_progress_warn: { text: "⚠ Already in progress", color: "text-amber-400" },
-  not_found:        { text: "✗ Order not found",    color: "text-red-400" },
-  done:             { text: "✓ Already fulfilled",  color: "text-green-400" },
-  cancelled:        { text: "✗ Cancelled",          color: "text-red-400" },
+const SCAN_LABEL: Record<ScanState, { text: string; color: string; Icon: typeof CheckCircle2 | null }> = {
+  idle:             { text: "",                    color: "",                   Icon: null },
+  loading:          { text: "Looking up…",          color: "text-white/60",      Icon: null },
+  found:            { text: "Order started",        color: "text-white",         Icon: CheckCircle2 },
+  in_progress_warn: { text: "Already in progress",  color: "text-white/60",      Icon: AlertTriangle },
+  not_found:        { text: "Order not found",      color: "text-white/60",      Icon: XCircle },
+  done:             { text: "Already fulfilled",    color: "text-white",         Icon: CheckCircle2 },
+  cancelled:        { text: "Cancelled",            color: "text-white/60",      Icon: XCircle },
 };
 
 const CORNERS = [
@@ -604,7 +605,9 @@ function ScannerView({
                   )}
                 </div>
                 {label.text && (
-                  <p className={cn("text-lg font-bold tracking-wide", label.color)}>{label.text}</p>
+                  <p className={cn("text-lg font-bold tracking-wide flex items-center gap-2", label.color)}>
+                    {label.Icon && <label.Icon className="h-5 w-5" />}{label.text}
+                  </p>
                 )}
                 {isIdle && (
                   <p className="text-xs text-white/30">Point camera at order QR code</p>
@@ -632,7 +635,9 @@ function ScannerView({
             </Button>
           </div>
           {label.text && (
-            <p className={cn("text-base font-bold", label.color)}>{label.text}</p>
+            <p className={cn("text-base font-bold flex items-center gap-2", label.color)}>
+              {label.Icon && <label.Icon className="h-4 w-4" />}{label.text}
+            </p>
           )}
         </div>
       )}
@@ -652,7 +657,7 @@ function ScannerView({
           className={cn(
             "p-1 transition-colors",
             !torchOk && "opacity-0 pointer-events-none",
-            torch ? "text-yellow-400" : "text-white/30 hover:text-white/60"
+            torch ? "text-white" : "text-white/30 hover:text-white/60"
           )}
         >
           {torch ? <Flashlight className="h-4 w-4" /> : <FlashlightOff className="h-4 w-4" />}
@@ -684,14 +689,14 @@ function OrderDetail({ order, scanState, fulfilled, allDone, completing, fmt,
       {/* Header */}
       <div className={cn(
         "flex items-center gap-3 px-4 py-3 border-b border-white/10 flex-shrink-0",
-        order.is_vip ? "bg-amber-950/40" : "bg-white/5"
+        order.is_vip ? "bg-white/10 border-l-2 border-l-white" : "bg-white/5"
       )}>
         <button onClick={onBack} className="text-white/40 hover:text-white/80 transition-colors">
           <ChevronLeft className="h-5 w-5" />
         </button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            {order.is_vip && <span className="text-amber-400 text-sm">⭐</span>}
+            {order.is_vip && <Star className="h-4 w-4 fill-current text-white" />}
             <span className="font-bold text-lg truncate">{order.guest_name ?? "Guest"}</span>
             <StatusBadge status={order.status} warn={scanState === "in_progress_warn"} />
           </div>
@@ -705,8 +710,8 @@ function OrderDetail({ order, scanState, fulfilled, allDone, completing, fmt,
 
       {/* Notes */}
       {order.notes && (
-        <div className="px-4 py-2 bg-white/5 border-b border-white/10 text-xs text-white/50 italic flex-shrink-0">
-          💬 {order.notes}
+        <div className="px-4 py-2 bg-white/5 border-b border-white/10 text-xs text-white/50 italic flex-shrink-0 flex items-center gap-1.5">
+          <MessageSquare className="h-3 w-3 shrink-0" /> {order.notes}
         </div>
       )}
 
@@ -720,7 +725,7 @@ function OrderDetail({ order, scanState, fulfilled, allDone, completing, fmt,
               className={cn(
                 "rounded-xl border transition-all duration-150 overflow-hidden",
                 done
-                  ? "bg-green-950/40 border-green-500/30"
+                  ? "bg-white/10 border-white/30"
                   : "bg-white/5 border-white/10"
               )}
             >
@@ -732,9 +737,9 @@ function OrderDetail({ order, scanState, fulfilled, allDone, completing, fmt,
                 {/* Checkbox */}
                 <div className={cn(
                   "h-7 w-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors",
-                  done ? "bg-green-500 border-green-500" : "border-white/30"
+                  done ? "bg-white border-white" : "border-white/30"
                 )}>
-                  {done && <CheckCircle2 className="h-4 w-4 text-white" />}
+                  {done && <CheckCircle2 className="h-4 w-4 text-black" />}
                 </div>
 
                 {/* Name + notes */}
@@ -773,7 +778,7 @@ function OrderDetail({ order, scanState, fulfilled, allDone, completing, fmt,
                 </button>
                 <button
                   onClick={() => onAdjustQty(item.id, -item.quantity)} // removes (qty → 0)
-                  className="h-9 w-9 rounded-full bg-red-500/20 hover:bg-red-500/30 text-red-400 flex items-center justify-center transition-colors ml-2"
+                  className="h-9 w-9 rounded-full bg-white/10 hover:bg-white/20 text-white/60 hover:text-white flex items-center justify-center transition-colors ml-2"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -787,7 +792,7 @@ function OrderDetail({ order, scanState, fulfilled, allDone, completing, fmt,
       <div className="flex-shrink-0 border-t border-white/10 p-3 flex gap-3 bg-black/60">
         <Button
           variant="ghost"
-          className="text-red-400 hover:text-red-300 hover:bg-red-500/10 flex-shrink-0"
+          className="text-white/60 hover:text-white hover:bg-white/10 flex-shrink-0"
           onClick={onCancel}
         >
           <XCircle className="h-4 w-4 mr-1.5" />
@@ -797,7 +802,7 @@ function OrderDetail({ order, scanState, fulfilled, allDone, completing, fmt,
           className={cn(
             "flex-1 h-14 text-lg font-bold transition-all",
             allDone
-              ? "bg-green-600 hover:bg-green-500 text-white"
+              ? "bg-white hover:bg-white/90 text-black"
               : "bg-white/10 text-white/30 cursor-not-allowed"
           )}
           disabled={!allDone || completing}
@@ -819,12 +824,12 @@ function OrderDetail({ order, scanState, fulfilled, allDone, completing, fmt,
 }
 
 function StatusBadge({ status, warn }: { status: DrinkOrderStatus; warn: boolean }) {
-  if (warn) return <span className="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full font-bold">IN PROGRESS</span>;
+  if (warn) return <span className="text-[10px] bg-white/15 text-white px-2 py-0.5 rounded-full font-bold">IN PROGRESS</span>;
   const map: Record<DrinkOrderStatus, [string, string]> = {
-    PENDING:     ["bg-amber-500/20 text-amber-400", "PENDING"],
-    IN_PROGRESS: ["bg-blue-500/20 text-blue-400",   "IN PROGRESS"],
-    FULFILLED:   ["bg-green-500/20 text-green-400", "FULFILLED"],
-    CANCELLED:   ["bg-gray-500/20 text-gray-400",   "CANCELLED"],
+    PENDING:     ["bg-white/15 text-white",      "PENDING"],
+    IN_PROGRESS: ["bg-white/10 text-white/80",   "IN PROGRESS"],
+    FULFILLED:   ["bg-white text-black",         "FULFILLED"],
+    CANCELLED:   ["bg-white/5 text-white/40",    "CANCELLED"],
   };
   const [cls, label] = map[status];
   return <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold", cls)}>{label}</span>;
