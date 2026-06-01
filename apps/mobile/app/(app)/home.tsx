@@ -1,7 +1,7 @@
 import { Pressable, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ticket, Wine, ScanLine, Beer, CreditCard, UserCircle, type LucideIcon } from "lucide-react-native";
+import { Ticket, Wine, ScanLine, Beer, CreditCard, UserCircle, Compass, type LucideIcon } from "lucide-react-native";
 import { useAuth } from "@/context/auth";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,7 @@ interface NavTile {
 const TILES: NavTile[] = [
   { icon: Ticket,     label: "My Tickets",    sub: "View & scan your tickets",   route: "/(app)/tickets" },
   { icon: Wine,       label: "Bar Menu",      sub: "Order drinks",                route: "/(app)/menu" },
+  { icon: Compass,    label: "Friend Compass",sub: "Find friends at the event",   route: "/(app)/compass" },
   { icon: ScanLine,   label: "Check-In",      sub: "Scan ticket QR codes",        route: "/(app)/checkin",   roles: ["ADMIN","EDITOR","STAFF","SELLER","BARTENDER"] },
   { icon: Beer,       label: "Bartender POS", sub: "Process drink orders",        route: "/(app)/bartender", roles: ["ADMIN","EDITOR","BARTENDER"] },
   { icon: CreditCard, label: "Sell Tickets",  sub: "POS ticket selling",          route: "/(app)/seller",    roles: ["ADMIN","EDITOR","SELLER"] },
