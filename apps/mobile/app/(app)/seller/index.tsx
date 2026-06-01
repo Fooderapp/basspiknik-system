@@ -200,6 +200,24 @@ export default function SellerScreen() {
     }
   }
 
+  // ── Send confirmation email after a cash/tap sale ──
+  async function sendConfirmation(orderId: string) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      await fetch(`${API_URL}/api/seller/send-confirmation`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ orderId }),
+      });
+    } catch {
+      // Email failure is non-fatal — ticket is already issued
+    }
+  }
+
   // ── Resolve registered buyer from wallet QR ──
   async function resolveWalletToken(token: string) {
     if (resolving) return;
@@ -268,6 +286,7 @@ export default function SellerScreen() {
       if (data?.error) throw new Error(data.error);
       setSuccessInfo({ total: data.total, ticketCount: data.ticketCount });
       setCart([]); setBuyerName(""); setBuyerEmail(""); setRegisteredProfile(null); setConfirmOpen(false);
+      if (data.orderId) sendConfirmation(data.orderId);
     } catch (e: any) { Alert.alert("Error", e.message); }
     finally { setSelling(false); }
   }
@@ -340,6 +359,7 @@ export default function SellerScreen() {
       setTapMessage("Payment accepted!");
       setSuccessInfo({ total: data.total, ticketCount: data.ticketCount });
       setCart([]); setBuyerName(""); setBuyerEmail(""); setRegisteredProfile(null); setConfirmOpen(false);
+      if (data.orderId) sendConfirmation(data.orderId);
     } catch (e: any) {
       setTapState("ready");
       setTapMessage("Ready to accept payment");
