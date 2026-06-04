@@ -20,6 +20,7 @@ export default function AppLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="profile" />
       <Stack.Screen name="compass/index" />
+      <Stack.Screen name="buy/index" />
       <Stack.Screen name="tickets/[id]" options={{ presentation: "modal" }} />
       <Stack.Screen name="transfer" options={{ presentation: "modal" }} />
       <Stack.Screen name="menu/order" options={{ presentation: "modal" }} />

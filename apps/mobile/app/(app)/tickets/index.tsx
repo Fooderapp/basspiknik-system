@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, FlatList, Linking, Platform, Pressable, RefreshControl, View } from "react-native";
+import { ActivityIndicator, Alert, Dimensions, FlatList, Linking, Platform, Pressable, RefreshControl, View } from "react-native";
 import { router } from "expo-router";
 import { Apple, Wallet, Ticket as TicketIcon, User, ChevronRight } from "lucide-react-native";
 import { Screen } from "@/components/ui/Screen";
@@ -14,6 +14,9 @@ import type { Ticket } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
+const COLUMN_GAP = 12;
+const H_PAD = 20;
+const CARD_WIDTH = (Dimensions.get("window").width - H_PAD * 2 - COLUMN_GAP) / 2;
 
 const STATUS_VARIANT: Record<string, "success" | "muted" | "destructive" | "secondary"> = {
   VALID:     "success",
@@ -113,7 +116,9 @@ export default function TicketsScreen() {
       <FlatList
         data={tickets}
         keyExtractor={t => t.id}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32, paddingTop: 8 }}
+        numColumns={2}
+        columnWrapperStyle={{ gap: COLUMN_GAP }}
+        contentContainerStyle={{ paddingHorizontal: H_PAD, paddingBottom: 32, paddingTop: 8 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fafafa" />}
         ListHeaderComponent={
           hasValid ? (
@@ -156,27 +161,34 @@ export default function TicketsScreen() {
           <Pressable
             onPress={() => router.push(`/(app)/tickets/${item.id}` as never)}
             className="mb-3 active:opacity-75"
+            style={{ width: CARD_WIDTH }}
           >
-            <Card>
-              <View className="flex-row items-start justify-between mb-2">
-                <View className="flex-1 mr-3">
-                  <Text className="text-foreground font-semibold text-base tracking-tight" numberOfLines={1}>
-                    {item.ticket_name ?? "Ticket"}
-                  </Text>
-                  <Text className="text-muted-foreground text-xs mt-0.5">{formatDate(item.created_at)}</Text>
-                </View>
+            <Card className="flex-1">
+              {/* Status badge */}
+              <View className="mb-2">
                 <Badge label={item.status} variant={STATUS_VARIANT[item.status] ?? "secondary"} />
               </View>
+              {/* Icon */}
+              <View className="w-9 h-9 rounded-xl items-center justify-center mb-3 border border-border bg-muted">
+                <TicketIcon size={17} color="#fafafa" strokeWidth={1.75} />
+              </View>
+              {/* Ticket name */}
+              <Text className="text-foreground font-semibold text-sm tracking-tight" numberOfLines={2}>
+                {item.ticket_name ?? "Ticket"}
+              </Text>
+              <Text className="text-muted-foreground text-xs mt-1" numberOfLines={1}>
+                {formatDate(item.created_at)}
+              </Text>
               {item.holder_name && (
-                <View className="flex-row items-center gap-1.5">
-                  <User size={13} color="#8f8f8f" strokeWidth={1.75} />
-                  <Text className="text-muted-foreground text-sm">{item.holder_name}</Text>
+                <View className="flex-row items-center gap-1 mt-1.5">
+                  <User size={11} color="#8f8f8f" strokeWidth={1.75} />
+                  <Text className="text-muted-foreground text-xs" numberOfLines={1}>{item.holder_name}</Text>
                 </View>
               )}
-              <Separator className="mt-3 mb-3" />
+              <Separator className="mt-3 mb-2" />
               <View className="flex-row items-center justify-between">
-                <Text className="text-muted-foreground text-xs">View QR code</Text>
-                <ChevronRight size={14} color="#8f8f8f" strokeWidth={1.75} />
+                <Text className="text-muted-foreground text-xs">QR</Text>
+                <ChevronRight size={13} color="#8f8f8f" strokeWidth={1.75} />
               </View>
             </Card>
           </Pressable>
