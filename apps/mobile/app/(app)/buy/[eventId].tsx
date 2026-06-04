@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, View } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import * as WebBrowser from "expo-web-browser";
+import { useStripe } from "@stripe/stripe-react-native";
 import { ChevronLeft, Minus, Plus, Tag, CalendarDays, MapPin } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth";
@@ -27,6 +27,7 @@ export default function BuyEventScreen() {
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const insets = useSafeAreaInsets();
   const { session, profile } = useAuth();
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
   const [event, setEvent] = useState<Event | null>(null);
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([]);
@@ -84,7 +85,8 @@ export default function BuyEventScreen() {
         .filter(([, q]) => q > 0)
         .map(([ticketTypeId, quantity]) => ({ ticketTypeId, quantity }));
 
-      const res = await fetch(`${API_URL}/api/orders/checkout`, {
+      // 1. Create a PaymentIntent + ephemeral key on the server.
+      const res = await fetch(`${API_URL}/api/orders/payment-intent`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -93,10 +95,30 @@ export default function BuyEventScreen() {
         body: JSON.stringify({ eventId, items, promoCode: promoCode || undefined }),
       });
       const data = await res.json();
-      if (!res.ok || !data.url) throw new Error(data.error ?? "Checkout failed");
+      if (!res.ok || !data.paymentIntent) throw new Error(data.error ?? "Checkout failed");
 
-      // Hosted Stripe page opens inside the app; tickets are created by the webhook.
-      await WebBrowser.openBrowserAsync(data.url, { presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET });
+      // 2. Initialise the native PaymentSheet.
+      const init = await initPaymentSheet({
+        merchantDisplayName: event?.name ?? "EventOS",
+        customerId: data.customer,
+        customerEphemeralKeySecret: data.ephemeralKey,
+        paymentIntentClientSecret: data.paymentIntent,
+        allowsDelayedPaymentMethods: false,
+        defaultBillingDetails: {
+          name: profile?.billing_name ?? profile?.name ?? undefined,
+          email: profile?.email ?? undefined,
+        },
+      });
+      if (init.error) throw new Error(init.error.message);
+
+      // 3. Present it. Tickets are created by the payment_intent.succeeded webhook.
+      const { error } = await presentPaymentSheet();
+      if (error) {
+        if (error.code === "Canceled") return; // user dismissed — no-op
+        throw new Error(error.message);
+      }
+
+      Alert.alert("Payment successful", "Your tickets are on the way.");
       router.replace("/(app)/tickets");
     } catch (e: any) {
       Alert.alert("Error", e.message ?? "Checkout failed");

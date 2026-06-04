@@ -54,6 +54,13 @@
           "bluetoothBackgroundMode": false,
           "locationWhenInUsePermission": "Required by Stripe Terminal for fraud prevention."
         }
+      ],
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.eventos.mobile",
+          "enableGooglePay": false
+        }
       ]
     ],
     "experiments": {

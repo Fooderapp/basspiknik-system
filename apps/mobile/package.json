@@ -6,6 +6,7 @@
     "@react-native-async-storage/async-storage": "^3.1.1",
     "@rn-primitives/slot": "^1.4.0",
     "@rn-primitives/types": "^1.4.0",
+    "@stripe/stripe-react-native": "0.66.0",
     "@stripe/stripe-terminal-react-native": "^0.0.1-beta.31",
     "@supabase/supabase-js": "^2.106.2",
     "babel-preset-expo": "^56.0.14",
