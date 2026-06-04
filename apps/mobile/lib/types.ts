@@ -18,6 +18,12 @@ export interface Profile {
   vip_notes: string | null;
   wallet_token: string | null;
   display_id: string | null;
+  billing_name: string | null;
+  billing_address: string | null;
+  billing_city: string | null;
+  billing_postal_code: string | null;
+  billing_country: string | null;
+  onboarded_at: string | null;
   created_at: string;
   updated_at: string;
 }

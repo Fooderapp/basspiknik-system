@@ -3,11 +3,11 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
-  Linking,
   Pressable,
   RefreshControl,
   View,
 } from "react-native";
+import { router } from "expo-router";
 import { CalendarDays, MapPin, ShoppingBag, Tag } from "lucide-react-native";
 import { Screen } from "@/components/ui/Screen";
 import { Card } from "@/components/ui/Card";
@@ -17,8 +17,6 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/lib/supabase";
 import type { Event, TicketType } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
 
 type EventWithTickets = Event & { ticket_types: TicketType[] };
 
@@ -64,8 +62,8 @@ export default function BuyTicketsScreen() {
     setRefreshing(false);
   }
 
-  function openEvent(slug: string) {
-    Linking.openURL(`${API_URL}/events/${slug}`);
+  function openEvent(id: string) {
+    router.push(`/(app)/buy/${id}` as never);
   }
 
   if (loading) {
@@ -109,7 +107,7 @@ export default function BuyTicketsScreen() {
 
           return (
             <Pressable
-              onPress={() => openEvent(event.slug)}
+              onPress={() => openEvent(event.id)}
               className="mb-3 active:opacity-75"
               disabled={soldOut}
             >

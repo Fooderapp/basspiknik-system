@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { createClient as createSbClient } from "@supabase/supabase-js";
 import { stripe } from "@/lib/stripe";
 import { getSettings, toStripeAmount, fromStripeAmount } from "@/lib/settings";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
@@ -27,9 +28,25 @@ function getBaseUrl(req: Request): string {
   return `${proto}://${host}`;
 }
 
+/** Resolve the buyer from a cookie session (web) or a Bearer token (mobile app). */
+async function resolveUser(req: Request, cookieClient: any) {
+  const authHeader = req.headers.get("authorization");
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (token) {
+    const sb = createSbClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    );
+    const { data: { user } } = await sb.auth.getUser(token);
+    return user ?? null;
+  }
+  const { data: { user } } = await cookieClient.auth.getUser();
+  return user ?? null;
+}
+
 export async function POST(req: Request) {
   const supabase = await createClient() as any;
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await resolveUser(req, supabase);
 
   const body = await req.json();
   const parsed = checkoutSchema.safeParse(body);
@@ -80,7 +97,9 @@ export async function POST(req: Request) {
 
   let profileEmail = guestEmail;
   if (user && !promoCode) {
-    const { data: profileData } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+    // Admin read so it works for both cookie (web) and Bearer (mobile) sessions.
+    const adminRead = await createAdminClient() as any;
+    const { data: profileData } = await adminRead.from("profiles").select("*").eq("id", user.id).single();
     const profile = profileData as Profile | null;
     if (profile?.loyalty_discount) discountAmount = subtotal * 0.1;
     profileEmail = profile?.email ?? guestEmail;
