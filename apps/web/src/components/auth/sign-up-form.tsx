@@ -13,22 +13,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Ticket } from "lucide-react";
+import type { Dictionary } from "@/lib/i18n";
 
-const schema = z.object({
-  name: z.string().min(2, "Name too short"),
-  email: z.string().email("Invalid email"),
-  password: z.string().min(8, "Min 8 characters"),
-  confirm: z.string(),
-}).refine((d) => d.password === d.confirm, {
-  message: "Passwords don't match",
-  path: ["confirm"],
-});
+interface Props { dict: Dictionary }
 
-type FormData = z.infer<typeof schema>;
-
-export function SignUpForm() {
+export function SignUpForm({ dict }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+
+  const schema = z.object({
+    name: z.string().min(2, dict["auth.name_short"]),
+    email: z.string().email(dict["auth.invalid_email"]),
+    password: z.string().min(8, dict["auth.min_chars_8"]),
+    confirm: z.string(),
+  }).refine((d) => d.password === d.confirm, {
+    message: dict["auth.pw_mismatch"],
+    path: ["confirm"],
+  });
+  type FormData = z.infer<typeof schema>;
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -53,7 +55,6 @@ export function SignUpForm() {
       return;
     }
 
-    // Create profile in DB
     if (authData.user) {
       await fetch("/api/auth/profile", {
         method: "POST",
@@ -62,7 +63,7 @@ export function SignUpForm() {
       });
     }
 
-    toast.success("Check your email to confirm your account!");
+    toast.success(dict["auth.confirm_email"]);
     router.push("/sign-in");
   };
 
@@ -72,39 +73,39 @@ export function SignUpForm() {
         <div className="flex justify-center mb-2">
           <Ticket className="h-8 w-8 text-primary" />
         </div>
-        <CardTitle className="text-2xl">Create account</CardTitle>
-        <CardDescription>Join EventOS — get 10% off every purchase</CardDescription>
+        <CardTitle className="text-2xl">{dict["auth.signup_title"]}</CardTitle>
+        <CardDescription>{dict["auth.signup_desc"]}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
+            <Label htmlFor="name">{dict["auth.full_name"]}</Label>
             <Input id="name" placeholder="Jane Smith" {...register("name")} />
             {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{dict["auth.email"]}</Label>
             <Input id="email" type="email" placeholder="you@example.com" {...register("email")} />
             {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" placeholder="Min 8 characters" {...register("password")} />
+            <Label htmlFor="password">{dict["auth.password"]}</Label>
+            <Input id="password" type="password" placeholder={dict["auth.pw_placeholder"]} {...register("password")} />
             {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="confirm">Confirm Password</Label>
+            <Label htmlFor="confirm">{dict["auth.confirm_password"]}</Label>
             <Input id="confirm" type="password" placeholder="••••••••" {...register("confirm")} />
             {errors.confirm && <p className="text-sm text-destructive">{errors.confirm.message}</p>}
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Creating account..." : "Create Account"}
+            {loading ? dict["auth.creating"] : dict["auth.create"]}
           </Button>
         </form>
       </CardContent>
       <CardFooter className="justify-center text-sm text-muted-foreground">
-        Already have an account?&nbsp;
-        <Link href="/sign-in" className="text-primary underline underline-offset-4">Sign in</Link>
+        {dict["auth.have_account"]}&nbsp;
+        <Link href="/sign-in" className="text-primary underline underline-offset-4">{dict["auth.sign_in_link"]}</Link>
       </CardFooter>
     </Card>
   );

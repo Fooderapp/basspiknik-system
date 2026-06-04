@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Globe, DollarSign, Save } from "lucide-react";
+import { Globe, DollarSign, Save, Coins } from "lucide-react";
 import type { AppSettings, Currency, Language } from "@/lib/settings";
 
 const CURRENCIES: { value: Currency; label: string; symbol: string; note?: string }[] = [
@@ -28,11 +30,33 @@ interface SettingsFormProps {
 export function SettingsForm({ initialSettings }: SettingsFormProps) {
   const [currency, setCurrency] = useState<Currency>(initialSettings.currency);
   const [language, setLanguage] = useState<Language>(initialSettings.language);
+  const [creditsEnabled, setCreditsEnabled] = useState(true);
+  const [creditsPerTicket, setCreditsPerTicket] = useState(4);
+  const [creditsPerDrink, setCreditsPerDrink] = useState(1);
+  const [spinCost, setSpinCost] = useState(4);
+  const [spinWinRate, setSpinWinRate] = useState(20);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
 
+  // Credit fields aren't part of getSettings() — pull them from the admin API
+  useEffect(() => {
+    fetch("/api/admin/settings")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.credits_enabled !== undefined) setCreditsEnabled(!!d.credits_enabled);
+        if (d.credits_per_ticket != null) setCreditsPerTicket(d.credits_per_ticket);
+        if (d.credits_per_drink != null) setCreditsPerDrink(d.credits_per_drink);
+        if (d.spin_cost != null) setSpinCost(d.spin_cost);
+        if (d.spin_win_rate != null) setSpinWinRate(d.spin_win_rate);
+      })
+      .catch(() => {});
+  }, []);
+
   const handleCurrency = (val: string) => { setCurrency(val as Currency); setDirty(true); };
   const handleLanguage = (val: string) => { setLanguage(val as Language); setDirty(true); };
+  const num = (set: (n: number) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    set(Math.max(0, parseInt(e.target.value || "0", 10))); setDirty(true);
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -40,7 +64,10 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
       const res = await fetch("/api/admin/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currency, language }),
+        body: JSON.stringify({
+          currency, language, creditsEnabled, creditsPerTicket,
+          creditsPerDrink, spinCost, spinWinRate,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
@@ -139,6 +166,53 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             </Select>
           </div>
 
+        </CardContent>
+      </Card>
+
+      {/* Credits & Spin */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Coins className="h-4 w-4" />
+            Credits &amp; Free Spin
+          </CardTitle>
+          <CardDescription>
+            Users earn credits on purchases and can spend them on a slot-machine spin.
+            A win makes the checkout free.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Enable credits &amp; spin</Label>
+              <p className="text-xs text-muted-foreground">Master switch for the whole feature.</p>
+            </div>
+            <Switch
+              checked={creditsEnabled}
+              onCheckedChange={(v) => { setCreditsEnabled(v); setDirty(true); }}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Credits per ticket order</Label>
+              <Input type="number" min={0} value={creditsPerTicket} onChange={num(setCreditsPerTicket)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Credits per drink order</Label>
+              <Input type="number" min={0} value={creditsPerDrink} onChange={num(setCreditsPerDrink)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Spin cost (credits)</Label>
+              <Input type="number" min={1} value={spinCost} onChange={num(setSpinCost)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Win rate (1 in N)</Label>
+              <Input type="number" min={1} value={spinWinRate} onChange={num(setSpinWinRate)} />
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Win chance ≈ {spinWinRate > 0 ? (100 / spinWinRate).toFixed(1) : "0"}% per spin.
+          </p>
         </CardContent>
       </Card>
 

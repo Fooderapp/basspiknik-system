@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { stripe } from "@/lib/stripe";
 import { getSettings, toStripeAmount, fromStripeAmount } from "@/lib/settings";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { sendTicketConfirmation } from "@/lib/email";
 import type { Event, TicketType, PromoCode, Profile } from "@/lib/supabase/types";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -13,6 +14,7 @@ const checkoutSchema = z.object({
   promoCode: z.string().optional(),
   guestEmail: z.string().email().optional(),
   guestName: z.string().optional(),
+  freeSpinToken: z.string().optional(),
 });
 
 /** Derive the base URL from the request so it works on localhost, LAN, and production.
@@ -33,7 +35,7 @@ export async function POST(req: Request) {
   const parsed = checkoutSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const { eventId, items, promoCode, guestEmail, guestName } = parsed.data;
+  const { eventId, items, promoCode, guestEmail, guestName, freeSpinToken } = parsed.data;
 
   // Load app settings to get active currency
   const settings = await getSettings();
@@ -85,6 +87,96 @@ export async function POST(req: Request) {
   }
 
   const taxAmount = subtotal * (event.tax_rate / 100);
+
+  // ── Free checkout via a winning spin token ──────────────────────────────────
+  if (freeSpinToken) {
+    if (!user) return NextResponse.json({ error: "Sign in to claim a free spin" }, { status: 401 });
+
+    // Single-use redemption (validates owner, expiry, context, marks used)
+    const { data: redeem } = await supabase.rpc("redeem_spin_token", {
+      p_token: freeSpinToken,
+      p_context: "TICKET",
+    });
+    if (!redeem?.ok) {
+      return NextResponse.json({ error: "Invalid or expired spin token" }, { status: 400 });
+    }
+
+    const admin = await createAdminClient() as any;
+    const buyerEmail = profileEmail || guestEmail || null;
+
+    const { data: order, error: orderErr } = await admin.from("orders").insert({
+      event_id: eventId,
+      user_id: user.id,
+      guest_email: buyerEmail,
+      guest_name: guestName ?? null,
+      stripe_payment_intent_id: `FREE_SPIN_${Date.now()}`,
+      subtotal,
+      discount_amount: subtotal,
+      tax_amount: 0,
+      total: 0,
+      currency,
+      status: "PAID",
+      payment_method: "ONLINE",
+    }).select().single();
+    if (orderErr || !order) return NextResponse.json({ error: "Order creation failed" }, { status: 500 });
+
+    for (const item of items) {
+      const tt = event.ticket_types.find((t) => t.id === item.ticketTypeId)!;
+      const unitPrice = tt.sale_enabled && tt.sale_price != null ? tt.sale_price : tt.price;
+
+      const { data: orderItem } = await admin.from("order_items").insert({
+        order_id: order.id,
+        ticket_type_id: item.ticketTypeId,
+        quantity: item.quantity,
+        unit_price: unitPrice,
+        total: unitPrice * item.quantity,
+      }).select().single();
+      if (!orderItem) continue;
+
+      const ticketsPerUnit = tt.is_bundle && tt.bundle_size ? tt.bundle_size : 1;
+      const totalTickets = item.quantity * ticketsPerUnit;
+      const ticketInserts = Array.from({ length: totalTickets }, (_, i) => ({
+        order_id: order.id,
+        order_item_id: orderItem.id,
+        event_id: eventId,
+        ticket_type_id: item.ticketTypeId,
+        ticket_name: tt.name,
+        tier: tt.tier,
+        status: "VALID",
+        holder_name: guestName ?? null,
+        holder_email: buyerEmail,
+        qr_code: `TKT-${order.id.slice(0,8).toUpperCase()}-${orderItem.id.slice(0,4).toUpperCase()}-${String(i+1).padStart(2,"0")}`,
+      }));
+      await admin.from("tickets").insert(ticketInserts);
+      await admin.rpc("increment_ticket_sold", { p_ticket_type_id: item.ticketTypeId, p_amount: item.quantity });
+    }
+
+    // Tie the win record to the resulting order
+    await admin.from("spin_wins").update({ used_order_id: order.id }).eq("id", redeem.win_id);
+
+    if (buyerEmail) {
+      const { data: emailTickets } = await admin.from("tickets").select("*").eq("order_id", order.id);
+      try {
+        await sendTicketConfirmation({
+          to: buyerEmail,
+          buyerName: guestName || "Guest",
+          eventName: event.name,
+          eventDate: event.start_date,
+          eventVenue: event.venue || undefined,
+          tickets: (emailTickets ?? []).map((t: any) => ({
+            id: t.id, qrCode: t.qr_code, ticketName: t.ticket_name ?? "Ticket",
+            tier: t.tier ?? "GENERAL", holderName: t.holder_name || undefined,
+          })),
+          total: 0,
+          orderId: order.id,
+          language: settings.language,
+          currency,
+        });
+      } catch { /* email failure shouldn't block a free win */ }
+    }
+
+    return NextResponse.json({ url: `/my-tickets?free=1`, free: true });
+  }
 
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],

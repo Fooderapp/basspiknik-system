@@ -6,6 +6,7 @@ import { Flashlight, FlashlightOff, ScanLine, Keyboard, RotateCcw, CheckCircle2,
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import type { Dictionary } from "@/lib/i18n";
 import jsQR from "jsqr";
 
 type ScanStatus = "idle" | "ok" | "already_used" | "invalid" | "cancelled";
@@ -33,13 +34,15 @@ const BORDER_COLOR: Record<ScanStatus, string> = {
   cancelled:    "border-white/30 shadow-[0_0_0_4px_rgba(115,115,115,0.3)]",
 };
 
-const POPUP_CONFIG: Record<ScanStatus, { bar: string; icon: React.ReactNode; label: string; labelColor: string }> = {
-  idle:         { bar: "",            icon: null,                                              label: "",           labelColor: "" },
-  ok:           { bar: "bg-white",    icon: <CheckCircle2 className="h-5 w-5 text-white"/>,    label: "ADMITTED",   labelColor: "text-white" },
-  already_used: { bar: "bg-white/60", icon: <AlertCircle  className="h-5 w-5 text-white/70"/>, label: "ALREADY IN", labelColor: "text-white/70" },
-  invalid:      { bar: "bg-white/40", icon: <XCircle      className="h-5 w-5 text-white/60"/>, label: "INVALID",    labelColor: "text-white/60" },
-  cancelled:    { bar: "bg-white/30", icon: <XCircle      className="h-5 w-5 text-white/60"/>, label: "CANCELLED",  labelColor: "text-white/60" },
-};
+function buildPopupConfig(dict: Dictionary): Record<ScanStatus, { bar: string; icon: React.ReactNode; label: string; labelColor: string }> {
+  return {
+    idle:         { bar: "",            icon: null,                                              label: "",                        labelColor: "" },
+    ok:           { bar: "bg-white",    icon: <CheckCircle2 className="h-5 w-5 text-white"/>,    label: dict["checkin.admitted"],   labelColor: "text-white" },
+    already_used: { bar: "bg-white/60", icon: <AlertCircle  className="h-5 w-5 text-white/70"/>, label: dict["checkin.already_in"], labelColor: "text-white/70" },
+    invalid:      { bar: "bg-white/40", icon: <XCircle      className="h-5 w-5 text-white/60"/>, label: dict["checkin.invalid"],    labelColor: "text-white/60" },
+    cancelled:    { bar: "bg-white/30", icon: <XCircle      className="h-5 w-5 text-white/60"/>, label: dict["checkin.cancelled"],  labelColor: "text-white/60" },
+  };
+}
 
 const CORNER_CLASSES = [
   "top-0 left-0 border-t-[5px] border-l-[5px] rounded-tl-2xl",
@@ -48,7 +51,7 @@ const CORNER_CLASSES = [
   "bottom-0 right-0 border-b-[5px] border-r-[5px] rounded-br-2xl",
 ];
 
-export function CheckinScanner() {
+export function CheckinScanner({ dict }: { dict: Dictionary }) {
   const videoRef       = useRef<HTMLVideoElement>(null);
   const canvasRef      = useRef<HTMLCanvasElement>(null);
   const streamRef      = useRef<MediaStream | null>(null);
@@ -70,9 +73,7 @@ export function CheckinScanner() {
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
       const secure = typeof location !== "undefined" &&
         (location.protocol === "https:" || location.hostname === "localhost");
-      setCameraError(secure
-        ? "Camera not available on this browser. Use manual entry."
-        : "Camera requires HTTPS. Use manual entry or open via HTTPS.");
+      setCameraError(dict["checkin.camera_unavail"]);
       return;
     }
     try {
@@ -86,7 +87,7 @@ export function CheckinScanner() {
       setTorchSupported(!!caps.torch);
       setCameraError(null);
     } catch (err) {
-      setCameraError(err instanceof Error ? err.message : "Camera unavailable");
+      setCameraError(err instanceof Error ? err.message : dict["checkin.camera_unavail"]);
     }
   }, []);
 
@@ -171,14 +172,14 @@ export function CheckinScanner() {
       else if (data.status === "CANCELLED")    status = "cancelled";
       showResult({ status, message: data.message, ticket: data.ticket });
     } catch {
-      toast.error("Network error — check connection");
+      toast.error(dict["checkin.network_err"]);
       cooldownRef.current = false;
       lastScannedRef.current = "";
     }
   };
 
   const status  = result?.status ?? "idle";
-  const popup   = POPUP_CONFIG[status];
+  const popup   = buildPopupConfig(dict)[status];
   const isIdle  = status === "idle";
 
   return (
@@ -190,9 +191,9 @@ export function CheckinScanner() {
           {cameraError ? (
             <div className="text-center text-white/60 px-8">
               <ScanLine className="h-12 w-12 mx-auto mb-4 opacity-40" />
-              <p className="font-medium mb-2">Camera unavailable</p>
+              <p className="font-medium mb-2">{dict["checkin.camera_unavail"]}</p>
               <p className="text-sm mb-4">{cameraError}</p>
-              <Button variant="secondary" onClick={() => setManualMode(true)}>Use Manual Entry</Button>
+              <Button variant="secondary" onClick={() => setManualMode(true)}>{dict["checkin.use_manual"]}</Button>
             </div>
           ) : (
             <>
@@ -223,7 +224,7 @@ export function CheckinScanner() {
                           {result.ticket && (
                             <>
                               <p className="text-white text-sm font-semibold truncate mt-0.5">
-                                {result.ticket.holderName ?? "Guest"}
+                                {result.ticket.holderName ?? dict["checkin.guest"]}
                               </p>
                               <p className="text-white/60 text-xs truncate">{result.ticket.ticketName}</p>
                               {result.ticket.tier && (
@@ -286,12 +287,12 @@ export function CheckinScanner() {
       {/* ── Manual entry ───────────────────────────────────────── */}
       {manualMode && (
         <div className="flex-1 flex flex-col items-center justify-center gap-5 px-6">
-          <p className="text-white/50 text-sm">Enter ticket code manually</p>
+          <p className="text-white/50 text-sm">{dict["checkin.manual_hint"]}</p>
           <div className="w-full max-w-sm flex gap-2">
             <Input
               value={manualInput}
               onChange={(e) => setManualInput(e.target.value)}
-              placeholder="TKT-XXXXXXXX-…"
+              placeholder={dict["checkin.manual_ph"]}
               className="bg-white/10 border-white/20 text-white placeholder:text-white/30"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && manualInput.trim()) {
@@ -305,7 +306,7 @@ export function CheckinScanner() {
               onClick={() => { if (manualInput.trim()) { handleScan(manualInput.trim()); setManualInput(""); } }}
               disabled={!manualInput.trim()}
             >
-              Check
+              {dict["checkin.check_btn"]}
             </Button>
           </div>
 
@@ -323,7 +324,7 @@ export function CheckinScanner() {
                   <p className={cn("text-sm font-black tracking-wider", popup.labelColor)}>{popup.label}</p>
                   {result.ticket && (
                     <p className="text-white/70 text-xs mt-0.5">
-                      {result.ticket.holderName ?? "Guest"} · {result.ticket.ticketName}
+                      {result.ticket.holderName ?? dict["checkin.guest"]} · {result.ticket.ticketName}
                     </p>
                   )}
                   {status === "invalid" && (
@@ -342,13 +343,13 @@ export function CheckinScanner() {
           variant="ghost" size="icon"
           className="text-white hover:bg-white/10"
           onClick={() => setManualMode((m) => !m)}
-          title={manualMode ? "Camera mode" : "Manual entry"}
+          title={manualMode ? dict["checkin.pointing"] : dict["checkin.manual_mode"]}
         >
           {manualMode ? <RotateCcw className="h-5 w-5" /> : <Keyboard className="h-5 w-5" />}
         </Button>
 
         <p className="text-xs text-white/30">
-          {manualMode ? "Manual Entry" : "Point at QR code"}
+          {manualMode ? dict["checkin.manual_mode"] : dict["checkin.pointing"]}
         </p>
 
         <Button

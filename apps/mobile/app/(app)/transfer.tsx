@@ -55,7 +55,7 @@ export default function TransferScreen() {
       // Try wallet_token first (QR scans give UUID), then display_id
       const { data, error } = await (supabase as any).rpc("transfer_ticket", {
         p_ticket_id:     ticketId,
-        p_to_identifier: recipient.id, // pass user ID directly since we already resolved
+        p_to_identifier: recipient.displayId,
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);

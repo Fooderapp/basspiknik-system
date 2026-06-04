@@ -67,6 +67,7 @@ const orderSchema = z.object({
   notes: z.string().max(400).optional().nullable(),
   eventId: z.string().uuid().optional().nullable(),
   items: z.array(itemSchema).min(1).max(20),
+  freeSpinToken: z.string().optional(),
 });
 
 export async function POST(req: Request) {
@@ -76,7 +77,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { guestName, notes, eventId, items } = parsed.data;
+  const { guestName, notes, eventId, items, freeSpinToken } = parsed.data;
 
   const supabase = await createClient() as any;
   const drinkIds = items.map((i) => i.drinkId);
@@ -109,7 +110,22 @@ export async function POST(req: Request) {
     return { drinkId: item.drinkId, quantity: item.quantity, unitPrice, notes: item.notes ?? null };
   });
 
-  const total = orderItems.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
+  let total = orderItems.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
+
+  // Free drink via a winning spin token (single-use, must own + match context)
+  let freeSpin = false;
+  if (freeSpinToken) {
+    if (!user) return NextResponse.json({ error: "Sign in to claim a free spin" }, { status: 401 });
+    const userClient = await createClient() as any;
+    const { data: redeem } = await userClient.rpc("redeem_spin_token", {
+      p_token: freeSpinToken,
+      p_context: "DRINK",
+    });
+    if (!redeem?.ok) return NextResponse.json({ error: "Invalid or expired spin token" }, { status: 400 });
+    total = 0;
+    freeSpin = true;
+  }
+
   const qrExpiresAt = new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString();
 
   const { data: order, error: orderError } = await adminSupabase
@@ -121,7 +137,7 @@ export async function POST(req: Request) {
       event_id: eventId ?? null,
       status: "PENDING",
       is_vip: isVip,
-      paid_online: false,
+      paid_online: freeSpin,
       total,
       qr_expires_at: qrExpiresAt,
     })
@@ -129,6 +145,10 @@ export async function POST(req: Request) {
     .single();
 
   if (orderError) return NextResponse.json({ error: orderError.message }, { status: 500 });
+
+  if (freeSpin) {
+    await adminSupabase.from("spin_wins").update({ used_order_id: order.id }).eq("token", freeSpinToken);
+  }
 
   const { error: itemsError } = await adminSupabase
     .from("drink_order_items")

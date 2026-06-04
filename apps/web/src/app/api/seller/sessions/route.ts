@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     .insert({
       event_id: eventId,
       user_id: profile.id,
-      status: "COMPLETED",
+      status: "PAID",
       payment_method: paymentMethod,
       stripe_payment_intent_id: `SELLER_${Date.now()}`,
       subtotal: totalAmount,
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
   for (const item of items) {
     const { data: tt } = await supabase
       .from("ticket_types")
-      .select("name, tier")
+      .select("name, tier, is_bundle, bundle_size, is_door_ticket")
       .eq("id", item.ticketTypeId)
       .single();
 
@@ -86,10 +86,13 @@ export async function POST(req: Request) {
 
     if (itemErr) continue;
 
-    // Create individual ticket records
-    for (let i = 0; i < item.quantity; i++) {
-      const qrCode = `TKT-${order.id.slice(0, 8)}-${orderItem.id.slice(0, 8)}-${i}`;
-      await supabase.from("tickets").insert({
+    // Bundles multiply the physical ticket count; sold count tracks bundle units
+    const ticketsToCreate = item.quantity * (tt?.is_bundle && tt?.bundle_size ? tt.bundle_size : 1);
+    const isDoor = !!tt?.is_door_ticket;
+
+    for (let i = 0; i < ticketsToCreate; i++) {
+      const qrCode = `TKT-${order.id.slice(0, 8)}-${orderItem.id.slice(0, 8)}-${String(i).padStart(2, "0")}`;
+      const { data: ticket } = await supabase.from("tickets").insert({
         order_id: order.id,
         order_item_id: orderItem.id,
         event_id: eventId,
@@ -99,10 +102,21 @@ export async function POST(req: Request) {
         qr_code: qrCode,
         holder_name: buyerName ?? null,
         holder_email: buyerEmail || null,
-      });
+        status: isDoor ? "USED" : "VALID",
+        used_at: isDoor ? new Date().toISOString() : null,
+      }).select("id").single();
+
+      // Door ticket → immediate check-in record
+      if (isDoor && ticket?.id) {
+        await supabase.from("check_ins").insert({
+          ticket_id: ticket.id,
+          event_id: eventId,
+          checked_in_by: profile.id,
+        });
+      }
     }
 
-    // Increment sold count
+    // sold tracks bundle units purchased, not individual tickets
     await supabase.rpc("increment_ticket_sold", {
       p_ticket_type_id: item.ticketTypeId,
       p_amount: item.quantity,

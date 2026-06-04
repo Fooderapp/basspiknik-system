@@ -104,6 +104,19 @@ export async function PATCH(
       .single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+    // Award credits when a drink order is fulfilled (registered users, idempotent)
+    if (status === "FULFILLED" && order.user_id) {
+      const { data: cs } = await adminSupabase
+        .from("app_settings").select("credits_per_drink").eq("id", "global").single();
+      await adminSupabase.rpc("award_credits", {
+        p_user_id: order.user_id,
+        p_amount: cs?.credits_per_drink ?? 1,
+        p_reason: "DRINK_ORDER",
+        p_order_id: null,
+        p_drink_order_id: id,
+      });
+    }
+
     // If status update is the only thing, return early
     if (!items) return NextResponse.json(data);
   }

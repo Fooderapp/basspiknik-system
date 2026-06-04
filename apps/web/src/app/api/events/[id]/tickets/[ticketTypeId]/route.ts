@@ -25,6 +25,7 @@ const updateSchema = z.object({
   saleEndsAt: z.string().optional().nullable(),
   isBundle: z.boolean().optional(),
   bundleSize: z.number().int().min(2).optional().nullable(),
+  isDoorTicket: z.boolean().optional(),
   saleEnabled: z.boolean().optional(),
   salePrice: z.number().min(0).optional().nullable(),
 });
@@ -44,7 +45,7 @@ export async function PATCH(
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
   const { name, description, price, quantity, tier, maxPerOrder, entriesPerTicket,
-          saleStartsAt, saleEndsAt, isBundle, bundleSize, saleEnabled, salePrice } = parsed.data;
+          saleStartsAt, saleEndsAt, isBundle, bundleSize, isDoorTicket, saleEnabled, salePrice } = parsed.data;
 
   const supabase = await createAdminClient() as any;
   const { data, error } = await supabase
@@ -61,6 +62,7 @@ export async function PATCH(
       ...(saleEndsAt !== undefined && { sale_ends_at: saleEndsAt }),
       ...(isBundle !== undefined && { is_bundle: isBundle }),
       ...(bundleSize !== undefined && { bundle_size: bundleSize }),
+      ...(isDoorTicket !== undefined && { is_door_ticket: isDoorTicket }),
       ...(saleEnabled !== undefined && { sale_enabled: saleEnabled }),
       ...(salePrice !== undefined && { sale_price: salePrice }),
     })

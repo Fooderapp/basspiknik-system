@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Minus, Plus, ShoppingCart, CheckCircle2, Banknote, CreditCard, Smartphone } from "lucide-react";
 import type { Event, TicketType } from "@/lib/supabase/types";
+import type { Dictionary } from "@/lib/i18n";
 
 type EventWithTickets = Event & { ticket_types: TicketType[] };
 
@@ -23,6 +24,7 @@ interface CartItem {
 interface Props {
   events: EventWithTickets[];
   sellerId: string;
+  dict: Dictionary;
 }
 
 type PaymentMethod = "CASH" | "CARD" | "TERMINAL";
@@ -33,7 +35,7 @@ const PAYMENT_ICONS: Record<PaymentMethod, React.ReactNode> = {
   TERMINAL: <Smartphone className="h-4 w-4" />,
 };
 
-export function SellerApp({ events }: Props) {
+export function SellerApp({ events, dict }: Props) {
   const [selectedEventId, setSelectedEventId] = useState<string>(events[0]?.id ?? "");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CASH");
@@ -87,7 +89,7 @@ export function SellerApp({ events }: Props) {
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error ?? "Sale failed");
+        throw new Error(err.error ?? dict["seller.sale_failed"]);
       }
 
       const result = await res.json();
@@ -96,9 +98,9 @@ export function SellerApp({ events }: Props) {
       setBuyerName("");
       setBuyerEmail("");
       setNotes("");
-      toast.success(`Sale complete — ${result.totalQty} ticket(s) sold`);
+      toast.success(`${dict["seller.sale_success"]} ${result.totalQty} ${dict["seller.sold"]}`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong");
+      toast.error(err instanceof Error ? err.message : dict["seller.error"]);
     } finally {
       setSubmitting(false);
     }
@@ -112,14 +114,14 @@ export function SellerApp({ events }: Props) {
           <CheckCircle2 className="h-16 w-16 text-foreground" />
         </div>
         <div>
-          <h2 className="text-2xl font-bold mb-1">Sale Complete!</h2>
+          <h2 className="text-2xl font-bold mb-1">{dict["seller.sale_complete"]}</h2>
           <p className="text-muted-foreground">
-            {lastReceipt.qty} ticket{lastReceipt.qty !== 1 ? "s" : ""} · {formatCurrency(lastReceipt.total)}
+            {lastReceipt.qty} {dict["seller.sold"]} · {formatCurrency(lastReceipt.total)}
           </p>
-          <p className="text-xs text-muted-foreground mt-1">Order #{lastReceipt.orderId.slice(0, 8).toUpperCase()}</p>
+          <p className="text-xs text-muted-foreground mt-1">{dict["seller.order_no"]}{lastReceipt.orderId.slice(0, 8).toUpperCase()}</p>
         </div>
         <Button size="lg" onClick={() => setLastReceipt(null)}>
-          New Sale
+          {dict["seller.new_sale"]}
         </Button>
       </div>
     );
@@ -131,10 +133,10 @@ export function SellerApp({ events }: Props) {
       <div className="lg:col-span-2 p-4 space-y-4 border-r">
         {/* Event selector */}
         <div className="space-y-1">
-          <Label>Event</Label>
+          <Label>{dict["seller.event_label"]}</Label>
           <Select value={selectedEventId} onValueChange={(v) => { setSelectedEventId(v); setCart([]); }}>
             <SelectTrigger>
-              <SelectValue placeholder="Select event…" />
+              <SelectValue placeholder={dict["seller.event_ph"]} />
             </SelectTrigger>
             <SelectContent>
               {events.map((e) => (
@@ -150,11 +152,11 @@ export function SellerApp({ events }: Props) {
         {/* Ticket types */}
         {availableTickets.length === 0 ? (
           <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
-            No available ticket types for this event.
+            {dict["seller.no_tickets"]}
           </div>
         ) : (
           <div className="space-y-3">
-            <Label>Ticket Types</Label>
+            <Label>{dict["seller.ticket_types"]}</Label>
             {availableTickets.map((tt) => {
               const qty = getQty(tt.id);
               const available = tt.quantity - tt.sold;
@@ -168,7 +170,7 @@ export function SellerApp({ events }: Props) {
                     {tt.description && <p className="text-xs text-muted-foreground mt-0.5">{tt.description}</p>}
                     <div className="flex items-center gap-3 mt-1">
                       <span className="font-bold">{formatCurrency(tt.price)}</span>
-                      <span className="text-xs text-muted-foreground">{available} left</span>
+                      <span className="text-xs text-muted-foreground">{available} {dict["seller.left"]}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -194,20 +196,20 @@ export function SellerApp({ events }: Props) {
 
         {/* Optional buyer info */}
         <div className="space-y-3 pt-2">
-          <Label className="text-muted-foreground text-xs uppercase tracking-wide">Buyer Info (optional)</Label>
+          <Label className="text-muted-foreground text-xs uppercase tracking-wide">{dict["seller.buyer_info"]}</Label>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="buyerName" className="text-xs">Name</Label>
+              <Label htmlFor="buyerName" className="text-xs">{dict["seller.buyer_name"]}</Label>
               <Input id="buyerName" placeholder="Jane Smith" value={buyerName} onChange={(e) => setBuyerName(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="buyerEmail" className="text-xs">Email</Label>
+              <Label htmlFor="buyerEmail" className="text-xs">{dict["seller.buyer_email"]}</Label>
               <Input id="buyerEmail" type="email" placeholder="jane@example.com" value={buyerEmail} onChange={(e) => setBuyerEmail(e.target.value)} />
             </div>
           </div>
           <div className="space-y-1">
-            <Label htmlFor="notes" className="text-xs">Notes</Label>
-            <Input id="notes" placeholder="e.g. paid in cash, group booking…" value={notes} onChange={(e) => setNotes(e.target.value)} />
+            <Label htmlFor="notes" className="text-xs">{dict["seller.notes"]}</Label>
+            <Input id="notes" placeholder={dict["seller.notes_ph"]} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
         </div>
       </div>
@@ -217,12 +219,12 @@ export function SellerApp({ events }: Props) {
         <Card className="flex-1">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
-              <ShoppingCart className="h-4 w-4" /> Cart
+              <ShoppingCart className="h-4 w-4" /> {dict["seller.cart"]}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {cart.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">Add tickets from the left</p>
+              <p className="text-sm text-muted-foreground text-center py-6">{dict["seller.cart_empty"]}</p>
             ) : (
               <>
                 {cart.map((item) => (
@@ -235,7 +237,7 @@ export function SellerApp({ events }: Props) {
                 ))}
                 <Separator />
                 <div className="flex justify-between font-bold">
-                  <span>Total ({cartQty} ticket{cartQty !== 1 ? "s" : ""})</span>
+                  <span>{dict["seller.total"]} ({cartQty})</span>
                   <span>{formatCurrency(cartTotal)}</span>
                 </div>
               </>
@@ -245,7 +247,7 @@ export function SellerApp({ events }: Props) {
 
         {/* Payment method */}
         <div className="space-y-2">
-          <Label className="text-xs uppercase tracking-wide text-muted-foreground">Payment Method</Label>
+          <Label className="text-xs uppercase tracking-wide text-muted-foreground">{dict["seller.payment_method"]}</Label>
           <div className="grid grid-cols-3 gap-2">
             {(["CASH", "CARD", "TERMINAL"] as PaymentMethod[]).map((method) => (
               <Button
@@ -268,7 +270,7 @@ export function SellerApp({ events }: Props) {
           disabled={cart.length === 0 || submitting || !selectedEventId}
           onClick={handleSubmit}
         >
-          {submitting ? "Processing…" : `Charge ${formatCurrency(cartTotal)}`}
+          {submitting ? dict["seller.processing"] : `${dict["seller.charge"]} ${formatCurrency(cartTotal)}`}
         </Button>
       </div>
     </div>

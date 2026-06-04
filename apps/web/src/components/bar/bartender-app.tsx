@@ -106,7 +106,7 @@ export function BartenderApp({ initialOrders, dict, currency }: Props) {
           if (res.ok) {
             const o: DrinkOrder = await res.json();
             setOrders(prev => prev.some(x => x.id === o.id) ? prev : [o, ...prev]);
-            if (o.is_vip) toast.success(`VIP order — ${o.guest_name ?? "Guest"}`);
+            if (o.is_vip) toast.success(`${t("bar.vip_order")} — ${o.guest_name ?? t("bar.guest")}`);
           }
         } else if (payload.eventType === "UPDATE") {
           const upd = payload.new as DrinkOrder;
@@ -122,7 +122,7 @@ export function BartenderApp({ initialOrders, dict, currency }: Props) {
   const startCam = useCallback(async () => {
     if (!navigator?.mediaDevices?.getUserMedia) {
       const secure = location.protocol === "https:" || location.hostname === "localhost";
-      setCamErr(secure ? "Camera not available" : "Requires HTTPS");
+      setCamErr(secure ? t("bar.cam_unavail") : t("bar.cam_https"));
       return;
     }
     try {
@@ -135,7 +135,7 @@ export function BartenderApp({ initialOrders, dict, currency }: Props) {
       setTorchOk(!!caps.torch);
       setCamErr(null);
     } catch (e) {
-      setCamErr(e instanceof Error ? e.message : "Camera unavailable");
+      setCamErr(e instanceof Error ? e.message : t("bar.cam_unavail"));
     }
   }, []);
 
@@ -188,7 +188,7 @@ export function BartenderApp({ initialOrders, dict, currency }: Props) {
     try {
       await track.applyConstraints({ advanced: [{ torch: !torch } as MediaTrackConstraintSet] });
       setTorch(t => !t);
-    } catch { toast.error("Torch not supported"); }
+    } catch { toast.error(t("bar.torch_err")); }
   };
 
   /* ── Scan handler ──────────────────────────────────────────────── */
@@ -201,11 +201,11 @@ export function BartenderApp({ initialOrders, dict, currency }: Props) {
 
       // Already done — alert popup, stay on scanner
       if (order.status === "FULFILLED") {
-        setAlert({ title: "Order already fulfilled", body: `This order (${order.guest_name ?? "Guest"}) has already been completed.` });
+        setAlert({ title: t("bar.fulfilled_title"), body: `${order.guest_name ?? t("bar.guest")} — ${t("bar.fulfilled_body")}` });
         setScanState("idle"); reset(0); return;
       }
       if (order.status === "CANCELLED") {
-        setAlert({ title: "Order cancelled", body: "This order has been cancelled and cannot be processed." });
+        setAlert({ title: t("bar.cancelled_title"), body: t("bar.cancelled_body") });
         setScanState("idle"); reset(0); return;
       }
 
@@ -219,8 +219,8 @@ export function BartenderApp({ initialOrders, dict, currency }: Props) {
         }
         // Different device is processing it — alert, block
         setAlert({
-          title: "Already being processed",
-          body: "This order is currently being processed on another device. Only one bartender can process it at a time.",
+          title: t("bar.in_progress_title"),
+          body: t("bar.in_progress_body"),
         });
         setScanState("idle"); reset(0); return;
       }
@@ -238,7 +238,7 @@ export function BartenderApp({ initialOrders, dict, currency }: Props) {
       setScanState("found");
       initFulfilled(updated);
     } catch {
-      toast.error("Network error");
+      toast.error(t("bar.network_err"));
       setScanState("idle");
       cooldownRef.current = false;
       lastTokenRef.current = "";
@@ -323,10 +323,10 @@ export function BartenderApp({ initialOrders, dict, currency }: Props) {
         body: JSON.stringify({ status: "FULFILLED" }),
       });
       setOrders(prev => prev.filter(o => o.id !== activeOrder.id));
-      toast.success(`Order fulfilled — ${activeOrder.guest_name ?? "Guest"}`);
+      toast.success(`${t("bar.fulfilled_toast")} — ${activeOrder.guest_name ?? t("bar.guest")}`);
       closeOrder();
     } catch {
-      toast.error("Failed to complete order");
+      toast.error(t("bar.fulfill_failed"));
     } finally {
       setCompleting(false);
     }
@@ -356,8 +356,8 @@ export function BartenderApp({ initialOrders, dict, currency }: Props) {
   const loadOrder = async (order: DrinkOrder) => {
     if (order.status === "IN_PROGRESS" && !myOrderIds.current.has(order.id)) {
       setAlert({
-        title: "Already being processed",
-        body: "This order is currently being processed on another device.",
+        title: t("bar.in_progress_title"),
+        body: t("bar.in_progress_body2"),
       });
       return;
     }
@@ -397,7 +397,7 @@ export function BartenderApp({ initialOrders, dict, currency }: Props) {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogAction onClick={() => { setAlert(null); cooldownRef.current = false; lastTokenRef.current = ""; }}>
-            OK
+            {t("bar.alert_ok")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -415,10 +415,10 @@ export function BartenderApp({ initialOrders, dict, currency }: Props) {
         {pending.length > 0 && (
           <div className="px-1.5 pt-2">
             <p className="text-[9px] font-bold uppercase tracking-wider text-white/60 px-1 mb-1">
-              {pending.length} NEW
+              {pending.length} {t("bar.new_label")}
             </p>
             {pending.map(o => (
-              <QueueCard key={o.id} order={o} active={activeOrder?.id === o.id} onClick={() => loadOrder(o)} fmt={fmt} />
+              <QueueCard key={o.id} order={o} active={activeOrder?.id === o.id} onClick={() => loadOrder(o)} fmt={fmt} guestLabel={t("bar.guest")} />
             ))}
           </div>
         )}
@@ -427,17 +427,17 @@ export function BartenderApp({ initialOrders, dict, currency }: Props) {
         {inProgress.length > 0 && (
           <div className="px-1.5 pt-2">
             <p className="text-[9px] font-bold uppercase tracking-wider text-white/40 px-1 mb-1">
-              {inProgress.length} ACTIVE
+              {inProgress.length} {t("bar.active_label")}
             </p>
             {inProgress.map(o => (
-              <QueueCard key={o.id} order={o} active={activeOrder?.id === o.id} onClick={() => loadOrder(o)} fmt={fmt} />
+              <QueueCard key={o.id} order={o} active={activeOrder?.id === o.id} onClick={() => loadOrder(o)} fmt={fmt} guestLabel={t("bar.guest")} />
             ))}
           </div>
         )}
 
         {pending.length === 0 && inProgress.length === 0 && (
           <div className="flex-1 flex items-center justify-center">
-            <p className="text-[9px] text-white/20 text-center px-1">No orders</p>
+            <p className="text-[9px] text-white/20 text-center px-1">{t("bar.no_orders_queue")}</p>
           </div>
         )}
 
@@ -469,6 +469,7 @@ export function BartenderApp({ initialOrders, dict, currency }: Props) {
             torch={torch}
             torchOk={torchOk}
             toggleTorch={toggleTorch}
+            dict={dict}
           />
         )}
 
@@ -481,6 +482,7 @@ export function BartenderApp({ initialOrders, dict, currency }: Props) {
             allDone={allDone}
             completing={completing}
             fmt={fmt}
+            dict={dict}
             onToggleItem={toggleItem}
             onAdjustQty={adjustQty}
             onComplete={completeOrder}
@@ -497,9 +499,10 @@ export function BartenderApp({ initialOrders, dict, currency }: Props) {
 /* ═══════════════════════════════════════════════════════════════════════════════
    Queue Card (compact strip item)
 ═══════════════════════════════════════════════════════════════════════════════ */
-function QueueCard({ order, active, onClick, fmt }: {
+function QueueCard({ order, active, onClick, fmt, guestLabel }: {
   order: DrinkOrder; active: boolean; onClick: () => void;
   fmt: (n: number) => string;
+  guestLabel: string;
 }) {
   return (
     <button
@@ -518,7 +521,7 @@ function QueueCard({ order, active, onClick, fmt }: {
         )} />
         <span className="text-[10px] font-mono text-white/50 truncate">{order.qr_token.slice(0, 6)}</span>
       </div>
-      <p className="text-[11px] font-semibold truncate">{order.guest_name ?? "Guest"}</p>
+      <p className="text-[11px] font-semibold truncate">{order.guest_name ?? guestLabel}</p>
       <p className="text-[9px] text-white/40">
         {order.drink_order_items.length}× · {fmt(order.total)}
       </p>
@@ -539,15 +542,17 @@ const SCAN_BG: Record<ScanState, string> = {
   cancelled:        "border-white/40 shadow-[0_0_0_6px_rgba(115,115,115,0.2)]",
 };
 
-const SCAN_LABEL: Record<ScanState, { text: string; color: string; Icon: typeof CheckCircle2 | null }> = {
-  idle:             { text: "",                    color: "",                   Icon: null },
-  loading:          { text: "Looking up…",          color: "text-white/60",      Icon: null },
-  found:            { text: "Order started",        color: "text-white",         Icon: CheckCircle2 },
-  in_progress_warn: { text: "Already in progress",  color: "text-white/60",      Icon: AlertTriangle },
-  not_found:        { text: "Order not found",      color: "text-white/60",      Icon: XCircle },
-  done:             { text: "Already fulfilled",    color: "text-white",         Icon: CheckCircle2 },
-  cancelled:        { text: "Cancelled",            color: "text-white/60",      Icon: XCircle },
-};
+function buildScanLabel(dict: Dictionary): Record<ScanState, { text: string; color: string; Icon: typeof CheckCircle2 | null }> {
+  return {
+    idle:             { text: "",                          color: "",              Icon: null },
+    loading:          { text: dict["bar.scan_looking"],    color: "text-white/60", Icon: null },
+    found:            { text: dict["bar.scan_started"],    color: "text-white",    Icon: CheckCircle2 },
+    in_progress_warn: { text: dict["bar.scan_in_progress"],color: "text-white/60", Icon: AlertTriangle },
+    not_found:        { text: dict["bar.scan_not_found"],  color: "text-white/60", Icon: XCircle },
+    done:             { text: dict["bar.scan_done"],       color: "text-white",    Icon: CheckCircle2 },
+    cancelled:        { text: dict["bar.status_cancelled"],color: "text-white/60", Icon: XCircle },
+  };
+}
 
 const CORNERS = [
   "top-0 left-0 border-t-[4px] border-l-[4px] rounded-tl-2xl",
@@ -558,7 +563,7 @@ const CORNERS = [
 
 function ScannerView({
   scanState, manualMode, setManualMode, manualInput, setManualInput,
-  handleScan, videoRef, canvasRef, camErr, torch, torchOk, toggleTorch,
+  handleScan, videoRef, canvasRef, camErr, torch, torchOk, toggleTorch, dict,
 }: {
   scanState: ScanState;
   manualMode: boolean; setManualMode: (v: boolean) => void;
@@ -568,9 +573,10 @@ function ScannerView({
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
   camErr: string | null;
   torch: boolean; torchOk: boolean; toggleTorch: () => void;
+  dict: Dictionary;
 }) {
   const isIdle = scanState === "idle";
-  const label  = SCAN_LABEL[scanState];
+  const label  = buildScanLabel(dict)[scanState];
 
   return (
     <div className="flex-1 flex flex-col relative">
@@ -580,7 +586,7 @@ function ScannerView({
             <div className="text-center text-white/50 px-8 space-y-3">
               <ScanLine className="h-10 w-10 mx-auto opacity-30" />
               <p className="text-sm">{camErr}</p>
-              <Button variant="secondary" size="sm" onClick={() => setManualMode(true)}>Manual Entry</Button>
+              <Button variant="secondary" size="sm" onClick={() => setManualMode(true)}>{dict["bar.cam_use_manual"]}</Button>
             </div>
           ) : (
             <>
@@ -610,7 +616,7 @@ function ScannerView({
                   </p>
                 )}
                 {isIdle && (
-                  <p className="text-xs text-white/30">Point camera at order QR code</p>
+                  <p className="text-xs text-white/30">{dict["bar.scan_hint"]}</p>
                 )}
               </div>
             </>
@@ -618,11 +624,11 @@ function ScannerView({
         </div>
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6">
-          <p className="text-white/40 text-sm">Enter QR token manually</p>
+          <p className="text-white/40 text-sm">{dict["bar.manual_hint"]}</p>
           <div className="w-full max-w-xs flex gap-2">
             <input
               className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-white/40"
-              placeholder="Order token…"
+              placeholder={dict["bar.manual_ph"]}
               value={manualInput}
               onChange={e => setManualInput(e.target.value)}
               onKeyDown={e => {
@@ -631,7 +637,7 @@ function ScannerView({
               autoFocus
             />
             <Button size="sm" onClick={() => { if (manualInput.trim()) { handleScan(manualInput.trim()); setManualInput(""); } }}>
-              Go
+              {dict["bar.manual_go"]}
             </Button>
           </div>
           {label.text && (
@@ -647,11 +653,11 @@ function ScannerView({
         <button
           onClick={() => setManualMode(!manualMode)}
           className="text-white/40 hover:text-white/80 transition-colors p-1"
-          title={manualMode ? "Camera" : "Manual"}
+          title={manualMode ? dict["bar.scan_mode_lbl"] : dict["bar.manual_mode_lbl"]}
         >
           {manualMode ? <RotateCcw className="h-4 w-4" /> : <Keyboard className="h-4 w-4" />}
         </button>
-        <p className="text-[10px] text-white/20">{manualMode ? "Manual mode" : "Scan order QR"}</p>
+        <p className="text-[10px] text-white/20">{manualMode ? dict["bar.manual_mode_lbl"] : dict["bar.scan_mode_lbl"]}</p>
         <button
           onClick={toggleTorch}
           className={cn(
@@ -670,7 +676,7 @@ function ScannerView({
 /* ═══════════════════════════════════════════════════════════════════════════════
    Order Detail Panel — full-height POS view
 ═══════════════════════════════════════════════════════════════════════════════ */
-function OrderDetail({ order, scanState, fulfilled, allDone, completing, fmt,
+function OrderDetail({ order, scanState, fulfilled, allDone, completing, fmt, dict,
   onToggleItem, onAdjustQty, onComplete, onCancel, onBack }: {
   order: DrinkOrder;
   scanState: ScanState;
@@ -678,6 +684,7 @@ function OrderDetail({ order, scanState, fulfilled, allDone, completing, fmt,
   allDone: boolean;
   completing: boolean;
   fmt: (n: number) => string;
+  dict: Dictionary;
   onToggleItem: (id: string) => void;
   onAdjustQty: (id: string, d: number) => void;
   onComplete: () => void;
@@ -697,13 +704,13 @@ function OrderDetail({ order, scanState, fulfilled, allDone, completing, fmt,
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             {order.is_vip && <Star className="h-4 w-4 fill-current text-white" />}
-            <span className="font-bold text-lg truncate">{order.guest_name ?? "Guest"}</span>
-            <StatusBadge status={order.status} warn={scanState === "in_progress_warn"} />
+            <span className="font-bold text-lg truncate">{order.guest_name ?? dict["bar.guest"]}</span>
+            <StatusBadge status={order.status} warn={scanState === "in_progress_warn"} dict={dict} />
           </div>
           <p className="text-[11px] text-white/30 font-mono">{order.qr_token.slice(0, 12)}</p>
         </div>
         <div className="text-right flex-shrink-0">
-          <p className="text-xs text-white/40">{order.drink_order_items.length} items</p>
+          <p className="text-xs text-white/40">{order.drink_order_items.length} {dict["bar.items"]}</p>
           <p className="font-bold">{fmt(order.total)}</p>
         </div>
       </div>
@@ -796,7 +803,7 @@ function OrderDetail({ order, scanState, fulfilled, allDone, completing, fmt,
           onClick={onCancel}
         >
           <XCircle className="h-4 w-4 mr-1.5" />
-          Cancel
+          {dict["bar.cancel"]}
         </Button>
         <Button
           className={cn(
@@ -811,8 +818,8 @@ function OrderDetail({ order, scanState, fulfilled, allDone, completing, fmt,
           {completing
             ? <Loader2 className="h-5 w-5 animate-spin" />
             : allDone
-              ? <><CheckCircle2 className="h-5 w-5 mr-2" />Complete Order</>
-              : `${Object.values(fulfilled).filter(Boolean).length} / ${Object.keys(fulfilled).length} done`
+              ? <><CheckCircle2 className="h-5 w-5 mr-2" />{dict["bar.complete_order"]}</>
+              : `${Object.values(fulfilled).filter(Boolean).length} / ${Object.keys(fulfilled).length} ${dict["bar.done_count"]}`
           }
         </Button>
       </div>
@@ -823,14 +830,14 @@ function OrderDetail({ order, scanState, fulfilled, allDone, completing, fmt,
   function completeOrder() { onComplete(); }
 }
 
-function StatusBadge({ status, warn }: { status: DrinkOrderStatus; warn: boolean }) {
-  if (warn) return <span className="text-[10px] bg-white/15 text-white px-2 py-0.5 rounded-full font-bold">IN PROGRESS</span>;
-  const map: Record<DrinkOrderStatus, [string, string]> = {
-    PENDING:     ["bg-white/15 text-white",      "PENDING"],
-    IN_PROGRESS: ["bg-white/10 text-white/80",   "IN PROGRESS"],
-    FULFILLED:   ["bg-white text-black",         "FULFILLED"],
-    CANCELLED:   ["bg-white/5 text-white/40",    "CANCELLED"],
+function StatusBadge({ status, warn, dict }: { status: DrinkOrderStatus; warn: boolean; dict: Dictionary }) {
+  if (warn) return <span className="text-[10px] bg-white/15 text-white px-2 py-0.5 rounded-full font-bold">{dict["bar.status_in_progress"].toUpperCase()}</span>;
+  const map: Record<DrinkOrderStatus, [string, keyof Dictionary]> = {
+    PENDING:     ["bg-white/15 text-white",      "bar.status_pending"],
+    IN_PROGRESS: ["bg-white/10 text-white/80",   "bar.status_in_progress"],
+    FULFILLED:   ["bg-white text-black",         "bar.status_fulfilled"],
+    CANCELLED:   ["bg-white/5 text-white/40",    "bar.status_cancelled"],
   };
-  const [cls, label] = map[status];
-  return <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold", cls)}>{label}</span>;
+  const [cls, key] = map[status];
+  return <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold", cls)}>{dict[key].toUpperCase()}</span>;
 }

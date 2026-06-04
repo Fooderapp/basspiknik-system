@@ -133,6 +133,19 @@ export async function POST(req: Request) {
       await supabase.rpc("increment_promo_used", { p_promo_id: meta.promoCodeId });
     }
 
+    // Award loyalty credits to registered buyers (idempotent per order)
+    if (meta.userId) {
+      const { data: cs } = await supabase
+        .from("app_settings").select("credits_per_ticket").eq("id", "global").single();
+      await supabase.rpc("award_credits", {
+        p_user_id: meta.userId,
+        p_amount: cs?.credits_per_ticket ?? 4,
+        p_reason: "TICKET_PURCHASE",
+        p_order_id: order.id,
+        p_drink_order_id: null,
+      });
+    }
+
     // Send confirmation email
     const appSettings = await getSettings();
     const buyerEmail = meta.guestEmail || session.customer_email || null;

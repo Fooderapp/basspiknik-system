@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TicketTypeManager } from "@/components/events/ticket-type-manager";
+import { SpinConfigManager } from "@/components/events/spin-config-manager";
 import { CalendarDays, MapPin, Users, ExternalLink, Pencil, BarChart3, Ticket, Tag, Code2 } from "lucide-react";
 import { EmbedSnippet } from "@/components/events/embed-snippet";
 import type { Event, TicketType } from "@/lib/supabase/types";
@@ -146,6 +147,9 @@ export default async function EventDetailPage({
 
       {/* Ticket type manager */}
       <TicketTypeManager eventId={id} initialTicketTypes={ticketTypes} />
+
+      {/* Free spin conditions */}
+      <SpinConfigManager eventId={id} ticketTypes={ticketTypes} />
 
       {/* Embed widget snippet */}
       {event.status === "PUBLISHED" && (

@@ -13,19 +13,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Ticket } from "lucide-react";
+import type { Dictionary } from "@/lib/i18n";
 
-const schema = z.object({
-  email: z.string().email("Invalid email"),
-  password: z.string().min(6, "Min 6 characters"),
-});
+interface Props { dict: Dictionary }
 
-type FormData = z.infer<typeof schema>;
-
-export function SignInForm() {
+export function SignInForm({ dict }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") ?? "/dashboard";
   const [loading, setLoading] = useState(false);
+
+  const schema = z.object({
+    email: z.string().email(dict["auth.invalid_email"]),
+    password: z.string().min(6, dict["auth.min_chars_6"]),
+  });
+  type FormData = z.infer<typeof schema>;
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -56,29 +58,29 @@ export function SignInForm() {
         <div className="flex justify-center mb-2">
           <Ticket className="h-8 w-8 text-primary" />
         </div>
-        <CardTitle className="text-2xl">Welcome back</CardTitle>
-        <CardDescription>Sign in to your EventOS account</CardDescription>
+        <CardTitle className="text-2xl">{dict["auth.signin_title"]}</CardTitle>
+        <CardDescription>{dict["auth.signin_desc"]}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{dict["auth.email"]}</Label>
             <Input id="email" type="email" placeholder="you@example.com" {...register("email")} />
             {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{dict["auth.password"]}</Label>
             <Input id="password" type="password" placeholder="••••••••" {...register("password")} />
             {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? dict["auth.signing_in"] : dict["auth.sign_in"]}
           </Button>
         </form>
       </CardContent>
       <CardFooter className="justify-center text-sm text-muted-foreground">
-        No account?&nbsp;
-        <Link href="/sign-up" className="text-primary underline underline-offset-4">Sign up</Link>
+        {dict["auth.no_account"]}&nbsp;
+        <Link href="/sign-up" className="text-primary underline underline-offset-4">{dict["auth.sign_up"]}</Link>
       </CardFooter>
     </Card>
   );

@@ -8,6 +8,11 @@ import { z } from "zod";
 const schema = z.object({
   currency: z.enum(["EUR", "USD", "HUF"]),
   language: z.enum(["en", "hu"]),
+  creditsEnabled: z.boolean().optional(),
+  creditsPerTicket: z.coerce.number().int().min(0).max(1000).optional(),
+  creditsPerDrink: z.coerce.number().int().min(0).max(1000).optional(),
+  spinCost: z.coerce.number().int().min(1).max(1000).optional(),
+  spinWinRate: z.coerce.number().int().min(1).max(100000).optional(),
 });
 
 export async function GET() {
@@ -18,7 +23,7 @@ export async function GET() {
   const supabase = await createAdminClient() as any;
   const { data, error } = await supabase
     .from("app_settings")
-    .select("currency, language, updated_at")
+    .select("currency, language, credits_enabled, credits_per_ticket, credits_per_drink, spin_cost, spin_win_rate, updated_at")
     .eq("id", "global")
     .single();
 
@@ -38,14 +43,23 @@ export async function POST(req: Request) {
   if (!parsed.success)
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
+  const d = parsed.data;
+  const update: Record<string, any> = {
+    currency: d.currency,
+    language: d.language,
+    updated_at: new Date().toISOString(),
+    updated_by: profile.id,
+  };
+  if (d.creditsEnabled   !== undefined) update.credits_enabled    = d.creditsEnabled;
+  if (d.creditsPerTicket !== undefined) update.credits_per_ticket = d.creditsPerTicket;
+  if (d.creditsPerDrink  !== undefined) update.credits_per_drink  = d.creditsPerDrink;
+  if (d.spinCost         !== undefined) update.spin_cost          = d.spinCost;
+  if (d.spinWinRate      !== undefined) update.spin_win_rate      = d.spinWinRate;
+
   const supabase = await createAdminClient() as any;
   const { error } = await supabase
     .from("app_settings")
-    .update({
-      ...parsed.data,
-      updated_at: new Date().toISOString(),
-      updated_by: profile.id,
-    })
+    .update(update)
     .eq("id", "global");
 
   if (error)

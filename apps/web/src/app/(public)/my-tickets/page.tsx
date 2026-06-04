@@ -8,6 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getSettings } from "@/lib/settings";
 import { getDictionary, t } from "@/lib/i18n";
+import { TransferTicketButton } from "@/components/tickets/transfer-ticket-dialog";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -137,7 +138,7 @@ export default async function MyTicketsPage() {
                           </p>
                         </div>
 
-                        <div className="shrink-0 text-right">
+                        <div className="shrink-0 text-right flex flex-col items-end gap-2">
                           {ticket.status === "USED" ? (
                             <Badge variant="secondary" className="text-xs">{t(dict, "mytickets.status_used")}</Badge>
                           ) : ticket.status === "CANCELLED" ? (
@@ -146,9 +147,16 @@ export default async function MyTicketsPage() {
                             <Badge variant="success" className="text-xs">{t(dict, "mytickets.status_valid")}</Badge>
                           )}
                           {ticket.used_at && (
-                            <p className="text-xs text-muted-foreground mt-1">
+                            <p className="text-xs text-muted-foreground">
                               {new Date(ticket.used_at).toLocaleTimeString()}
                             </p>
+                          )}
+                          {ticket.status === "VALID" && (
+                            <TransferTicketButton
+                              ticketId={ticket.id}
+                              ticketName={ticket.ticket_name ?? "Ticket"}
+                              dict={dict}
+                            />
                           )}
                         </div>
                       </div>
@@ -157,7 +165,7 @@ export default async function MyTicketsPage() {
                     {tickets.length === 0 && (
                       <div className="p-4 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
                         <QrCode className="h-4 w-4" />
-                        Tickets generating…
+                        {t(dict, "ticket.generating")}
                       </div>
                     )}
                   </div>

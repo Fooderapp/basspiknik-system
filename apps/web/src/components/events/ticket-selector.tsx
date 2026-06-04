@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/utils";
-import { Minus, Plus, Tag } from "lucide-react";
+import { Minus, Plus, Tag, Sparkles } from "lucide-react";
+import { SpinButton } from "@/components/credits/spin-button";
 import type { Dictionary } from "@/lib/i18n";
 import type { Currency } from "@/lib/settings";
 
@@ -38,6 +39,7 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency }: TicketS
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [promoCode, setPromoCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [freeSpinToken, setFreeSpinToken] = useState<string | null>(null);
 
   const updateQty = (id: string, delta: number, max: number) => {
     setQuantities((prev) => {
@@ -64,14 +66,18 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency }: TicketS
       const res = await fetch("/api/orders/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId, items, promoCode: promoCode || undefined }),
+        body: JSON.stringify({
+          eventId, items,
+          promoCode: promoCode || undefined,
+          freeSpinToken: freeSpinToken || undefined,
+        }),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Checkout failed");
+      if (!res.ok) throw new Error(data.error ?? dict["ticket.checkout_failed"]);
       router.push(data.url);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Checkout failed");
+      toast.error(err instanceof Error ? err.message : dict["ticket.checkout_failed"]);
     } finally {
       setLoading(false);
     }
@@ -167,11 +173,37 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency }: TicketS
         <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
           <div className="flex justify-between text-sm">
             <span>{dict["ticket.subtotal"]}</span>
-            <span>{fmt(subtotal)}</span>
+            <span className={freeSpinToken ? "line-through text-muted-foreground" : ""}>{fmt(subtotal)}</span>
           </div>
-          <Button className="w-full" size="lg" onClick={handleCheckout} disabled={loading}>
-            {loading ? "…" : `${dict["ticket.checkout"]} · ${fmt(subtotal)}`}
-          </Button>
+
+          {/* Free spin — server enforces eligibility */}
+          {!freeSpinToken && (
+            <SpinButton
+              context="TICKET"
+              eventId={eventId}
+              items={Object.entries(quantities)
+                .filter(([, q]) => q > 0)
+                .map(([ticketTypeId, quantity]) => ({ ticketTypeId, quantity }))}
+              dict={dict}
+              onWin={setFreeSpinToken}
+            />
+          )}
+
+          {freeSpinToken ? (
+            <Button
+              className="w-full bg-amber-500 hover:bg-amber-600 gap-2"
+              size="lg"
+              onClick={handleCheckout}
+              disabled={loading}
+            >
+              <Sparkles className="h-4 w-4" />
+              {loading ? "…" : dict["credits.claim_free"]}
+            </Button>
+          ) : (
+            <Button className="w-full" size="lg" onClick={handleCheckout} disabled={loading}>
+              {loading ? "…" : `${dict["ticket.checkout"]} · ${fmt(subtotal)}`}
+            </Button>
+          )}
         </div>
       )}
     </div>

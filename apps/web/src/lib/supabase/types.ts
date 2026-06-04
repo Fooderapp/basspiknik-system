@@ -74,6 +74,7 @@ export interface Database {
           is_bundle: boolean
           bundle_size: number | null
           entries_per_ticket: number
+          is_door_ticket: boolean
           sale_enabled: boolean
           sale_price: number | null
           created_at: string

@@ -23,19 +23,76 @@ export async function POST(req: Request) {
 
   const supabase = await createAdminClient() as any;
 
-  // Look up ticket by QR code — include ticket_type for entries_per_ticket
-  const { data: ticket, error: ticketErr } = await supabase
-    .from("tickets")
-    .select("*, events(name, start_date), ticket_types(name, tier, entries_per_ticket), check_ins(*)")
-    .eq("qr_code", qrCode)
-    .single();
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  let ticket: any = null;
 
-  if (ticketErr || !ticket) {
+  if (UUID_RE.test(qrCode)) {
+    // Could be a wallet pass QR (wallet_token) — resolve user then find valid ticket
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("wallet_token", qrCode)
+      .single();
+
+    if (prof?.id) {
+      // Find this user's next valid ticket (nearest upcoming event)
+      const { data: walletTickets } = await supabase
+        .from("tickets")
+        .select("*, events(name, start_date), ticket_types(name, tier, entries_per_ticket), check_ins(*), orders!inner(user_id)")
+        .eq("orders.user_id", prof.id)
+        .eq("status", "VALID")
+        .order("created_at", { ascending: true })
+        .limit(1);
+      ticket = walletTickets?.[0] ?? null;
+    }
+
+    if (!ticket) {
+      // Fall back: UUID might be a ticket qr_code directly
+      const { data: t } = await supabase
+        .from("tickets")
+        .select("*, events(name, start_date), ticket_types(name, tier, entries_per_ticket), check_ins(*)")
+        .eq("qr_code", qrCode)
+        .single();
+      ticket = t ?? null;
+    }
+  } else {
+    // Non-UUID: individual ticket QR code
+    const { data: t } = await supabase
+      .from("tickets")
+      .select("*, events(name, start_date), ticket_types(name, tier, entries_per_ticket), check_ins(*)")
+      .eq("qr_code", qrCode)
+      .single();
+    ticket = t ?? null;
+  }
+
+  if (!ticket) {
     return NextResponse.json({
       success: false,
       status: "INVALID",
       message: "Ticket not found",
     }, { status: 404 });
+  }
+
+  // Door tickets are marked USED at POS sale — treat them as already checked in
+  if (ticket.status === "USED") {
+    const lastCi = Array.isArray(ticket.check_ins) && ticket.check_ins.length > 0
+      ? ticket.check_ins[ticket.check_ins.length - 1]
+      : null;
+    return NextResponse.json({
+      success: false,
+      status: "ALREADY_USED",
+      message: "Already checked in",
+      ticket: {
+        id: ticket.id,
+        holderName: ticket.holder_name,
+        ticketName: ticket.ticket_name,
+        tier: ticket.ticket_types?.tier,
+        event: ticket.events?.name,
+        checkedInAt: lastCi?.checked_in_at ?? null,
+        entriesUsed: Array.isArray(ticket.check_ins) ? ticket.check_ins.length : 1,
+        entriesAllowed: ticket.ticket_types?.entries_per_ticket ?? 1,
+      },
+    });
   }
 
   if (ticket.status === "CANCELLED" || ticket.status === "REFUNDED") {

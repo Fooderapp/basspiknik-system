@@ -17,6 +17,7 @@ const ticketTypeSchema = z.object({
   saleEndsAt: z.string().optional().nullable(),
   isBundle: z.boolean().default(false),
   bundleSize: z.number().int().min(2).optional().nullable(),
+  isDoorTicket: z.boolean().default(false),
   saleEnabled: z.boolean().default(false),
   salePrice: z.number().min(0).optional().nullable(),
 });
@@ -60,6 +61,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     sale_ends_at: d.saleEndsAt ?? null,
     is_bundle: d.isBundle,
     bundle_size: d.bundleSize ?? null,
+    is_door_ticket: d.isDoorTicket,
     sale_enabled: d.saleEnabled,
     sale_price: d.saleEnabled ? (d.salePrice ?? null) : null,
   }).select().single();

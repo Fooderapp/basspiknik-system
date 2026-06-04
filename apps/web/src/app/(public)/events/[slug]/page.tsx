@@ -25,7 +25,8 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   if (!event) notFound();
 
   const dict = getDictionary(settings.language);
-  const tts = event.ticket_types;
+  // Door tickets are POS-only — never shown in the public purchase flow
+  const tts = event.ticket_types.filter((tt) => !tt.is_door_ticket);
   const totalSold = tts.reduce((a, tt) => a + tt.sold, 0);
   const totalCapacity = tts.reduce((a, tt) => a + tt.quantity, 0);
   const isSoldOut = totalSold >= totalCapacity;
@@ -122,7 +123,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
               </div>
               <div className="border-t pt-3">
                 <p className="text-xs text-muted-foreground mb-1">
-                  {settings.language === "hu" ? "Jegy ártól" : "Tickets from"}
+                  {t(dict, "event.tickets_from")}
                 </p>
                 <p className="text-xl font-bold">
                   {formatCurrency(Math.min(...tts.map((tt) => tt.price)), settings.currency)}

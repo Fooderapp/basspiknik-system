@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
-import { ShoppingCart, Plus, Minus, Trash2, Wine, CheckCircle2, RefreshCw, Pencil, X, Clock, Loader2, AlertTriangle } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Trash2, Wine, CheckCircle2, RefreshCw, Pencil, X, Clock, Loader2, AlertTriangle, Sparkles } from "lucide-react";
+import { SpinButton } from "@/components/credits/spin-button";
 import type { Drink, DrinkCategory, DrinkCategoryRow } from "@/lib/supabase/types";
 import type { Dictionary } from "@/lib/i18n";
 import type { Currency } from "@/lib/settings";
@@ -58,6 +59,7 @@ export function BarMenu({ drinks, categories, dict, currency }: Props) {
   const [orderStatus, setOrderStatus] = useState<"PENDING" | "IN_PROGRESS" | "FULFILLED" | "CANCELLED" | null>(null);
   const [cancelling, setCancelling] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [freeSpinToken, setFreeSpinToken] = useState<string | null>(null);
 
   // ── derived: build unified category tabs ──
   const categoryTabs = useMemo((): CategoryTab[] => {
@@ -145,10 +147,12 @@ export function BarMenu({ drinks, categories, dict, currency }: Props) {
           guestName: guestName.trim() || null,
           notes: orderNotes.trim() || null,
           items: cart.map((c) => ({ drinkId: c.drink.id, quantity: c.quantity, notes: c.notes ?? null })),
+          freeSpinToken: freeSpinToken || undefined,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
+      setFreeSpinToken(null);
 
       // Generate QR
       const qr = await QRCode.toDataURL(data.qrToken, {
@@ -517,11 +521,26 @@ export function BarMenu({ drinks, categories, dict, currency }: Props) {
               <SheetFooter className="flex-col gap-2 pt-2">
                 <div className="flex justify-between font-bold text-base w-full">
                   <span>{t("menu.total")}</span>
-                  <span>{fmt(cartTotal)}</span>
+                  <span className={freeSpinToken ? "line-through text-muted-foreground" : ""}>{fmt(cartTotal)}</span>
                 </div>
-                <Button className="w-full" size="lg" onClick={placeOrder} disabled={placing}>
-                  {placing ? t("menu.placing") : t("menu.place_order")}
-                </Button>
+
+                {!freeSpinToken && (
+                  <SpinButton context="DRINK" dict={dict} onWin={setFreeSpinToken} />
+                )}
+
+                {freeSpinToken ? (
+                  <Button
+                    className="w-full bg-amber-500 hover:bg-amber-600 gap-2"
+                    size="lg" onClick={placeOrder} disabled={placing}
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    {placing ? t("menu.placing") : t("credits.claim_free_drink")}
+                  </Button>
+                ) : (
+                  <Button className="w-full" size="lg" onClick={placeOrder} disabled={placing}>
+                    {placing ? t("menu.placing") : t("menu.place_order")}
+                  </Button>
+                )}
               </SheetFooter>
             </>
           )}

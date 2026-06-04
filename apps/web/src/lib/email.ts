@@ -50,15 +50,27 @@ export async function sendTicketConfirmation(input: SendTicketConfirmationInput)
 
   const dict = getDictionary(language);
 
-  // Generate PDF with translated ticket cards
-  const pdfBuffer = await generateTicketPdf({
-    eventName,
-    eventDate,
-    eventVenue,
-    orderId,
-    tickets,
-    language,
-  });
+  // One self-contained PDF per ticket — buyer can forward each to a different person
+  const slug = orderId.slice(0, 8).toUpperCase();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const safe = (s: string) => s.replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 24) || "ticket";
+
+  const attachments = await Promise.all(
+    tickets.map(async (tk, i) => {
+      const pdfBuffer = await generateTicketPdf({
+        eventName,
+        eventDate,
+        eventVenue,
+        orderId,
+        tickets: [tk],
+        language,
+      });
+      return {
+        filename: `ticket-${slug}-${pad(i + 1)}-${safe(tk.ticketName)}.pdf`,
+        content: pdfBuffer,
+      };
+    })
+  );
 
   const ticketCount = tickets.length;
   const ticketLabel = ticketCount === 1 ? t(dict, "email.ticket_count") : t(dict, "email.ticket_count_pl");
@@ -152,12 +164,7 @@ export async function sendTicketConfirmation(input: SendTicketConfirmationInput)
     to,
     subject,
     html,
-    attachments: [
-      {
-        filename: `tickets-${orderId.slice(0, 8).toUpperCase()}.pdf`,
-        content: pdfBuffer,
-      },
-    ],
+    attachments,
   });
 
   if (error) throw new Error(`Resend error: ${error.message}`);

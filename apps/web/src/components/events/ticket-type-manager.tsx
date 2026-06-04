@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Pencil, Trash2, Ticket, Users, Tag, PackageOpen, RefreshCcw } from "lucide-react";
+import { Plus, Pencil, Trash2, Ticket, Users, Tag, PackageOpen, RefreshCcw, DoorOpen } from "lucide-react";
 import type { TicketType } from "@/lib/supabase/types";
 
 const TIERS = ["EARLY_BIRD", "GENERAL", "LATE", "DOOR", "VIP", "FREE"] as const;
@@ -46,6 +46,8 @@ const schema = z.object({
   // Bundle
   isBundle: z.boolean().default(false),
   bundleSize: z.coerce.number().int().min(2).optional(),
+  // Door ticket (auto-admitted at creation)
+  isDoorTicket: z.boolean().default(false),
   // Sale price
   saleEnabled: z.boolean().default(false),
   salePrice: z.coerce.number().min(0).optional(),
@@ -94,11 +96,12 @@ export function TicketTypeManager({ eventId, initialTicketTypes }: Props) {
 
   const isBundle = watch("isBundle");
   const saleEnabled = watch("saleEnabled");
+  const isDoorTicket = watch("isDoorTicket");
   const entriesPerTicket = watch("entriesPerTicket") ?? 1;
 
   const openAdd = () => {
     setEditing(null);
-    reset({ tier: "GENERAL", maxPerOrder: 10, entriesPerTicket: 1, isBundle: false, saleEnabled: false, price: 0, quantity: 100 });
+    reset({ tier: "GENERAL", maxPerOrder: 10, entriesPerTicket: 1, isBundle: false, isDoorTicket: false, saleEnabled: false, price: 0, quantity: 100 });
     setDialogOpen(true);
   };
 
@@ -114,6 +117,7 @@ export function TicketTypeManager({ eventId, initialTicketTypes }: Props) {
       entriesPerTicket: tt.entries_per_ticket ?? 1,
       isBundle: tt.is_bundle,
       bundleSize: tt.bundle_size ?? undefined,
+      isDoorTicket: tt.is_door_ticket ?? false,
       saleEnabled: tt.sale_enabled ?? false,
       salePrice: tt.sale_price ?? undefined,
     });
@@ -139,6 +143,7 @@ export function TicketTypeManager({ eventId, initialTicketTypes }: Props) {
           entriesPerTicket: data.entriesPerTicket,
           isBundle: data.isBundle,
           bundleSize: data.isBundle ? data.bundleSize : null,
+          isDoorTicket: data.isDoorTicket,
           saleEnabled: data.saleEnabled,
           salePrice: data.saleEnabled ? data.salePrice : null,
         }),
@@ -215,6 +220,11 @@ export function TicketTypeManager({ eventId, initialTicketTypes }: Props) {
                       {TIER_LABELS[tt.tier]}
                     </span>
                     {tt.is_bundle && <Badge variant="outline" className="text-[11px]">Bundle ×{tt.bundle_size}</Badge>}
+                    {tt.is_door_ticket && (
+                      <Badge variant="outline" className="text-[11px]">
+                        <DoorOpen className="h-2.5 w-2.5 mr-1" />Door
+                      </Badge>
+                    )}
                     {(tt.entries_per_ticket ?? 1) > 1 && (
                       <Badge variant="outline" className="text-[11px]">
                         <RefreshCcw className="h-2.5 w-2.5 mr-1" />{tt.entries_per_ticket}× entry
@@ -362,6 +372,16 @@ export function TicketTypeManager({ eventId, initialTicketTypes }: Props) {
                   <p className="text-xs text-muted-foreground">Generates this many QR codes per purchase</p>
                 </div>
               </ToggleRow>
+
+              {/* Door ticket */}
+              <ToggleRow
+                id="doorTicket"
+                icon={DoorOpen}
+                label="Door ticket"
+                description="Sold at the entrance — ticket is automatically admitted on creation"
+                checked={isDoorTicket}
+                onCheckedChange={(v) => setValue("isDoorTicket", v)}
+              />
 
               {/* Sale price */}
               <ToggleRow
