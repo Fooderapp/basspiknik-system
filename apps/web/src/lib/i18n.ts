@@ -46,6 +46,20 @@ const en = {
   "ticket.per_person":    "per person",
   "ticket.generating":    "Tickets generating…",
 
+  // Guest checkout
+  "checkout.guest_title":     "Checkout as guest",
+  "checkout.guest_subtitle":  "Enter your details to receive your tickets.",
+  "checkout.full_name":       "Full name",
+  "checkout.email":           "Email",
+  "checkout.email_hint":      "Your tickets and receipt are sent here.",
+  "checkout.billing_note":    "Billing address is collected securely on the next (payment) step.",
+  "checkout.guest_warning":   "As a guest you won't earn credits, can't use Free Spin, and won't get the wallet pass.",
+  "checkout.app_hint":        "Get the best experience — credits, Free Spin and live event features — in our mobile app.",
+  "checkout.continue_guest":  "Continue as guest",
+  "checkout.login_register":  "Log in or register",
+  "checkout.name_required":   "Please enter your name",
+  "checkout.email_invalid":   "Please enter a valid email",
+
   // Success page
   "success.heading":         "You're in!",
   "success.confirmed":       "Your tickets for",
@@ -384,6 +398,20 @@ const hu: typeof en = {
   "ticket.checkout_failed":"Fizetés sikertelen",
   "ticket.per_person":    "személyenként",
   "ticket.generating":    "Jegyek generálása folyamatban…",
+
+  // Guest checkout
+  "checkout.guest_title":     "Fizetés vendégként",
+  "checkout.guest_subtitle":  "Add meg az adataidat a jegyek kézbesítéséhez.",
+  "checkout.full_name":       "Teljes név",
+  "checkout.email":           "E-mail",
+  "checkout.email_hint":      "Ide küldjük a jegyeidet és a számlát.",
+  "checkout.billing_note":    "A számlázási címet a következő (fizetési) lépésben, biztonságosan kérjük be.",
+  "checkout.guest_warning":   "Vendégként nem gyűjtesz kreditet, nem használhatod a Pörgetést, és nem kapsz wallet jegyet.",
+  "checkout.app_hint":        "A legjobb élményért — kreditek, Pörgetés és élő rendezvény-funkciók — használd a mobilappunkat.",
+  "checkout.continue_guest":  "Folytatás vendégként",
+  "checkout.login_register":  "Bejelentkezés vagy regisztráció",
+  "checkout.name_required":   "Add meg a neved",
+  "checkout.email_invalid":   "Adj meg egy érvényes e-mail címet",
 
   // Success page
   "success.heading":         "Beengedve!",

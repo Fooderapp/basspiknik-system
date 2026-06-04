@@ -70,6 +70,7 @@ export default async function WidgetPage({ params }: { params: Promise<{ slug: s
               eventId={event.id}
               dict={dict}
               currency={settings.currency}
+              isLoggedIn={false}
               ticketTypes={tts.map((t) => ({
                 id: t.id, name: t.name,
                 description: t.description ?? undefined,

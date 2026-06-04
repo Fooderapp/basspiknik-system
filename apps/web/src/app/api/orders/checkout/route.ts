@@ -182,6 +182,7 @@ export async function POST(req: Request) {
     payment_method_types: ["card"],
     line_items: lineItems as any,
     mode: "payment",
+    billing_address_collection: "required",
     success_url: `${getBaseUrl(req)}/events/${event.slug}/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${getBaseUrl(req)}/events/${event.slug}`,
     customer_email: profileEmail,

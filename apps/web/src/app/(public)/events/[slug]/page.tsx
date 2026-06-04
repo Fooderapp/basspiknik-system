@@ -16,9 +16,10 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   const { slug } = await params;
   const supabase = await createClient() as any;
 
-  const [{ data }, settings] = await Promise.all([
+  const [{ data }, settings, { data: { user } }] = await Promise.all([
     supabase.from("events").select("*, ticket_types(*)").eq("slug", slug).eq("status", "PUBLISHED").single(),
     getSettings(),
+    supabase.auth.getUser(),
   ]);
 
   const event = data as EventWithTickets | null;
@@ -98,6 +99,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
                 eventId={event.id}
                 dict={dict}
                 currency={settings.currency}
+                isLoggedIn={!!user}
                 ticketTypes={tts.map((tt) => ({
                   id: tt.id, name: tt.name,
                   description: tt.description ?? undefined,
