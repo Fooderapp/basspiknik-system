@@ -5,13 +5,14 @@ import { useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Ticket, Wine, ScanLine, Beer, CreditCard, UserCircle,
-  Compass, ShoppingBag, Star, ChevronRight, type LucideIcon,
+  Compass, ShoppingBag, ChevronRight, type LucideIcon,
 } from "lucide-react-native";
 import { useAuth } from "@/context/auth";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/Card";
+import { CreditCoin } from "@/components/ui/CreditCoin";
 import { Text } from "@/components/ui/text";
 import { Separator } from "@/components/ui/separator";
 import type { Ticket as TicketType } from "@/lib/types";
@@ -128,9 +129,7 @@ export default function HomeScreen() {
       <Pressable onPress={() => router.push("/(app)/tickets" as never)} className="active:opacity-75 mb-5">
         <View className="flex-row items-center justify-between bg-muted rounded-2xl px-4 py-3 border border-border">
           <View className="flex-row items-center gap-2.5">
-            <View className="w-8 h-8 rounded-xl items-center justify-center bg-primary">
-              <Star size={16} color="#000" strokeWidth={2} fill="#000" />
-            </View>
+            <CreditCoin size={32} />
             <View>
               <Text className="text-muted-foreground text-xs">Your credits</Text>
               {loadingData ? (

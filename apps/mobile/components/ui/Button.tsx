@@ -1,8 +1,15 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 import { cn } from "@/lib/utils";
 import { TextClassContext } from "@/components/ui/text";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const buttonVariants = cva(
   "flex flex-row items-center justify-center rounded-xl active:opacity-70",
@@ -54,21 +61,30 @@ type ButtonProps = React.ComponentPropsWithoutRef<typeof Pressable> &
   };
 
 const Button = React.forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>(
-  ({ className, variant, size, loading, icon, disabled, children, ...props }, ref) => {
+  ({ className, variant, size, loading, icon, disabled, children, onPressIn, onPressOut, ...props }, ref) => {
     // White-bg variants need a dark spinner; dark variants need a light one.
     const spinnerColor =
       variant === "outline" || variant === "secondary" || variant === "ghost"
         ? "#fafafa"
         : "#000000";
+
+    // Press-scale micro-interaction
+    const scale = useSharedValue(1);
+    const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+    const isLocked = disabled || loading;
+
     return (
     <TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
-      <Pressable
+      <AnimatedPressable
         ref={ref}
         role="button"
-        disabled={disabled || loading}
+        disabled={isLocked}
+        style={animStyle}
+        onPressIn={(e) => { if (!isLocked) scale.value = withSpring(0.95, { damping: 15, stiffness: 320 }); onPressIn?.(e); }}
+        onPressOut={(e) => { scale.value = withSpring(1, { damping: 12, stiffness: 280 }); onPressOut?.(e); }}
         className={cn(
           buttonVariants({ variant, size, className }),
-          (disabled || loading) && "opacity-40",
+          isLocked && "opacity-40",
         )}
         {...props}
       >
@@ -80,7 +96,7 @@ const Button = React.forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>
             {children}
           </>
         )}
-      </Pressable>
+      </AnimatedPressable>
     </TextClassContext.Provider>
     );
   }
