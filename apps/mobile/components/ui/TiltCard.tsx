@@ -93,15 +93,14 @@ export function TiltCard({
     };
   });
 
-  // foil bands sweep with tilt; whole sheen brightens with tilt magnitude
-  const holoWrapStyle = useAnimatedStyle(() => {
-    const mag = (Math.abs(gRx.value + pRx.value) + Math.abs(gRy.value + pRy.value)) / maxTilt;
-    return { opacity: Math.min(0.85, 0.28 + mag * 0.45) };
-  });
+  // foil bands sweep with tilt — kept faint so underlying content (QR) stays
+  // readable; brightness rides tilt magnitude like the holo-card glare
   const holoBandsStyle = useAnimatedStyle(() => {
     const rx = gRx.value + pRx.value;
     const ry = gRy.value + pRy.value;
+    const mag = (Math.abs(rx) + Math.abs(ry)) / maxTilt;
     return {
+      opacity: Math.min(0.32, 0.08 + mag * 0.22),
       transform: [
         { translateX: ry * 3.2 },
         { translateY: rx * 3.2 },
@@ -109,10 +108,13 @@ export function TiltCard({
       ],
     };
   });
-  // bright specular streak that glides across as you tilt left↔right
+  // bright specular glare that glides across as you tilt left↔right
   const specularStyle = useAnimatedStyle(() => {
+    const rx = gRx.value + pRx.value;
     const ry = gRy.value + pRy.value;
+    const mag = (Math.abs(rx) + Math.abs(ry)) / maxTilt;
     return {
+      opacity: Math.min(0.3, 0.06 + mag * 0.2),
       transform: [
         { translateX: interpolate(ry, [-maxTilt, maxTilt], [-size.w * 0.7, size.w * 1.2]) },
         { rotate: "18deg" },
@@ -130,12 +132,9 @@ export function TiltCard({
       <Animated.View onLayout={onLayout} style={[cardStyle, style]}>
         {children}
         {holo && size.w > 0 && (
-          <Animated.View
+          <View
             pointerEvents="none"
-            style={[
-              { position: "absolute", left: 0, top: 0, width: size.w, height: size.h, borderRadius: radius, overflow: "hidden" },
-              holoWrapStyle,
-            ]}
+            style={{ position: "absolute", left: 0, top: 0, width: size.w, height: size.h, borderRadius: radius, overflow: "hidden" }}
           >
             <Animated.View
               style={[
@@ -144,16 +143,16 @@ export function TiltCard({
               ]}
             >
               {HOLO_BARS.map((c, i) => (
-                <View key={i} style={{ height: 14, marginBottom: 16, backgroundColor: c, opacity: 0.5 }} />
+                <View key={i} style={{ height: 14, marginBottom: 16, backgroundColor: c, opacity: 0.45 }} />
               ))}
             </Animated.View>
             <Animated.View
               style={[
-                { position: "absolute", top: -size.h * 0.4, bottom: -size.h * 0.4, width: size.w * 0.45, backgroundColor: "#ffffff", opacity: 0.18 },
+                { position: "absolute", top: -size.h * 0.4, bottom: -size.h * 0.4, width: size.w * 0.45, backgroundColor: "#ffffff" },
                 specularStyle,
               ]}
             />
-          </Animated.View>
+          </View>
         )}
       </Animated.View>
     </GestureDetector>
