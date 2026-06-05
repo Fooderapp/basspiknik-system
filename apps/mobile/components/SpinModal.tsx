@@ -1,12 +1,32 @@
-import { useEffect, useRef, useState } from "react";
-import { Animated, Modal, Pressable, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Modal, Pressable, StyleSheet, View } from "react-native";
+import Animated, {
+  cancelAnimation,
+  Easing,
+  interpolate,
+  runOnJS,
+  type SharedValue,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 import { Sparkles, X, Star, Info } from "lucide-react-native";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/Button";
 
 // Ordered so 7️⃣ is the jackpot symbol — always last
 const REEL = ["🍒", "🍋", "🔔", "🍇", "⭐", "💎", "7️⃣"];
-const CELL_H = 80;
+const JACKPOT = REEL.length - 1;
+
+// ── 3D cylinder geometry ──
+const N = REEL.length;
+const CELL_H = 72;
+const STEP = 360 / N;                                  // angle between faces
+const RADIUS = CELL_H / 2 / Math.tan(Math.PI / N);     // drum radius
+const PERSPECTIVE = 700;
+const FRAME_H = CELL_H * 2.7;
 
 type Phase = "idle" | "spinning" | "win" | "lose";
 
@@ -21,75 +41,122 @@ interface SpinModalProps {
   onClaim: (token: string) => void;
 }
 
+/** One face of the spinning drum. Builds its full 3D transform from the shared
+ *  rotation — RN has no preserve-3d, so each face is positioned independently. */
+function ReelFace({
+  symbol,
+  index,
+  rotation,
+  win,
+}: {
+  symbol: string;
+  index: number;
+  rotation: SharedValue<number>;
+  win: boolean;
+}) {
+  // RN has no translateZ — emulate the cylinder with translateY (position on
+  // the drum), rotateX (face tilt) and scale (depth foreshortening).
+  const style = useAnimatedStyle(() => {
+    const angle = rotation.value + index * STEP;
+    const rad = (angle * Math.PI) / 180;
+    const facing = Math.cos(rad);               // 1 = front, -1 = back
+    const translateY = -RADIUS * Math.sin(rad);
+    const scale = interpolate(facing, [-1, 0, 1], [0.55, 0.75, 1]);
+    return {
+      opacity: facing > 0.05 ? facing : 0,      // hide back faces
+      transform: [
+        { perspective: PERSPECTIVE },
+        { translateY },
+        { rotateX: `${angle}deg` },
+        { scale },
+      ],
+    };
+  });
+
+  return (
+    <Animated.View style={[styles.face, style]} pointerEvents="none">
+      <Text style={{ fontSize: 40, color: win ? "#fbbf24" : "#fafafa" }}>{symbol}</Text>
+    </Animated.View>
+  );
+}
+
 export function SpinModal({ visible, balance, spinCost, result, spinning, onSpin, onClose, onClaim }: SpinModalProps) {
-  // Three rows visible: top (dim), center (active), bottom (dim)
-  const [symbols, setSymbols] = useState([REEL[4], REEL[0], REEL[1]]); // [top, center, bottom]
-  const [phase, setPhase] = useState<Phase>("idle");
+  // rotation in degrees; decreasing = drum spins "up"
+  const rotation = useSharedValue(0);
+  const glow = useSharedValue(0);
+  const [phaseState, setPhaseState] = useState<Phase>("idle");
 
-  // Slide animation: translateY cycles -CELL_H → 0 → +CELL_H during spin
-  const slideAnim = useRef(new Animated.Value(0)).current;
-  const glowAnim  = useRef(new Animated.Value(0)).current;
+  // bring REEL[target] to the front: rotation ≡ -target*STEP (mod 360)
+  function landingRotation(target: number, fromValue: number) {
+    const base = -target * STEP;
+    // add full spins beyond current so it always rotates a few turns
+    const turns = 4;
+    let final = base - 360 * turns;
+    while (final > fromValue) final -= 360;
+    return final;
+  }
 
-  // Spin animation: rapid symbol cycling
+  // Start continuous spin when the request fires
   useEffect(() => {
     if (!spinning) return;
-    setPhase("spinning");
-    let idx = 0;
-    const iv = setInterval(() => {
-      idx = (idx + 1) % REEL.length;
-      const prev = REEL[(idx - 1 + REEL.length) % REEL.length];
-      const cur  = REEL[idx];
-      const next = REEL[(idx + 1) % REEL.length];
-      setSymbols([prev, cur, next]);
-
-      // Slide cell up each tick
-      slideAnim.setValue(-CELL_H * 0.5);
-      Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, speed: 80 }).start();
-    }, 110);
-    return () => clearInterval(iv);
+    setPhaseState("spinning");
+    glow.value = 0;
+    cancelAnimation(rotation);
+    rotation.value = withRepeat(
+      withTiming(rotation.value - 360, { duration: 550, easing: Easing.linear }),
+      -1,
+      false,
+    );
   }, [spinning]);
 
-  // Settle result
+  // Settle on result
   useEffect(() => {
     if (!result) return;
+    cancelAnimation(rotation);
+    const target = result.win ? JACKPOT : pickLoser();
+    const final = landingRotation(target, rotation.value);
+    rotation.value = withTiming(
+      final,
+      { duration: 2400, easing: Easing.bezier(0.16, 0.9, 0.2, 1) },
+      (finished) => {
+        if (finished) runOnJS(setPhaseState)(result.win ? "win" : "lose");
+      },
+    );
     if (result.win) {
-      setSymbols(["💎", "7️⃣", "💎"]);
-      setPhase("win");
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(glowAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
-          Animated.timing(glowAnim, { toValue: 0, duration: 600, useNativeDriver: true }),
-        ])
-      ).start();
-    } else {
-      // Land on a non-jackpot symbol
-      const loser = REEL[Math.floor(Math.random() * (REEL.length - 1))]; // exclude 7️⃣
-      const prev = REEL[(REEL.indexOf(loser) - 1 + REEL.length) % REEL.length];
-      const next = REEL[(REEL.indexOf(loser) + 1) % REEL.length];
-      setSymbols([prev, loser, next]);
-      setPhase("lose");
+      glow.value = withRepeat(
+        withSequence(
+          withTiming(1, { duration: 600, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0.4, { duration: 600, easing: Easing.inOut(Easing.ease) }),
+        ),
+        -1,
+        true,
+      );
     }
   }, [result]);
 
   // Reset on close
   useEffect(() => {
     if (!visible) {
-      setPhase("idle");
-      setSymbols([REEL[4], REEL[0], REEL[1]]);
-      glowAnim.setValue(0);
-      slideAnim.setValue(0);
+      cancelAnimation(rotation);
+      cancelAnimation(glow);
+      rotation.value = 0;
+      glow.value = 0;
+      setPhaseState("idle");
     }
   }, [visible]);
 
   const currentBalance = result?.balance ?? balance;
-  const canSpin = currentBalance >= spinCost && phase === "idle";
+  const canSpin = currentBalance >= spinCost && phaseState === "idle";
+  const isWin = phaseState === "win";
 
-  const winOpacity = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] });
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(glow.value, [0, 1], [0, 0.9]),
+    shadowOpacity: interpolate(glow.value, [0, 1], [0, 0.9]),
+  }));
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View className="flex-1 bg-background">
-
         {/* Header */}
         <View className="flex-row items-center justify-between px-5 pt-5 pb-3">
           <View className="flex-row items-center gap-2">
@@ -112,48 +179,33 @@ export function SpinModal({ visible, balance, spinCost, result, spinning, onSpin
           </Text>
         </View>
 
-        {/* Single vertical slot */}
+        {/* 3D drum */}
         <View className="items-center mb-6">
-          {/* Slot machine frame */}
-          <View
-            className="overflow-hidden rounded-2xl border-2 border-border bg-muted"
-            style={{ width: 120, height: CELL_H * 3 }}
-          >
-            <Animated.View style={{ transform: [{ translateY: slideAnim }] }}>
-              {symbols.map((sym, i) => {
-                const isCenter = i === 1;
-                return (
-                  <View
-                    key={i}
-                    style={{ height: CELL_H }}
-                    className={`items-center justify-center ${isCenter ? "bg-background border-y border-border" : ""}`}
-                  >
-                    {isCenter && phase === "win" ? (
-                      <Animated.Text style={{ fontSize: 44, opacity: winOpacity }}>{sym}</Animated.Text>
-                    ) : (
-                      <Text style={{ fontSize: isCenter ? 44 : 30, opacity: isCenter ? 1 : 0.35 }}>{sym}</Text>
-                    )}
-                  </View>
-                );
-              })}
-            </Animated.View>
+          <Animated.View style={[styles.drumGlow, glowStyle]} pointerEvents="none" />
+          <View style={styles.frame}>
+            {REEL.map((sym, i) => (
+              <ReelFace key={i} symbol={sym} index={i} rotation={rotation} win={isWin} />
+            ))}
+            {/* payline window */}
+            <View style={styles.payline} pointerEvents="none" />
+            {/* top/bottom shade for depth */}
+            <View style={styles.shadeTop} pointerEvents="none" />
+            <View style={styles.shadeBottom} pointerEvents="none" />
           </View>
-
-          {/* Center indicator arrows */}
           <View className="flex-row items-center gap-2 mt-2">
-            <Text className="text-primary text-xs font-semibold">▶ spin here ◀</Text>
+            <Text className="text-primary text-xs font-semibold">▶ payline ◀</Text>
           </View>
         </View>
 
         {/* Phase message */}
-        {phase !== "idle" && (
+        {phaseState !== "idle" && (
           <Text className={`text-center font-semibold text-base mb-4 px-6 ${
-            phase === "win" ? "text-amber-400" :
-            phase === "lose" ? "text-muted-foreground" :
+            isWin ? "text-amber-400" :
+            phaseState === "lose" ? "text-muted-foreground" :
             "text-foreground"
           }`}>
-            {phase === "win"  ? "🎉 Jackpot! Free checkout unlocked!" :
-             phase === "lose" ? "Not this time — keep collecting credits!" :
+            {isWin ? "🎉 Jackpot! Free checkout unlocked!" :
+             phaseState === "lose" ? "Not this time — keep collecting credits!" :
              "Good luck…"}
           </Text>
         )}
@@ -168,7 +220,7 @@ export function SpinModal({ visible, balance, spinCost, result, spinning, onSpin
 
         {/* Actions */}
         <View className="px-5 gap-3">
-          {phase === "idle" && (
+          {phaseState === "idle" && (
             <Button
               onPress={onSpin}
               disabled={!canSpin}
@@ -181,7 +233,7 @@ export function SpinModal({ visible, balance, spinCost, result, spinning, onSpin
             </Button>
           )}
 
-          {phase === "win" && result?.token && (
+          {isWin && result?.token && (
             <Button
               style={{ backgroundColor: "#f59e0b" }}
               onPress={() => onClaim(result.token!)}
@@ -191,7 +243,7 @@ export function SpinModal({ visible, balance, spinCost, result, spinning, onSpin
             </Button>
           )}
 
-          {phase === "lose" && (
+          {phaseState === "lose" && (
             <Button
               onPress={onSpin}
               disabled={currentBalance < spinCost}
@@ -206,7 +258,7 @@ export function SpinModal({ visible, balance, spinCost, result, spinning, onSpin
 
           <Button variant="ghost" onPress={onClose}>
             <Text className="text-muted-foreground">
-              {phase === "win" ? "Skip — pay normally" : "Close"}
+              {isWin ? "Skip — pay normally" : "Close"}
             </Text>
           </Button>
         </View>
@@ -214,3 +266,68 @@ export function SpinModal({ visible, balance, spinCost, result, spinning, onSpin
     </Modal>
   );
 }
+
+function pickLoser(): number {
+  return Math.floor(Math.random() * (REEL.length - 1)); // excludes JACKPOT
+}
+
+const styles = StyleSheet.create({
+  frame: {
+    width: 150,
+    height: FRAME_H,
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: "#2c2c2e",
+    backgroundColor: "#0e0e10",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  face: {
+    position: "absolute",
+    width: 150,
+    height: CELL_H,
+    alignItems: "center",
+    justifyContent: "center",
+    backfaceVisibility: "hidden",
+  },
+  payline: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: FRAME_H / 2 - CELL_H / 2,
+    height: CELL_H,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: "rgba(245,158,11,0.45)",
+    backgroundColor: "rgba(245,158,11,0.05)",
+  },
+  shadeTop: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    height: FRAME_H / 2 - CELL_H / 2,
+    backgroundColor: "rgba(0,0,0,0.55)",
+  },
+  shadeBottom: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: FRAME_H / 2 - CELL_H / 2,
+    backgroundColor: "rgba(0,0,0,0.55)",
+  },
+  drumGlow: {
+    position: "absolute",
+    width: 170,
+    height: FRAME_H + 16,
+    borderRadius: 28,
+    backgroundColor: "transparent",
+    borderWidth: 2,
+    borderColor: "#f59e0b",
+    shadowColor: "#f59e0b",
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 0 },
+  },
+});
