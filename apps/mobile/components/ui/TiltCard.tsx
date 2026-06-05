@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from "react-native";
 import Animated, {
+  interpolate,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -17,35 +18,36 @@ interface Props {
   gyro?: boolean;
   /** drag-to-tilt with finger */
   pan?: boolean;
-  /** cast-shadow plate behind the card for real depth */
-  shadow?: boolean;
-  /** corner radius of the shadow plate (match the child) */
+  /** holographic light sheen that reacts to tilt (Apple-Wallet / foil look) */
+  holo?: boolean;
+  /** corner radius of the holo clip (match the child) */
   radius?: number;
   style?: StyleProp<ViewStyle>;
 }
 
 const clampJS = (v: number, m: number) => Math.max(-m, Math.min(m, v));
 
+// iridescent band colours, cycled to make a foil/hologram gradient
+const HOLO_COLORS = ["#ff3d81", "#ff9a3d", "#ffe23d", "#3dff9e", "#3dc9ff", "#b03dff"];
+const HOLO_BARS = Array.from({ length: 28 }, (_, i) => HOLO_COLORS[i % HOLO_COLORS.length]);
+
 /**
  * Wallet-style 3D tilt card. Reacts to device gyroscope (ambient) and/or
  * finger drag. Faux-3D via perspective + rotateX/rotateY (no preserve-3d in
- * RN). Depth comes from a SEPARATE shadow plate rendered behind the card —
- * attaching a layer shadow to the rotated card itself makes the shadow tilt
- * in-plane and mask the content, which is wrong.
+ * RN). Depth/sheen comes from a holographic foil overlay that sweeps and
+ * brightens as the card tilts — built from plain Views (no gradient lib).
  */
 export function TiltCard({
   children,
   maxTilt = 12,
   gyro = true,
   pan = true,
-  shadow = true,
+  holo = true,
   radius = 24,
   style,
 }: Props) {
-  // gyro-driven rotation (degrees)
   const gRx = useSharedValue(0);
   const gRy = useSharedValue(0);
-  // pan-driven rotation (degrees)
   const pRx = useSharedValue(0);
   const pRy = useSharedValue(0);
 
@@ -57,13 +59,11 @@ export function TiltCard({
     DeviceMotion.setUpdateInterval(50);
     const sub = DeviceMotion.addListener(({ rotation }) => {
       if (!rotation) return;
-      const beta = (rotation.beta * 180) / Math.PI; // front/back
-      const gamma = (rotation.gamma * 180) / Math.PI; // left/right
+      const beta = (rotation.beta * 180) / Math.PI;
+      const gamma = (rotation.gamma * 180) / Math.PI;
       if (!rest.current) rest.current = { beta, gamma };
-      const dBeta = beta - rest.current.beta;
-      const dGamma = gamma - rest.current.gamma;
-      gRx.value = withTiming(clampJS(-dBeta / 2.2, maxTilt), { duration: 120 });
-      gRy.value = withTiming(clampJS(dGamma / 2.2, maxTilt), { duration: 120 });
+      gRx.value = withTiming(clampJS(-(beta - rest.current.beta) / 2.2, maxTilt), { duration: 120 });
+      gRy.value = withTiming(clampJS((gamma - rest.current.gamma) / 2.2, maxTilt), { duration: 120 });
     });
     return () => sub.remove();
   }, [gyro, maxTilt, gRx, gRy]);
@@ -93,18 +93,29 @@ export function TiltCard({
     };
   });
 
-  // Shadow plate: sits behind + below the card, shifts opposite the tilt so the
-  // card visibly hovers above it. Its own soft layer shadow does the blur.
-  const plateStyle = useAnimatedStyle(() => {
+  // foil bands sweep with tilt; whole sheen brightens with tilt magnitude
+  const holoWrapStyle = useAnimatedStyle(() => {
+    const mag = (Math.abs(gRx.value + pRx.value) + Math.abs(gRy.value + pRy.value)) / maxTilt;
+    return { opacity: Math.min(0.85, 0.28 + mag * 0.45) };
+  });
+  const holoBandsStyle = useAnimatedStyle(() => {
     const rx = gRx.value + pRx.value;
     const ry = gRy.value + pRy.value;
-    const mag = (Math.abs(rx) + Math.abs(ry)) / maxTilt; // 0..~2
     return {
-      opacity: 0.32 + Math.min(0.28, mag * 0.16),
       transform: [
-        { translateX: -ry * 1.6 },
-        { translateY: 18 - rx * 1.6 },
-        { scale: 0.94 },
+        { translateX: ry * 3.2 },
+        { translateY: rx * 3.2 },
+        { rotate: "22deg" },
+      ],
+    };
+  });
+  // bright specular streak that glides across as you tilt left↔right
+  const specularStyle = useAnimatedStyle(() => {
+    const ry = gRy.value + pRy.value;
+    return {
+      transform: [
+        { translateX: interpolate(ry, [-maxTilt, maxTilt], [-size.w * 0.7, size.w * 1.2]) },
+        { rotate: "18deg" },
       ],
     };
   });
@@ -116,31 +127,35 @@ export function TiltCard({
 
   return (
     <GestureDetector gesture={panGesture}>
-      <View>
-        {shadow && size.w > 0 && (
+      <Animated.View onLayout={onLayout} style={[cardStyle, style]}>
+        {children}
+        {holo && size.w > 0 && (
           <Animated.View
             pointerEvents="none"
             style={[
-              {
-                position: "absolute",
-                width: size.w,
-                height: size.h,
-                borderRadius: radius,
-                backgroundColor: "#000",
-                shadowColor: "#000",
-                shadowOpacity: 0.9,
-                shadowRadius: 24,
-                shadowOffset: { width: 0, height: 10 },
-                elevation: 12,
-              },
-              plateStyle,
+              { position: "absolute", left: 0, top: 0, width: size.w, height: size.h, borderRadius: radius, overflow: "hidden" },
+              holoWrapStyle,
             ]}
-          />
+          >
+            <Animated.View
+              style={[
+                { position: "absolute", left: -size.w * 0.5, top: -size.h * 0.7, width: size.w * 2, height: size.h * 2.4 },
+                holoBandsStyle,
+              ]}
+            >
+              {HOLO_BARS.map((c, i) => (
+                <View key={i} style={{ height: 14, marginBottom: 16, backgroundColor: c, opacity: 0.5 }} />
+              ))}
+            </Animated.View>
+            <Animated.View
+              style={[
+                { position: "absolute", top: -size.h * 0.4, bottom: -size.h * 0.4, width: size.w * 0.45, backgroundColor: "#ffffff", opacity: 0.18 },
+                specularStyle,
+              ]}
+            />
+          </Animated.View>
         )}
-        <Animated.View onLayout={onLayout} style={[cardStyle, style]}>
-          {children}
-        </Animated.View>
-      </View>
+      </Animated.View>
     </GestureDetector>
   );
 }

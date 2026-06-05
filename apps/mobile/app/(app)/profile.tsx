@@ -5,6 +5,7 @@ import { ChevronLeft, User, Mail, Shield, Hash } from "lucide-react-native";
 import { useAuth } from "@/context/auth";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { TiltCard } from "@/components/ui/TiltCard";
 import { Badge } from "@/components/ui/badge";
 import { Text } from "@/components/ui/text";
 import { Separator } from "@/components/ui/separator";
@@ -85,30 +86,59 @@ export default function ProfileScreen() {
         )}
       </Card>
 
-      {/* Wallet QR pass */}
+      {/* Wallet-style holographic entry pass */}
       {qrUrl && (
         <>
           <Text className="text-foreground font-semibold text-base mb-3 mt-2">Entry Pass</Text>
-          <Card className="items-center py-8">
-            <View className="bg-white p-4 rounded-2xl mb-4">
-              <Image
-                source={{ uri: qrUrl }}
-                style={{ width: 200, height: 200 }}
-                resizeMode="contain"
-              />
-            </View>
-            <Text className="text-foreground font-semibold mb-1">Scan at check-in</Text>
-            <Text className="text-muted-foreground text-xs text-center px-6">
-              Show this QR code at the entrance or to a seller. Same code as your Apple Wallet pass.
-            </Text>
-            {profile.display_id && (
-              <Text className="text-muted-foreground text-xs text-center px-6 mt-2">
-                Share your Bass-ID{" "}
-                <Text className="text-foreground font-mono">{profile.display_id}</Text>
-                {" "}to receive ticket transfers.
+          <TiltCard maxTilt={11} radius={28} style={{ marginBottom: 12 }}>
+            <View
+              style={{
+                borderRadius: 28,
+                padding: 22,
+                backgroundColor: "#0d0d12",
+                borderWidth: 1,
+                borderColor: "#26263a",
+                overflow: "hidden",
+              }}
+            >
+              {/* pass header */}
+              <View className="flex-row items-center justify-between mb-5">
+                <Text className="text-muted-foreground text-[11px] font-semibold tracking-[2px]">
+                  ENTRY PASS
+                </Text>
+                <Badge label={profile.role} variant="default" />
+              </View>
+
+              {/* holder */}
+              <Text className="text-foreground text-2xl font-bold tracking-tight" numberOfLines={1}>
+                {profile.name}
               </Text>
-            )}
-          </Card>
+              <Text className="text-muted-foreground text-xs mb-5" numberOfLines={1}>
+                {profile.email}
+              </Text>
+
+              {/* QR */}
+              <View className="items-center">
+                <View className="bg-white p-3.5 rounded-2xl">
+                  <Image source={{ uri: qrUrl }} style={{ width: 188, height: 188 }} resizeMode="contain" />
+                </View>
+              </View>
+
+              {/* footer */}
+              <View className="flex-row items-center justify-between mt-5">
+                <View>
+                  <Text className="text-muted-foreground text-[10px] tracking-wider">BASS-ID</Text>
+                  <Text className="text-foreground font-mono font-semibold">
+                    {profile.display_id ?? "—"}
+                  </Text>
+                </View>
+                <Text className="text-muted-foreground text-[10px]">Scan at check-in</Text>
+              </View>
+            </View>
+          </TiltCard>
+          <Text className="text-muted-foreground text-xs text-center px-6">
+            Same code as your Apple Wallet pass. Share your Bass-ID to receive ticket transfers.
+          </Text>
         </>
       )}
     </ScrollView>
