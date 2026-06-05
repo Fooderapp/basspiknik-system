@@ -69,13 +69,15 @@ function ReelFace({
     const cos = Math.cos(theta);                // 1 = dead centre, 0 = side
     const projY = WHEEL_R * Math.sin(theta);    // project onto the curve
 
+    // Only show face when it's close to the front (cos > 0.65 ≈ within 50°).
+    // This prevents neighbours from bleeding through the shades on iOS.
     return {
-      opacity: cos > 0.18 ? interpolate(cos, [0.18, 1], [0, 1]) : 0,
+      opacity: cos > 0.65 ? interpolate(cos, [0.65, 1], [0, 1]) : 0,
       transform: [
         { perspective: PERSPECTIVE },
         { translateY: projY },
         { rotateX: `${(theta * 180) / Math.PI}deg` },
-        { scale: interpolate(cos, [0.18, 1], [0.62, 1]) },
+        { scale: interpolate(cos, [0.65, 1], [0.7, 1]) },
       ],
     };
   });
@@ -313,7 +315,8 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     height: FRAME_H / 2 - CELL_H / 2,
-    backgroundColor: "rgba(0,0,0,0.55)",
+    backgroundColor: "rgba(14,14,16,0.97)",
+    zIndex: 2,
   },
   shadeBottom: {
     position: "absolute",
@@ -321,7 +324,8 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: FRAME_H / 2 - CELL_H / 2,
-    backgroundColor: "rgba(0,0,0,0.55)",
+    backgroundColor: "rgba(14,14,16,0.97)",
+    zIndex: 2,
   },
   drumGlow: {
     position: "absolute",

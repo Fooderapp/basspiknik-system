@@ -12,34 +12,27 @@ import { DeviceMotion } from "expo-sensors";
 
 interface Props {
   children: React.ReactNode;
-  /** max tilt in degrees on each axis */
   maxTilt?: number;
-  /** ambient gyroscope tilt (device motion) */
   gyro?: boolean;
-  /** drag-to-tilt with finger */
   pan?: boolean;
-  /** holographic light sheen that reacts to tilt (Apple-Wallet / foil look) */
   holo?: boolean;
-  /** corner radius of the holo clip (match the child) */
   radius?: number;
   style?: StyleProp<ViewStyle>;
 }
 
 const clampJS = (v: number, m: number) => Math.max(-m, Math.min(m, v));
 
-// iridescent band colours, cycled to make a foil/hologram gradient
-const HOLO_COLORS = ["#ff3d81", "#ff9a3d", "#ffe23d", "#3dff9e", "#3dc9ff", "#b03dff"];
-const HOLO_BARS = Array.from({ length: 28 }, (_, i) => HOLO_COLORS[i % HOLO_COLORS.length]);
+// iridescent foil colours — bold, repeating rainbow band
+const HOLO_COLORS = [
+  "#ff0055", "#ff5500", "#ffcc00",
+  "#00ff88", "#00ccff", "#8800ff",
+  "#ff0055", "#ff5500", "#ffcc00",
+  "#00ff88", "#00ccff", "#8800ff",
+];
 
-/**
- * Wallet-style 3D tilt card. Reacts to device gyroscope (ambient) and/or
- * finger drag. Faux-3D via perspective + rotateX/rotateY (no preserve-3d in
- * RN). Depth/sheen comes from a holographic foil overlay that sweeps and
- * brightens as the card tilts — built from plain Views (no gradient lib).
- */
 export function TiltCard({
   children,
-  maxTilt = 12,
+  maxTilt = 8,           // reduced — less edge exposure on dark bg
   gyro = true,
   pan = true,
   holo = true,
@@ -90,34 +83,38 @@ export function TiltCard({
         { rotateX: `${rx}deg` },
         { rotateY: `${ry}deg` },
       ],
+      // suppress iOS implicit compositing-layer shadow on 3D-transformed views
+      shadowColor: "transparent",
+      shadowOpacity: 0,
+      shadowRadius: 0,
     };
   });
 
-  // foil bands sweep with tilt — kept faint so underlying content (QR) stays
-  // readable; brightness rides tilt magnitude like the holo-card glare
+  // Holo bands: vivid rainbow that sweeps visibly with tilt
   const holoBandsStyle = useAnimatedStyle(() => {
     const rx = gRx.value + pRx.value;
     const ry = gRy.value + pRy.value;
     const mag = (Math.abs(rx) + Math.abs(ry)) / maxTilt;
     return {
-      opacity: Math.min(0.32, 0.08 + mag * 0.22),
+      opacity: Math.min(0.72, 0.22 + mag * 0.55),
       transform: [
-        { translateX: ry * 3.2 },
-        { translateY: rx * 3.2 },
-        { rotate: "22deg" },
+        { translateX: ry * 5 },
+        { translateY: rx * 5 },
+        { rotate: "25deg" },
       ],
     };
   });
-  // bright specular glare that glides across as you tilt left↔right
+
+  // Bright specular glare that sweeps left↔right with tilt
   const specularStyle = useAnimatedStyle(() => {
     const rx = gRx.value + pRx.value;
     const ry = gRy.value + pRy.value;
     const mag = (Math.abs(rx) + Math.abs(ry)) / maxTilt;
     return {
-      opacity: Math.min(0.3, 0.06 + mag * 0.2),
+      opacity: Math.min(0.55, 0.1 + mag * 0.45),
       transform: [
-        { translateX: interpolate(ry, [-maxTilt, maxTilt], [-size.w * 0.7, size.w * 1.2]) },
-        { rotate: "18deg" },
+        { translateX: interpolate(ry, [-maxTilt, maxTilt], [-size.w * 0.6, size.w * 1.1]) },
+        { rotate: "20deg" },
       ],
     };
   });
@@ -134,21 +131,44 @@ export function TiltCard({
         {holo && size.w > 0 && (
           <View
             pointerEvents="none"
-            style={{ position: "absolute", left: 0, top: 0, width: size.w, height: size.h, borderRadius: radius, overflow: "hidden" }}
+            style={{
+              position: "absolute",
+              left: 0, top: 0,
+              width: size.w, height: size.h,
+              borderRadius: radius,
+              overflow: "hidden",
+            }}
           >
+            {/* Rainbow foil bands */}
             <Animated.View
               style={[
-                { position: "absolute", left: -size.w * 0.5, top: -size.h * 0.7, width: size.w * 2, height: size.h * 2.4 },
+                {
+                  position: "absolute",
+                  left: -size.w * 0.4,
+                  top: -size.h * 0.6,
+                  width: size.w * 1.8,
+                  height: size.h * 2.2,
+                },
                 holoBandsStyle,
               ]}
             >
-              {HOLO_BARS.map((c, i) => (
-                <View key={i} style={{ height: 14, marginBottom: 16, backgroundColor: c, opacity: 0.45 }} />
+              {HOLO_COLORS.map((c, i) => (
+                <View
+                  key={i}
+                  style={{ height: 22, marginBottom: 8, backgroundColor: c, opacity: 0.75 }}
+                />
               ))}
             </Animated.View>
+            {/* Bright specular highlight streak */}
             <Animated.View
               style={[
-                { position: "absolute", top: -size.h * 0.4, bottom: -size.h * 0.4, width: size.w * 0.45, backgroundColor: "#ffffff" },
+                {
+                  position: "absolute",
+                  top: -size.h * 0.3,
+                  bottom: -size.h * 0.3,
+                  width: size.w * 0.5,
+                  backgroundColor: "#ffffff",
+                },
                 specularStyle,
               ]}
             />
