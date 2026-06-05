@@ -3,7 +3,7 @@ import { ActivityIndicator, Alert, Pressable, ScrollView, View } from "react-nat
 import { useLocalSearchParams, router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStripe } from "@stripe/stripe-react-native";
-import { ChevronLeft, Minus, Plus, Tag, CalendarDays, MapPin } from "lucide-react-native";
+import { ChevronLeft, Minus, Plus, Tag, CalendarDays, MapPin, Sparkles, Star } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth";
 import { Button } from "@/components/ui/Button";
@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
 import { OnboardingModal } from "@/components/OnboardingModal";
+import { SpinModal } from "@/components/SpinModal";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Event, TicketType } from "@/lib/types";
 
@@ -37,12 +38,23 @@ export default function BuyEventScreen() {
   const [loading, setLoading] = useState(true);
   const [checkingOut, setCheckingOut] = useState(false);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
+  // Spin state
+  const [credits, setCredits]       = useState(0);
+  const [spinCost, setSpinCost]     = useState(4);
+  const [spinEnabled, setSpinEnabled] = useState(false);
+  const [spinOpen, setSpinOpen]     = useState(false);
+  const [spinning, setSpinning]     = useState(false);
+  const [spinResult, setSpinResult] = useState<{ win: boolean; token?: string; balance?: number } | null>(null);
+  const [freeToken, setFreeToken]   = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
-      const [{ data: ev }, { data: settings }] = await Promise.all([
+      const [{ data: ev }, { data: settings }, creditRes] = await Promise.all([
         (supabase as any).from("events").select("*, ticket_types(*)").eq("id", eventId).eq("status", "PUBLISHED").single(),
         (supabase as any).from("app_settings").select("currency").single(),
+        session ? fetch(`${API_URL}/api/credits/balance`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        }).then(r => r.json()).catch(() => null) : Promise.resolve(null),
       ]);
       if (ev) {
         setEvent(ev as Event);
@@ -50,6 +62,11 @@ export default function BuyEventScreen() {
         setTicketTypes(((ev.ticket_types as TicketType[]) ?? []).filter((t) => !(t as any).is_door_ticket));
       }
       if (settings?.currency) setCurrency(settings.currency);
+      if (creditRes) {
+        setCredits(creditRes.balance ?? 0);
+        setSpinCost(creditRes.spinCost ?? 4);
+        setSpinEnabled(creditRes.enabled ?? false);
+      }
       setLoading(false);
     })();
   }, [eventId]);
@@ -65,6 +82,55 @@ export default function BuyEventScreen() {
       const next = Math.max(0, Math.min(max, (prev[t.id] ?? 0) + delta));
       return { ...prev, [t.id]: next };
     });
+  }
+
+  async function doSpin() {
+    if (!session || !hasItems) return;
+    setSpinning(true);
+    setSpinResult(null);
+    try {
+      const items = Object.entries(quantities)
+        .filter(([, q]) => q > 0)
+        .map(([ticketTypeId, quantity]) => ({ ticketTypeId, quantity }));
+      const res = await fetch(`${API_URL}/api/credits/spin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ context: "TICKET", eventId, items }),
+      });
+      const data = await res.json();
+      if (!res.ok) { Alert.alert("Spin failed", data.error ?? "Try again"); return; }
+      setSpinResult({ win: !!data.win, token: data.token, balance: data.balance });
+      setCredits(data.balance ?? credits);
+      if (data.win && data.token) setFreeToken(data.token);
+    } catch (e: any) {
+      Alert.alert("Error", e.message);
+    } finally {
+      setSpinning(false);
+    }
+  }
+
+  async function freeCheckout(token: string) {
+    if (!session) return;
+    setSpinOpen(false);
+    setCheckingOut(true);
+    try {
+      const items = Object.entries(quantities)
+        .filter(([, q]) => q > 0)
+        .map(([ticketTypeId, quantity]) => ({ ticketTypeId, quantity }));
+      const res = await fetch(`${API_URL}/api/orders/checkout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ eventId, items, freeSpinToken: token }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Free checkout failed");
+      Alert.alert("🎉 Free tickets claimed!", "Your tickets are confirmed. Check My Tickets.");
+      router.replace("/(app)/tickets");
+    } catch (e: any) {
+      Alert.alert("Error", e.message);
+    } finally {
+      setCheckingOut(false);
+    }
   }
 
   async function proceed() {
@@ -244,13 +310,50 @@ export default function BuyEventScreen() {
       {/* Sticky footer */}
       {hasItems && (
         <View className="px-5 pt-3 border-t border-border" style={{ paddingBottom: insets.bottom + 12 }}>
+          {/* Subtotal */}
           <View className="flex-row items-center justify-between mb-3">
             <Text className="text-muted-foreground">Subtotal</Text>
-            <Text className="text-foreground font-bold text-lg">{fmt(subtotal)}</Text>
+            <Text className={`font-bold text-lg ${freeToken ? "line-through text-muted-foreground" : "text-foreground"}`}>
+              {fmt(subtotal)}
+            </Text>
           </View>
-          <Button onPress={proceed} loading={checkingOut} icon={<Tag size={16} color="#000" strokeWidth={2} />}>
-            <Text className="font-semibold">Checkout · {fmt(subtotal)}</Text>
-          </Button>
+
+          {/* Free spin banner — shows when credits enabled + user has enough */}
+          {spinEnabled && !freeToken && credits >= spinCost && (
+            <Pressable
+              onPress={() => { setSpinResult(null); setSpinOpen(true); }}
+              className="flex-row items-center justify-between rounded-xl border px-3 py-2.5 mb-3 active:opacity-75"
+              style={{ borderColor: "#f59e0b", backgroundColor: "rgba(245,158,11,0.08)" }}
+            >
+              <View className="flex-row items-center gap-2">
+                <Sparkles size={16} color="#f59e0b" strokeWidth={2} />
+                <Text className="font-semibold text-sm" style={{ color: "#f59e0b" }}>
+                  Try free spin!
+                </Text>
+                <Text className="text-xs text-muted-foreground">costs {spinCost} credits</Text>
+              </View>
+              <View className="flex-row items-center gap-1">
+                <Star size={12} color="#f59e0b" strokeWidth={2} fill="#f59e0b" />
+                <Text className="text-xs font-semibold" style={{ color: "#f59e0b" }}>{credits}</Text>
+              </View>
+            </Pressable>
+          )}
+
+          {/* Checkout or free claim */}
+          {freeToken ? (
+            <Button
+              onPress={() => freeCheckout(freeToken)}
+              loading={checkingOut}
+              style={{ backgroundColor: "#f59e0b" }}
+              icon={<Sparkles size={16} color="#000" strokeWidth={2} />}
+            >
+              <Text className="font-semibold text-black">🎟 Claim free tickets!</Text>
+            </Button>
+          ) : (
+            <Button onPress={proceed} loading={checkingOut} icon={<Tag size={16} color="#000" strokeWidth={2} />}>
+              <Text className="font-semibold">Checkout · {fmt(subtotal)}</Text>
+            </Button>
+          )}
         </View>
       )}
 
@@ -258,6 +361,17 @@ export default function BuyEventScreen() {
         visible={onboardingOpen}
         onClose={() => setOnboardingOpen(false)}
         onComplete={() => { setOnboardingOpen(false); void checkout(); }}
+      />
+
+      <SpinModal
+        visible={spinOpen}
+        balance={credits}
+        spinCost={spinCost}
+        result={spinResult}
+        spinning={spinning}
+        onSpin={doSpin}
+        onClose={() => setSpinOpen(false)}
+        onClaim={(token) => { setSpinOpen(false); void freeCheckout(token); }}
       />
     </View>
   );
