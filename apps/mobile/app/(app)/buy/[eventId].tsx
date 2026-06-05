@@ -118,7 +118,22 @@ export default function BuyEventScreen() {
         throw new Error(error.message);
       }
 
-      Alert.alert("Payment successful", "Your tickets are on the way.");
+      // Estimate credits earned (server awards them via webhook asynchronously)
+      const { data: cs } = await (supabase as any)
+        .from("app_settings").select("credits_per_ticket").eq("id", "global").single();
+      const creditsPerTicket = cs?.credits_per_ticket ?? 4;
+      const totalTicketsBought = Object.entries(quantities)
+        .filter(([, q]) => q > 0)
+        .reduce((acc, [id, qty]) => {
+          const tt = ticketTypes.find(t => t.id === id);
+          return acc + qty * (tt?.is_bundle && tt?.bundle_size ? tt.bundle_size : 1);
+        }, 0);
+      const creditsEarned = totalTicketsBought * creditsPerTicket;
+
+      Alert.alert(
+        "🎉 Payment successful!",
+        `Your tickets are on the way.\n\n⭐ You earned ${creditsEarned} credits!`,
+      );
       router.replace("/(app)/tickets");
     } catch (e: any) {
       Alert.alert("Error", e.message ?? "Checkout failed");
