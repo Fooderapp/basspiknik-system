@@ -20,7 +20,7 @@ import { formatDate } from "@/lib/utils";
 
 const GAP = 12;
 const H_PAD = 20;
-const CARD_WIDTH = (Dimensions.get("window").width - H_PAD * 2 - GAP) / 2;
+const TICKET_ITEM_WIDTH = (Dimensions.get("window").width - H_PAD * 2 - GAP * 3) / 2.3;
 
 const STATUS_VARIANT: Record<string, "success" | "muted" | "destructive" | "secondary"> = {
   VALID: "success", USED: "muted", CANCELLED: "destructive", REFUNDED: "secondary",
@@ -149,22 +149,29 @@ export default function HomeScreen() {
         </View>
       </Pressable>
 
-      {/* ── Recent tickets ────────────────────────────────────────── */}
+      {/* ── Recent tickets — contained card, scrolls horizontally ──── */}
       {recentTickets.length > 0 && (
-        <View className="mb-5">
-          <View className="flex-row items-center justify-between mb-3">
+        <View
+          className="mb-5 rounded-2xl border border-border bg-muted/40"
+          style={{ paddingVertical: 14 }}
+        >
+          <View className="flex-row items-center justify-between mb-3 px-4">
             <Text className="text-foreground font-semibold text-base">My Tickets</Text>
             <Pressable onPress={() => router.push("/(app)/tickets" as never)} className="active:opacity-60">
               <Text className="text-muted-foreground text-xs">See all →</Text>
             </Pressable>
           </View>
-          <View style={{ flexDirection: "row", gap: GAP }}>
-            {recentTickets.slice(0, 2).map(ticket => (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 16, gap: GAP }}
+          >
+            {recentTickets.map(ticket => (
               <Pressable
                 key={ticket.id}
                 onPress={() => router.push(`/(app)/tickets/${ticket.id}` as never)}
                 className="active:opacity-75"
-                style={{ width: CARD_WIDTH }}
+                style={{ width: TICKET_ITEM_WIDTH }}
               >
                 <Card className="flex-1">
                   <View className="mb-2">
@@ -182,20 +189,18 @@ export default function HomeScreen() {
                 </Card>
               </Pressable>
             ))}
-            {/* If only 1 ticket, show "Buy more" placeholder */}
-            {recentTickets.length === 1 && (
-              <Pressable
-                onPress={() => router.push("/(app)/buy" as never)}
-                className="active:opacity-75"
-                style={{ width: CARD_WIDTH }}
-              >
-                <Card className="flex-1 items-center justify-center" style={{ minHeight: 100 }}>
-                  <ShoppingBag size={20} color="#8f8f8f" strokeWidth={1.5} />
-                  <Text className="text-muted-foreground text-xs mt-2 text-center">Buy more tickets</Text>
-                </Card>
-              </Pressable>
-            )}
-          </View>
+            {/* Buy-more tile always trails the list */}
+            <Pressable
+              onPress={() => router.push("/(app)/buy" as never)}
+              className="active:opacity-75"
+              style={{ width: TICKET_ITEM_WIDTH }}
+            >
+              <Card className="flex-1 items-center justify-center" style={{ minHeight: 100 }}>
+                <ShoppingBag size={20} color="#8f8f8f" strokeWidth={1.5} />
+                <Text className="text-muted-foreground text-xs mt-2 text-center">Buy more tickets</Text>
+              </Card>
+            </Pressable>
+          </ScrollView>
         </View>
       )}
 

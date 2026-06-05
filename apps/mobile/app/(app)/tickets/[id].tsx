@@ -9,6 +9,7 @@ import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { TiltCard } from "@/components/ui/TiltCard";
 import { Text } from "@/components/ui/text";
 import { Separator } from "@/components/ui/separator";
 import QRCode from "react-native-qrcode-svg";
@@ -70,17 +71,19 @@ export default function TicketDetailScreen() {
       </View>
 
       <View className="flex-1 items-center justify-center px-6 gap-6">
-        {/* QR Code */}
-        <View className="bg-white rounded-3xl p-6">
-          {ticket.status === "VALID" ? (
-            <QRCode value={ticket.qr_code} size={220} />
-          ) : (
-            <View className="w-56 h-56 items-center justify-center bg-muted rounded-2xl gap-3">
-              <Ban size={40} color="#8f8f8f" strokeWidth={1.5} />
-              <Text className="text-muted-foreground text-sm">{ticket.status}</Text>
-            </View>
-          )}
-        </View>
+        {/* QR Code — wallet-style gyro tilt pass */}
+        <TiltCard maxTilt={10} style={{ borderRadius: 24, overflow: "hidden" }}>
+          <View className="bg-white rounded-3xl p-6">
+            {ticket.status === "VALID" ? (
+              <QRCode value={ticket.qr_code} size={220} />
+            ) : (
+              <View className="w-56 h-56 items-center justify-center bg-muted rounded-2xl gap-3">
+                <Ban size={40} color="#8f8f8f" strokeWidth={1.5} />
+                <Text className="text-muted-foreground text-sm">{ticket.status}</Text>
+              </View>
+            )}
+          </View>
+        </TiltCard>
 
         {/* Details card */}
         <Card className="w-full gap-3">
