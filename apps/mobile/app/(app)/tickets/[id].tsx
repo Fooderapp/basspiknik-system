@@ -72,7 +72,7 @@ export default function TicketDetailScreen() {
 
       <View className="flex-1 items-center justify-center px-6 gap-6">
         {/* QR Code — wallet-style gyro tilt pass */}
-        <TiltCard maxTilt={10} style={{ borderRadius: 24, overflow: "hidden" }}>
+        <TiltCard maxTilt={10}>
           <View className="bg-white rounded-3xl p-6">
             {ticket.status === "VALID" ? (
               <QRCode value={ticket.qr_code} size={220} />

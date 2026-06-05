@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/Card";
 import { CreditCoin } from "@/components/ui/CreditCoin";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { Text } from "@/components/ui/text";
 import { Separator } from "@/components/ui/separator";
 import type { Ticket as TicketType } from "@/lib/types";
@@ -126,7 +127,7 @@ export default function HomeScreen() {
       </View>
 
       {/* ── Credits pill ──────────────────────────────────────────── */}
-      <Pressable onPress={() => router.push("/(app)/tickets" as never)} className="active:opacity-75 mb-5">
+      <PressableScale onPress={() => router.push("/(app)/tickets" as never)} style={{ marginBottom: 20 }}>
         <View className="flex-row items-center justify-between bg-muted rounded-2xl px-4 py-3 border border-border">
           <View className="flex-row items-center gap-2.5">
             <CreditCoin size={32} />
@@ -147,7 +148,7 @@ export default function HomeScreen() {
             <ChevronRight size={14} color="#8f8f8f" strokeWidth={1.75} />
           </View>
         </View>
-      </Pressable>
+      </PressableScale>
 
       {/* ── Recent tickets — contained card, scrolls horizontally ──── */}
       {recentTickets.length > 0 && (
@@ -156,7 +157,12 @@ export default function HomeScreen() {
           style={{ paddingVertical: 14 }}
         >
           <View className="flex-row items-center justify-between mb-3 px-4">
-            <Text className="text-foreground font-semibold text-base">My Tickets</Text>
+            <View className="flex-row items-center gap-2">
+              <Text className="text-foreground font-semibold text-base">My Tickets</Text>
+              <View className="rounded-full bg-primary/15 px-2 py-0.5">
+                <Text className="text-primary text-xs font-semibold">{recentTickets.length}</Text>
+              </View>
+            </View>
             <Pressable onPress={() => router.push("/(app)/tickets" as never)} className="active:opacity-60">
               <Text className="text-muted-foreground text-xs">See all →</Text>
             </Pressable>
@@ -164,42 +170,47 @@ export default function HomeScreen() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
+            decelerationRate="fast"
+            snapToInterval={TICKET_ITEM_WIDTH + GAP}
             contentContainerStyle={{ paddingHorizontal: 16, gap: GAP }}
           >
             {recentTickets.map(ticket => (
-              <Pressable
+              <PressableScale
                 key={ticket.id}
                 onPress={() => router.push(`/(app)/tickets/${ticket.id}` as never)}
-                className="active:opacity-75"
                 style={{ width: TICKET_ITEM_WIDTH }}
               >
-                <Card className="flex-1">
-                  <View className="mb-2">
+                <Card className="flex-1 overflow-hidden">
+                  {/* ticket-stub accent bar */}
+                  <View
+                    className="absolute left-0 top-0 bottom-0 w-1"
+                    style={{ backgroundColor: ticket.status === "VALID" ? "#22c55e" : "#3f3f46" }}
+                  />
+                  <View className="flex-row items-center justify-between mb-2 pl-1.5">
+                    <View className="w-9 h-9 rounded-xl items-center justify-center border border-border bg-background">
+                      <Ticket size={16} color="#fafafa" strokeWidth={1.75} />
+                    </View>
                     <Badge label={ticket.status} variant={STATUS_VARIANT[ticket.status] ?? "secondary"} />
                   </View>
-                  <View className="w-8 h-8 rounded-xl items-center justify-center mb-2 border border-border bg-background">
-                    <Ticket size={15} color="#fafafa" strokeWidth={1.75} />
-                  </View>
-                  <Text className="text-foreground font-semibold text-xs tracking-tight" numberOfLines={2}>
+                  <Text className="text-foreground font-semibold text-sm tracking-tight pl-1.5" numberOfLines={2}>
                     {ticket.ticket_name ?? "Ticket"}
                   </Text>
-                  <Text className="text-muted-foreground text-xs mt-0.5" numberOfLines={1}>
+                  <Text className="text-muted-foreground text-xs mt-0.5 pl-1.5" numberOfLines={1}>
                     {formatDate(ticket.created_at)}
                   </Text>
                 </Card>
-              </Pressable>
+              </PressableScale>
             ))}
             {/* Buy-more tile always trails the list */}
-            <Pressable
+            <PressableScale
               onPress={() => router.push("/(app)/buy" as never)}
-              className="active:opacity-75"
               style={{ width: TICKET_ITEM_WIDTH }}
             >
-              <Card className="flex-1 items-center justify-center" style={{ minHeight: 100 }}>
-                <ShoppingBag size={20} color="#8f8f8f" strokeWidth={1.5} />
+              <Card className="flex-1 items-center justify-center border-dashed" style={{ minHeight: 116 }}>
+                <ShoppingBag size={22} color="#8f8f8f" strokeWidth={1.5} />
                 <Text className="text-muted-foreground text-xs mt-2 text-center">Buy more tickets</Text>
               </Card>
-            </Pressable>
+            </PressableScale>
           </ScrollView>
         </View>
       )}
@@ -211,10 +222,9 @@ export default function HomeScreen() {
         {tiles.map(tile => {
           const Icon = tile.icon;
           return (
-            <Pressable
+            <PressableScale
               key={tile.route}
               onPress={() => router.push(tile.route as never)}
-              className="active:opacity-75"
               style={{ width: tiles.length === 1 ? "100%" : "47%" }}
             >
               <Card className="p-5">
@@ -224,7 +234,7 @@ export default function HomeScreen() {
                 <Text className="text-foreground font-semibold text-base tracking-tight">{tile.label}</Text>
                 <Text className="text-muted-foreground text-xs mt-1">{tile.sub}</Text>
               </Card>
-            </Pressable>
+            </PressableScale>
           );
         })}
       </View>

@@ -20,13 +20,17 @@ import { Button } from "@/components/ui/Button";
 const REEL = ["🍒", "🍋", "🔔", "🍇", "⭐", "💎", "7️⃣"];
 const JACKPOT = REEL.length - 1;
 
-// ── 3D cylinder geometry ──
+// ── 3D wheel geometry ──
+// Continuous-offset cylinder: each symbol is parameterised by its vertical
+// distance from the payline, so the centre symbol always sits upright + full
+// size and neighbours curve away & fade. No fixed faces → never half-cut.
 const N = REEL.length;
-const CELL_H = 72;
-const STEP = 360 / N;                                  // angle between faces
-const RADIUS = CELL_H / 2 / Math.tan(Math.PI / N);     // drum radius
-const PERSPECTIVE = 700;
-const FRAME_H = CELL_H * 2.7;
+const CELL_H = 76;
+const SPACING = CELL_H;            // vertical gap between symbols on the wheel
+const TRACK = N * SPACING;         // one full revolution, in px
+const WHEEL_R = CELL_H * 1.15;     // cylinder radius, in px
+const PERSPECTIVE = 600;
+const FRAME_H = CELL_H * 2.6;
 
 type Phase = "idle" | "spinning" | "win" | "lose";
 
@@ -46,53 +50,54 @@ interface SpinModalProps {
 function ReelFace({
   symbol,
   index,
-  rotation,
+  offset,
   win,
 }: {
   symbol: string;
   index: number;
-  rotation: SharedValue<number>;
+  offset: SharedValue<number>;
   win: boolean;
 }) {
-  // RN has no translateZ — emulate the cylinder with translateY (position on
-  // the drum), rotateX (face tilt) and scale (depth foreshortening).
   const style = useAnimatedStyle(() => {
-    const angle = rotation.value + index * STEP;
-    const rad = (angle * Math.PI) / 180;
-    const facing = Math.cos(rad);               // 1 = front, -1 = back
-    const translateY = -RADIUS * Math.sin(rad);
-    const scale = interpolate(facing, [-1, 0, 1], [0.55, 0.75, 1]);
+    // signed vertical distance of this symbol from the payline centre, wrapped
+    // into [-TRACK/2, TRACK/2) so it loops seamlessly
+    let y = (index * SPACING - offset.value) % TRACK;
+    if (y < -TRACK / 2) y += TRACK;
+    if (y >= TRACK / 2) y -= TRACK;
+
+    const theta = y / WHEEL_R;                  // angle on the cylinder (rad)
+    const cos = Math.cos(theta);                // 1 = dead centre, 0 = side
+    const projY = WHEEL_R * Math.sin(theta);    // project onto the curve
+
     return {
-      opacity: facing > 0.05 ? facing : 0,      // hide back faces
+      opacity: cos > 0.18 ? interpolate(cos, [0.18, 1], [0, 1]) : 0,
       transform: [
         { perspective: PERSPECTIVE },
-        { translateY },
-        { rotateX: `${angle}deg` },
-        { scale },
+        { translateY: projY },
+        { rotateX: `${(theta * 180) / Math.PI}deg` },
+        { scale: interpolate(cos, [0.18, 1], [0.62, 1]) },
       ],
     };
   });
 
   return (
     <Animated.View style={[styles.face, style]} pointerEvents="none">
-      <Text style={{ fontSize: 40, color: win ? "#fbbf24" : "#fafafa" }}>{symbol}</Text>
+      <Text style={{ fontSize: 42, color: win ? "#fbbf24" : "#fafafa" }}>{symbol}</Text>
     </Animated.View>
   );
 }
 
 export function SpinModal({ visible, balance, spinCost, result, spinning, onSpin, onClose, onClaim }: SpinModalProps) {
-  // rotation in degrees; decreasing = drum spins "up"
-  const rotation = useSharedValue(0);
+  // vertical scroll offset in px; increasing = wheel spins "up"
+  const offset = useSharedValue(0);
   const glow = useSharedValue(0);
   const [phaseState, setPhaseState] = useState<Phase>("idle");
 
-  // bring REEL[target] to the front: rotation ≡ -target*STEP (mod 360)
-  function landingRotation(target: number, fromValue: number) {
-    const base = -target * STEP;
-    // add full spins beyond current so it always rotates a few turns
-    const turns = 4;
-    let final = base - 360 * turns;
-    while (final > fromValue) final -= 360;
+  // centre REEL[target] on the payline: offset ≡ target*SPACING (mod TRACK),
+  // always at least a few full revolutions ahead of where we are now
+  function landingOffset(target: number, fromValue: number) {
+    let final = target * SPACING;
+    while (final < fromValue + TRACK * 4) final += TRACK;
     return final;
   }
 
@@ -101,9 +106,9 @@ export function SpinModal({ visible, balance, spinCost, result, spinning, onSpin
     if (!spinning) return;
     setPhaseState("spinning");
     glow.value = 0;
-    cancelAnimation(rotation);
-    rotation.value = withRepeat(
-      withTiming(rotation.value - 360, { duration: 550, easing: Easing.linear }),
+    cancelAnimation(offset);
+    offset.value = withRepeat(
+      withTiming(offset.value + TRACK, { duration: 650, easing: Easing.linear }),
       -1,
       false,
     );
@@ -112,10 +117,10 @@ export function SpinModal({ visible, balance, spinCost, result, spinning, onSpin
   // Settle on result
   useEffect(() => {
     if (!result) return;
-    cancelAnimation(rotation);
+    cancelAnimation(offset);
     const target = result.win ? JACKPOT : pickLoser();
-    const final = landingRotation(target, rotation.value);
-    rotation.value = withTiming(
+    const final = landingOffset(target, offset.value);
+    offset.value = withTiming(
       final,
       { duration: 2400, easing: Easing.bezier(0.16, 0.9, 0.2, 1) },
       (finished) => {
@@ -137,9 +142,9 @@ export function SpinModal({ visible, balance, spinCost, result, spinning, onSpin
   // Reset on close
   useEffect(() => {
     if (!visible) {
-      cancelAnimation(rotation);
+      cancelAnimation(offset);
       cancelAnimation(glow);
-      rotation.value = 0;
+      offset.value = 0;
       glow.value = 0;
       setPhaseState("idle");
     }
@@ -184,7 +189,7 @@ export function SpinModal({ visible, balance, spinCost, result, spinning, onSpin
           <Animated.View style={[styles.drumGlow, glowStyle]} pointerEvents="none" />
           <View style={styles.frame}>
             {REEL.map((sym, i) => (
-              <ReelFace key={i} symbol={sym} index={i} rotation={rotation} win={isWin} />
+              <ReelFace key={i} symbol={sym} index={i} offset={offset} win={isWin} />
             ))}
             {/* payline window */}
             <View style={styles.payline} pointerEvents="none" />

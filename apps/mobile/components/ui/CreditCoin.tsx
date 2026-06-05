@@ -40,7 +40,12 @@ export function CreditCoin({ size = 32, duration = 2800 }: { size?: number; dura
           justifyContent: "center",
           backgroundColor: "#f59e0b",
           borderWidth: 1.5,
-          borderColor: "#d97706",
+          borderColor: "#fbbf24",
+          shadowColor: "#f59e0b",
+          shadowOpacity: 0.55,
+          shadowRadius: 6,
+          shadowOffset: { width: 0, height: 2 },
+          elevation: 4,
         },
         style,
       ]}

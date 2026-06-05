@@ -17,8 +17,8 @@ interface Props {
   gyro?: boolean;
   /** drag-to-tilt with finger */
   pan?: boolean;
-  /** moving specular highlight overlay (wallet shine) */
-  glare?: boolean;
+  /** drop shadow that lifts the card off the background */
+  shadow?: boolean;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -34,7 +34,7 @@ export function TiltCard({
   maxTilt = 12,
   gyro = true,
   pan = true,
-  glare = true,
+  shadow = true,
   style,
 }: Props) {
   // gyro-driven rotation (degrees)
@@ -79,48 +79,32 @@ export function TiltCard({
   const cardStyle = useAnimatedStyle(() => {
     const rx = Math.max(-maxTilt, Math.min(maxTilt, gRx.value + pRx.value));
     const ry = Math.max(-maxTilt, Math.min(maxTilt, gRy.value + pRy.value));
+    // shadow drifts opposite the tilt → the card reads as lifted off the bg
     return {
       transform: [
-        { perspective: 900 },
+        { perspective: 1200 },
         { rotateX: `${rx}deg` },
         { rotateY: `${ry}deg` },
       ],
-    };
-  });
-
-  const glareStyle = useAnimatedStyle(() => {
-    const ry = gRy.value + pRy.value;
-    const rx = gRx.value + pRx.value;
-    return {
-      opacity: Math.min(0.4, (Math.abs(ry) + Math.abs(rx)) / 40),
-      transform: [
-        { translateX: ry * 6 },
-        { translateY: rx * 6 },
-      ],
+      shadowOffset: shadow ? { width: -ry * 1.2, height: 14 - rx * 1.2 } : { width: 0, height: 0 },
     };
   });
 
   return (
     <GestureDetector gesture={panGesture}>
-      <Animated.View style={[cardStyle, style]}>
+      <Animated.View
+        style={[
+          shadow && {
+            shadowColor: "#000",
+            shadowOpacity: 0.45,
+            shadowRadius: 22,
+            elevation: 16,
+          },
+          cardStyle,
+          style,
+        ]}
+      >
         {children}
-        {glare && (
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              {
-                position: "absolute",
-                top: -40,
-                left: -40,
-                right: -40,
-                bottom: -40,
-                borderRadius: 24,
-                backgroundColor: "#ffffff",
-              },
-              glareStyle,
-            ]}
-          />
-        )}
       </Animated.View>
     </GestureDetector>
   );
