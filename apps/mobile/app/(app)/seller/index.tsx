@@ -13,6 +13,7 @@ import { Tent, Ticket as TicketIcon, ChevronLeft, MapPin, Calendar, Check, Bankn
 import { supabase } from "@/lib/supabase";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
+import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 import { Card, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -714,20 +715,23 @@ export default function SellerScreen() {
 
           <View className="py-4 gap-3">
             {paymentMethod === "cash" ? (
-              <Button variant="success" className="w-full" onPress={sellCash} loading={selling} disabled={selling} icon={<Banknote size={18} color="#000000" strokeWidth={1.75} />}>
-                <Text>Collect Cash — {formatCurrency(cartTotal)}</Text>
-              </Button>
+              <SlideToConfirm
+                label={`Slide to collect ${formatCurrency(cartTotal)}`}
+                confirmedLabel="Sold!"
+                color="#22c55e"
+                disabled={selling || cart.length === 0}
+                onConfirm={sellCash}
+                icon={<Banknote size={22} color="#000000" strokeWidth={2} />}
+              />
             ) : (
-              <Button
-                variant="success"
-                className="w-full"
-                onPress={sellTap}
-                loading={selling}
-                disabled={selling || tapState !== "ready"}
-                icon={<Smartphone size={18} color="#000000" strokeWidth={1.75} />}
-              >
-                <Text>Charge {formatCurrency(cartTotal)} — Tap to Pay</Text>
-              </Button>
+              <SlideToConfirm
+                label={`Slide to charge ${formatCurrency(cartTotal)}`}
+                confirmedLabel="Charged!"
+                color="#22c55e"
+                disabled={selling || tapState !== "ready" || cart.length === 0}
+                onConfirm={sellTap}
+                icon={<Smartphone size={22} color="#000000" strokeWidth={2} />}
+              />
             )}
           </View>
         </View>

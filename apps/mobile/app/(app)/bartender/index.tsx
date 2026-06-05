@@ -11,6 +11,7 @@ import { formatCurrency } from "@/lib/utils";
 import type { DrinkOrder, DrinkOrderItem, Drink } from "@/lib/types";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/Button";
+import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 
 type ItemWithDrink = DrinkOrderItem & { drinks: Pick<Drink, "name" | "price"> };
 type OrderWithItems = DrinkOrder & { drink_order_items: ItemWithDrink[] };
@@ -280,15 +281,20 @@ export default function BartenderScreen() {
 
           {/* Complete button */}
           <View className="absolute bottom-0 left-0 right-0 px-4 pb-8 pt-4 bg-black/90">
-            <Button
-              onPress={completeOrder}
-              disabled={!allDone || completing}
-              loading={completing}
-              variant={allDone ? "success" : "secondary"}
-              className="w-full py-5 rounded-2xl"
-            >
-              <Text>{allDone ? "Complete Order" : `${doneCount} / ${items.length} done`}</Text>
-            </Button>
+            {allDone ? (
+              <SlideToConfirm
+                label="Slide to complete order"
+                confirmedLabel="Completed!"
+                color="#22c55e"
+                disabled={completing}
+                onConfirm={completeOrder}
+                icon={<Check size={22} color="#000000" strokeWidth={2.5} />}
+              />
+            ) : (
+              <Button disabled variant="secondary" className="w-full py-5 rounded-2xl">
+                <Text>{`${doneCount} / ${items.length} done`}</Text>
+              </Button>
+            )}
           </View>
         </>
       )}

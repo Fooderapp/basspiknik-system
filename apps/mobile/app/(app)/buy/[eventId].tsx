@@ -7,6 +7,7 @@ import { ChevronLeft, Minus, Plus, Tag, CalendarDays, MapPin, Sparkles, Star } f
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth";
 import { Button } from "@/components/ui/Button";
+import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -341,18 +342,24 @@ export default function BuyEventScreen() {
 
           {/* Checkout or free claim */}
           {freeToken ? (
-            <Button
-              onPress={() => freeCheckout(freeToken)}
-              loading={checkingOut}
-              style={{ backgroundColor: "#f59e0b" }}
-              icon={<Sparkles size={16} color="#000" strokeWidth={2} />}
-            >
-              <Text className="font-semibold text-black">🎟 Claim free tickets!</Text>
-            </Button>
+            <SlideToConfirm
+              label="🎟 Slide to claim free tickets"
+              confirmedLabel="Claiming…"
+              color="#f59e0b"
+              disabled={checkingOut}
+              onConfirm={() => freeCheckout(freeToken)}
+              icon={<Sparkles size={22} color="#000" strokeWidth={2} />}
+            />
           ) : (
-            <Button onPress={proceed} loading={checkingOut} icon={<Tag size={16} color="#000" strokeWidth={2} />}>
-              <Text className="font-semibold">Checkout · {fmt(subtotal)}</Text>
-            </Button>
+            <SlideToConfirm
+              label={`Slide to checkout · ${fmt(subtotal)}`}
+              color="#fafafa"
+              onColor="#000000"
+              lockOnConfirm={false}
+              disabled={checkingOut}
+              onConfirm={proceed}
+              icon={<Tag size={22} color="#000" strokeWidth={2} />}
+            />
           )}
         </View>
       )}
