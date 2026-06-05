@@ -19,7 +19,7 @@ interface Props {
 export function SpinConfigManager({ eventId, ticketTypes }: Props) {
   const [enabled, setEnabled] = useState(false);
   const [allowed, setAllowed] = useState<string[]>([]);
-  const [minCartItems, setMinCartItems] = useState(0);
+  const [maxCartItems, setMaxCartItems] = useState(0);
   const [requireBundle, setRequireBundle] = useState(false);
   const [minBundles, setMinBundles] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -31,7 +31,7 @@ export function SpinConfigManager({ eventId, ticketTypes }: Props) {
       .then((d) => {
         setEnabled(!!d.enabled);
         setAllowed(d.allowed_ticket_type_ids ?? []);
-        setMinCartItems(d.min_cart_items ?? 0);
+        setMaxCartItems(d.max_cart_items ?? 0);
         setRequireBundle(!!d.require_bundle);
         setMinBundles(d.min_bundles ?? 0);
       })
@@ -52,7 +52,7 @@ export function SpinConfigManager({ eventId, ticketTypes }: Props) {
         body: JSON.stringify({
           enabled,
           allowedTicketTypeIds: allowed,
-          minCartItems,
+          maxCartItems,
           requireBundle,
           minBundles,
         }),
@@ -115,10 +115,10 @@ export function SpinConfigManager({ eventId, ticketTypes }: Props) {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Min items in cart</Label>
+                <Label>Max items in cart (0 = no limit)</Label>
                 <Input
-                  type="number" min={0} value={minCartItems}
-                  onChange={(e) => { setMinCartItems(Math.max(0, parseInt(e.target.value || "0", 10))); setDirty(true); }}
+                  type="number" min={0} value={maxCartItems}
+                  onChange={(e) => { setMaxCartItems(Math.max(0, parseInt(e.target.value || "0", 10))); setDirty(true); }}
                 />
               </div>
               <div className="space-y-2">
