@@ -14,18 +14,18 @@ const spinSchema = z.object({
   })).default([]),
 });
 
-/** Resolve an authed Supabase client from Bearer token (mobile) or cookie (web). */
+/** Resolve an authed Supabase client from Bearer token (mobile) or cookie (web).
+ *  For mobile: inject the JWT as the Authorization header so auth.uid() works in RPCs. */
 async function resolveClient(req: Request) {
   const authHeader = req.headers.get("authorization");
   const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
   if (token) {
-    // For mobile: use anon client with the user's JWT — RPCs run as that user.
+    // Create client with the user JWT baked in — auth.uid() resolves correctly in RPCs.
     const sb = createSbClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { global: { headers: { Authorization: `Bearer ${token}` } } },
     );
-    // Set auth so RPCs inherit the caller's context
-    sb.auth.setSession({ access_token: token, refresh_token: "" }).catch(() => {});
     const { data: { user } } = await sb.auth.getUser(token);
     return { client: sb, user };
   }
