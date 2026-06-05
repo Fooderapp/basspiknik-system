@@ -5,7 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, CalendarDays, Users, BarChart3,
   Ticket, Wine, ScanLine, UserCheck,
-  LogOut, ChevronLeft, Menu, User, Settings
+  LogOut, ChevronLeft, Menu, User, Settings,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,7 @@ import { toast } from "sonner";
 interface NavItem {
   label: string;
   href: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
   roles: string[];
 }
 

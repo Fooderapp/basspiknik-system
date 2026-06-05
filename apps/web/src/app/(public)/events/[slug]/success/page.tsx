@@ -3,8 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { formatDate, formatCurrency } from "@/lib/utils";
-import { CheckCircle2, CalendarDays, MapPin, Download, ArrowLeft } from "lucide-react";
+import { CalendarDays, MapPin, Download, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SuccessCelebration } from "@/components/three/SuccessCelebration";
 import { Badge } from "@/components/ui/badge";
 import type { Event } from "@/lib/supabase/types";
 import { getSettings } from "@/lib/settings";
@@ -59,11 +60,7 @@ export default async function SuccessPage({
 
         {/* Success header */}
         <div className="text-center space-y-3">
-          <div className="flex justify-center">
-            <div className="rounded-full bg-muted p-5">
-              <CheckCircle2 className="h-14 w-14 text-foreground" />
-            </div>
-          </div>
+          <SuccessCelebration />
           <h1 className="text-3xl font-bold">{t(dict, "success.heading")}</h1>
           <p className="text-muted-foreground">
             {t(dict, "success.confirmed")} <strong>{event.name}</strong>

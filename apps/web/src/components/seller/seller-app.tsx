@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { SlideToConfirm } from "@/components/ui/slide-to-confirm";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -66,8 +67,8 @@ export function SellerApp({ events, dict }: Props) {
 
   const getQty = (ttId: string) => cart.find((i) => i.ticketType.id === ttId)?.quantity ?? 0;
 
-  const handleSubmit = async () => {
-    if (!selectedEventId || cart.length === 0) return;
+  const handleSubmit = async (): Promise<boolean> => {
+    if (!selectedEventId || cart.length === 0) return false;
     setSubmitting(true);
     try {
       const res = await fetch("/api/seller/sessions", {
@@ -99,8 +100,10 @@ export function SellerApp({ events, dict }: Props) {
       setBuyerEmail("");
       setNotes("");
       toast.success(`${dict["seller.sale_success"]} ${result.totalQty} ${dict["seller.sold"]}`);
+      return true;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : dict["seller.error"]);
+      return false;
     } finally {
       setSubmitting(false);
     }
@@ -264,14 +267,16 @@ export function SellerApp({ events, dict }: Props) {
           </div>
         </div>
 
-        <Button
-          size="lg"
-          className="w-full"
+        <SlideToConfirm
+          label={submitting ? dict["seller.processing"] : `${dict["seller.charge"]} ${formatCurrency(cartTotal)}`}
+          confirmedLabel={dict["seller.sale_success"] ?? "Sold!"}
+          color="#22c55e"
           disabled={cart.length === 0 || submitting || !selectedEventId}
-          onClick={handleSubmit}
-        >
-          {submitting ? dict["seller.processing"] : `${dict["seller.charge"]} ${formatCurrency(cartTotal)}`}
-        </Button>
+          onConfirm={async () => {
+            const ok = await handleSubmit();
+            if (!ok) throw new Error("sale failed");
+          }}
+        />
       </div>
     </div>
   );

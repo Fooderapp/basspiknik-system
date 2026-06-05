@@ -30,6 +30,8 @@
     "@radix-ui/react-toast": "^1.2.14",
     "@radix-ui/react-tooltip": "^1.2.7",
     "@react-pdf/renderer": "^4.5.1",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
     "@stripe/stripe-js": "^5.8.0",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.2",
@@ -56,6 +58,7 @@
     "stripe": "^17.7.0",
     "tailwind-merge": "^3.3.0",
     "tailwindcss-animate": "^1.0.7",
+    "three": "^0.184.0",
     "zod": "^3.25.34"
   },
   "devDependencies": {
@@ -64,6 +67,7 @@
     "@types/qrcode": "^1.5.5",
     "@types/react": "^19.1.5",
     "@types/react-dom": "^19.1.5",
+    "@types/three": "^0.184.1",
     "autoprefixer": "^10.5.0",
     "eslint": "^9.28.0",
     "eslint-config-next": "15.3.2",

@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Pencil, Trash2, Ticket, Users, Tag, PackageOpen, RefreshCcw, DoorOpen } from "lucide-react";
+import { Plus, Pencil, Trash2, Ticket, Users, Tag, PackageOpen, RefreshCcw, DoorOpen, type LucideIcon } from "lucide-react";
 import type { TicketType } from "@/lib/supabase/types";
 
 const TIERS = ["EARLY_BIRD", "GENERAL", "LATE", "DOOR", "VIP", "FREE"] as const;
@@ -64,7 +64,7 @@ interface Props {
 function ToggleRow({
   id, icon: Icon, label, description, checked, onCheckedChange, children,
 }: {
-  id: string; icon: React.ElementType; label: string; description: string;
+  id: string; icon: LucideIcon; label: string; description: string;
   checked: boolean; onCheckedChange: (v: boolean) => void; children?: React.ReactNode;
 }) {
   return (
