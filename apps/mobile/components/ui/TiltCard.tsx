@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import type { StyleProp, ViewStyle } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -17,8 +17,10 @@ interface Props {
   gyro?: boolean;
   /** drag-to-tilt with finger */
   pan?: boolean;
-  /** drop shadow that lifts the card off the background */
+  /** cast-shadow plate behind the card for real depth */
   shadow?: boolean;
+  /** corner radius of the shadow plate (match the child) */
+  radius?: number;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -26,8 +28,10 @@ const clampJS = (v: number, m: number) => Math.max(-m, Math.min(m, v));
 
 /**
  * Wallet-style 3D tilt card. Reacts to device gyroscope (ambient) and/or
- * finger drag, with an optional specular glare sweep. Faux-3D via
- * perspective + rotateX/rotateY (no preserve-3d in RN).
+ * finger drag. Faux-3D via perspective + rotateX/rotateY (no preserve-3d in
+ * RN). Depth comes from a SEPARATE shadow plate rendered behind the card —
+ * attaching a layer shadow to the rotated card itself makes the shadow tilt
+ * in-plane and mask the content, which is wrong.
  */
 export function TiltCard({
   children,
@@ -35,6 +39,7 @@ export function TiltCard({
   gyro = true,
   pan = true,
   shadow = true,
+  radius = 24,
   style,
 }: Props) {
   // gyro-driven rotation (degrees)
@@ -45,6 +50,7 @@ export function TiltCard({
   const pRy = useSharedValue(0);
 
   const rest = useRef<{ beta: number; gamma: number } | null>(null);
+  const [size, setSize] = useState({ w: 0, h: 0 });
 
   useEffect(() => {
     if (!gyro) return;
@@ -56,7 +62,6 @@ export function TiltCard({
       if (!rest.current) rest.current = { beta, gamma };
       const dBeta = beta - rest.current.beta;
       const dGamma = gamma - rest.current.gamma;
-      // tilt ~1/3 of the device delta, clamped
       gRx.value = withTiming(clampJS(-dBeta / 2.2, maxTilt), { duration: 120 });
       gRy.value = withTiming(clampJS(dGamma / 2.2, maxTilt), { duration: 120 });
     });
@@ -79,33 +84,63 @@ export function TiltCard({
   const cardStyle = useAnimatedStyle(() => {
     const rx = Math.max(-maxTilt, Math.min(maxTilt, gRx.value + pRx.value));
     const ry = Math.max(-maxTilt, Math.min(maxTilt, gRy.value + pRy.value));
-    // shadow drifts opposite the tilt → the card reads as lifted off the bg
     return {
       transform: [
         { perspective: 1200 },
         { rotateX: `${rx}deg` },
         { rotateY: `${ry}deg` },
       ],
-      shadowOffset: shadow ? { width: -ry * 1.2, height: 14 - rx * 1.2 } : { width: 0, height: 0 },
     };
   });
 
+  // Shadow plate: sits behind + below the card, shifts opposite the tilt so the
+  // card visibly hovers above it. Its own soft layer shadow does the blur.
+  const plateStyle = useAnimatedStyle(() => {
+    const rx = gRx.value + pRx.value;
+    const ry = gRy.value + pRy.value;
+    const mag = (Math.abs(rx) + Math.abs(ry)) / maxTilt; // 0..~2
+    return {
+      opacity: 0.32 + Math.min(0.28, mag * 0.16),
+      transform: [
+        { translateX: -ry * 1.6 },
+        { translateY: 18 - rx * 1.6 },
+        { scale: 0.94 },
+      ],
+    };
+  });
+
+  function onLayout(e: LayoutChangeEvent) {
+    const { width, height } = e.nativeEvent.layout;
+    setSize((s) => (s.w === width && s.h === height ? s : { w: width, h: height }));
+  }
+
   return (
     <GestureDetector gesture={panGesture}>
-      <Animated.View
-        style={[
-          shadow && {
-            shadowColor: "#000",
-            shadowOpacity: 0.45,
-            shadowRadius: 22,
-            elevation: 16,
-          },
-          cardStyle,
-          style,
-        ]}
-      >
-        {children}
-      </Animated.View>
+      <View>
+        {shadow && size.w > 0 && (
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              {
+                position: "absolute",
+                width: size.w,
+                height: size.h,
+                borderRadius: radius,
+                backgroundColor: "#000",
+                shadowColor: "#000",
+                shadowOpacity: 0.9,
+                shadowRadius: 24,
+                shadowOffset: { width: 0, height: 10 },
+                elevation: 12,
+              },
+              plateStyle,
+            ]}
+          />
+        )}
+        <Animated.View onLayout={onLayout} style={[cardStyle, style]}>
+          {children}
+        </Animated.View>
+      </View>
     </GestureDetector>
   );
 }
