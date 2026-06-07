@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Ticket, Wine, User, type LucideIcon } from "lucide-react";
+import { Ticket, ShoppingCart, Wine, User, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Dictionary } from "@/lib/i18n";
 import { t } from "@/lib/i18n";
@@ -15,11 +15,13 @@ interface NavItem {
   match: string[];
 }
 
+// Order + items mirror the mobile NativeTabs bar exactly:
+// Tickets · Buy · Bar · Profile
 const NAV: NavItem[] = [
-  { href: "/events",     icon: CalendarDays, key: "nav.events",     match: ["/events"] },
-  { href: "/my-tickets", icon: Ticket,       key: "nav.my_tickets", match: ["/my-tickets"] },
-  { href: "/menu",       icon: Wine,         key: "nav.bar",        match: ["/menu"] },
-  { href: "/profile",    icon: User,         key: "nav.profile",    match: ["/profile"] },
+  { href: "/my-tickets", icon: Ticket,       key: "nav.tickets", match: ["/my-tickets"] },
+  { href: "/events",     icon: ShoppingCart, key: "nav.buy",     match: ["/events"] },
+  { href: "/menu",       icon: Wine,         key: "nav.bar",     match: ["/menu"] },
+  { href: "/profile",    icon: User,         key: "nav.profile", match: ["/profile"] },
 ];
 
 function isActive(pathname: string, item: NavItem) {

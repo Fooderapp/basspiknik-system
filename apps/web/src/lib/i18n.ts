@@ -11,16 +11,19 @@ const en = {
   "nav.dashboard":  "Dashboard",
   "nav.profile":    "Profile",
   "nav.bar":        "Bar",
+  "nav.tickets":    "Tickets",
+  "nav.buy":        "Buy",
 
-  // Consumer events list
-  "events.title":     "Events",
-  "events.subtitle":  "Browse upcoming events and grab your tickets.",
-  "events.upcoming":  "Upcoming events",
-  "events.none":      "No events on sale right now.",
-  "events.none_sub":  "Check back soon — new events drop here.",
-  "events.from":      "From",
-  "events.buy":       "Buy Tickets",
-  "events.sold_out":  "Sold Out",
+  // Consumer events list (Buy tab — mirrors mobile)
+  "events.title":         "Buy Tickets",
+  "events.subtitle":      "Upcoming events",
+  "events.none":          "No upcoming events",
+  "events.none_sub":      "Check back soon for new events",
+  "events.from":          "from",
+  "events.buy":           "Buy Tickets",
+  "events.sold_out":      "Sold out",
+  "events.ticket_type":   "ticket type",
+  "events.ticket_types":  "ticket types",
 
   // Consumer profile
   "profile.title":      "My Profile",
@@ -390,16 +393,19 @@ const hu: typeof en = {
   "nav.dashboard":  "Vezérlőpult",
   "nav.profile":    "Profil",
   "nav.bar":        "Bár",
+  "nav.tickets":    "Jegyek",
+  "nav.buy":        "Vásárlás",
 
-  // Consumer events list
-  "events.title":     "Rendezvények",
-  "events.subtitle":  "Böngészd a közelgő eseményeket és szerezd be a jegyed.",
-  "events.upcoming":  "Közelgő rendezvények",
-  "events.none":      "Jelenleg nincs jegy értékesítésen.",
-  "events.none_sub":  "Nézz vissza hamarosan — itt jelennek meg az új események.",
-  "events.from":      "Ártól",
-  "events.buy":       "Jegyvásárlás",
-  "events.sold_out":  "Elfogyott",
+  // Consumer events list (Buy tab — mirrors mobile)
+  "events.title":         "Jegyvásárlás",
+  "events.subtitle":      "Közelgő rendezvények",
+  "events.none":          "Nincs közelgő rendezvény",
+  "events.none_sub":      "Nézz vissza hamarosan az új eseményekért",
+  "events.from":          "ártól",
+  "events.buy":           "Jegyvásárlás",
+  "events.sold_out":      "Elfogyott",
+  "events.ticket_type":   "jegytípus",
+  "events.ticket_types":  "jegytípus",
 
   // Consumer profile
   "profile.title":      "Profilom",

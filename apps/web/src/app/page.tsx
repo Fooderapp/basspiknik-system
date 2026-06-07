@@ -12,7 +12,7 @@ export default async function HomePage() {
   // Logged-in users land directly in the consumer app (mobile-first shell).
   const supabase = await createClient() as any;
   const { data: { user } } = await supabase.auth.getUser();
-  if (user) redirect("/events");
+  if (user) redirect("/my-tickets");
 
   const settings = await getSettings();
   const dict = getDictionary(settings.language);
