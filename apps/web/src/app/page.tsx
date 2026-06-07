@@ -1,10 +1,19 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Ticket, Wine, ScanLine } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
 import { getSettings } from "@/lib/settings";
 import { getDictionary, t } from "@/lib/i18n";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export default async function HomePage() {
+  // Logged-in users land directly in the consumer app (mobile-first shell).
+  const supabase = await createClient() as any;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) redirect("/events");
+
   const settings = await getSettings();
   const dict = getDictionary(settings.language);
 

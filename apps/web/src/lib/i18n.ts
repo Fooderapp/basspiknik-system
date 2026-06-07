@@ -9,6 +9,32 @@ const en = {
   "nav.my_tickets": "My Tickets",
   "nav.sign_in":    "Sign In",
   "nav.dashboard":  "Dashboard",
+  "nav.profile":    "Profile",
+  "nav.bar":        "Bar",
+
+  // Consumer events list
+  "events.title":     "Events",
+  "events.subtitle":  "Browse upcoming events and grab your tickets.",
+  "events.upcoming":  "Upcoming events",
+  "events.none":      "No events on sale right now.",
+  "events.none_sub":  "Check back soon — new events drop here.",
+  "events.from":      "From",
+  "events.buy":       "Buy Tickets",
+  "events.sold_out":  "Sold Out",
+
+  // Consumer profile
+  "profile.title":      "My Profile",
+  "profile.subtitle":   "Account & entry pass",
+  "profile.credits":    "credits",
+  "profile.entry_pass": "ENTRY PASS",
+  "profile.scan":       "Scan at check-in",
+  "profile.bass_id":    "BASS-ID",
+  "profile.share_hint": "Share your Bass-ID to receive ticket transfers.",
+  "profile.account":    "Account",
+  "profile.name":       "Name",
+  "profile.email":      "Email",
+  "profile.sign_out":   "Sign out",
+  "profile.sign_in_prompt": "Sign in to view your profile and entry pass.",
 
   // Homepage
   "home.headline":       "Events. Tickets. Bar.",
@@ -362,6 +388,32 @@ const hu: typeof en = {
   "nav.my_tickets": "Jegyeim",
   "nav.sign_in":    "Bejelentkezés",
   "nav.dashboard":  "Vezérlőpult",
+  "nav.profile":    "Profil",
+  "nav.bar":        "Bár",
+
+  // Consumer events list
+  "events.title":     "Rendezvények",
+  "events.subtitle":  "Böngészd a közelgő eseményeket és szerezd be a jegyed.",
+  "events.upcoming":  "Közelgő rendezvények",
+  "events.none":      "Jelenleg nincs jegy értékesítésen.",
+  "events.none_sub":  "Nézz vissza hamarosan — itt jelennek meg az új események.",
+  "events.from":      "Ártól",
+  "events.buy":       "Jegyvásárlás",
+  "events.sold_out":  "Elfogyott",
+
+  // Consumer profile
+  "profile.title":      "Profilom",
+  "profile.subtitle":   "Fiók és belépőkártya",
+  "profile.credits":    "kredit",
+  "profile.entry_pass": "BELÉPŐKÁRTYA",
+  "profile.scan":       "Mutasd be a beengedésnél",
+  "profile.bass_id":    "BASS-ID",
+  "profile.share_hint": "Oszd meg a Bass-ID-d, hogy jegyátadást fogadhass.",
+  "profile.account":    "Fiók",
+  "profile.name":       "Név",
+  "profile.email":      "Email",
+  "profile.sign_out":   "Kijelentkezés",
+  "profile.sign_in_prompt": "Jelentkezz be a profilod és belépőkártyád megtekintéséhez.",
 
   // Homepage
   "home.headline":       "Rendezvények. Jegyek. Bár.",

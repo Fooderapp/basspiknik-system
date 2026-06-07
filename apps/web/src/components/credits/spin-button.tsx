@@ -7,6 +7,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { Coins, Sparkles } from "lucide-react";
+import { Dice3D } from "@/components/three/Dice3D";
 import type { Dictionary } from "@/lib/i18n";
 
 interface SpinButtonProps {
@@ -22,7 +23,14 @@ interface SpinButtonProps {
 
 type Phase = "idle" | "spinning" | "win" | "lose";
 
-const REEL = ["🍒", "🍋", "🔔", "⭐", "7️⃣", "🍇", "💎"];
+const WIN_FACE = 6; // double six = jackpot
+const d6 = () => 1 + Math.floor(Math.random() * 6);
+function loseFaces(): [number, number] {
+  let a = d6();
+  let b = d6();
+  while (a === WIN_FACE && b === WIN_FACE) b = d6();
+  return [a, b];
+}
 
 export function SpinButton({ context, eventId, items = [], dict, onWin, disabled }: SpinButtonProps) {
   const [balance, setBalance] = useState(0);
@@ -30,7 +38,7 @@ export function SpinButton({ context, eventId, items = [], dict, onWin, disabled
   const [enabled, setEnabled] = useState(false);
   const [open, setOpen] = useState(false);
   const [phase, setPhase] = useState<Phase>("idle");
-  const [reel, setReel] = useState<string[]>([REEL[0], REEL[1], REEL[2]]);
+  const [faces, setFaces] = useState<[number, number]>([WIN_FACE, WIN_FACE]);
 
   const loadBalance = () => {
     fetch("/api/credits/balance")
@@ -45,16 +53,10 @@ export function SpinButton({ context, eventId, items = [], dict, onWin, disabled
 
   useEffect(loadBalance, []);
 
-  // Spin reel animation while the request is in flight
+  // Cycle faces rapidly while the dice tumble
   useEffect(() => {
     if (phase !== "spinning") return;
-    const iv = setInterval(() => {
-      setReel([
-        REEL[Math.floor(Math.random() * REEL.length)],
-        REEL[Math.floor(Math.random() * REEL.length)],
-        REEL[Math.floor(Math.random() * REEL.length)],
-      ]);
-    }, 90);
+    const iv = setInterval(() => setFaces([d6(), d6()]), 90);
     return () => clearInterval(iv);
   }, [phase]);
 
@@ -83,10 +85,11 @@ export function SpinButton({ context, eventId, items = [], dict, onWin, disabled
       await new Promise((r) => setTimeout(r, 700));
       setBalance(data.balance ?? balance);
       if (data.win && data.token) {
-        setReel(["7️⃣", "7️⃣", "7️⃣"]);
+        setFaces([WIN_FACE, WIN_FACE]);
         setPhase("win");
         onWin(data.token);
       } else {
+        setFaces(loseFaces());
         setPhase("lose");
       }
     } catch {
@@ -101,7 +104,7 @@ export function SpinButton({ context, eventId, items = [], dict, onWin, disabled
       <Button
         type="button"
         variant="outline"
-        className="w-full gap-2 border-amber-400 text-amber-700 hover:bg-amber-50"
+        className="w-full gap-2 border-amber-500/40 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 hover:text-amber-300"
         onClick={doSpin}
         disabled={!canSpin}
       >
@@ -127,12 +130,8 @@ export function SpinButton({ context, eventId, items = [], dict, onWin, disabled
             </DialogDescription>
           </DialogHeader>
 
-          <div className={`flex justify-center gap-3 py-6 text-5xl ${phase === "spinning" ? "animate-pulse" : ""}`}>
-            {reel.map((s, i) => (
-              <span key={i} className="w-16 h-20 flex items-center justify-center rounded-xl border bg-muted/40">
-                {s}
-              </span>
-            ))}
+          <div className="py-2">
+            <Dice3D rolling={phase === "spinning"} faces={faces} win={phase === "win"} height={160} />
           </div>
 
           <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">

@@ -111,16 +111,27 @@ export async function POST(req: Request) {
   if (freeSpinToken) {
     if (!user) return NextResponse.json({ error: "Sign in to claim a free spin" }, { status: 401 });
 
-    // Single-use redemption (validates owner, expiry, context, marks used)
-    const { data: redeem } = await supabase.rpc("redeem_spin_token", {
-      p_token: freeSpinToken,
-      p_context: "TICKET",
-    });
-    if (!redeem?.ok) {
+    const admin = await createAdminClient() as any;
+
+    // Atomic single-use redemption via service role.
+    // Done here (not via the SECURITY DEFINER RPC) because mobile authenticates
+    // with a Bearer token, so auth.uid() is NULL on the cookie client and the
+    // RPC's ownership check would always fail. Conditional UPDATE guarantees
+    // the token is owned, unused, not expired, and flips used=true atomically.
+    const { data: redeem } = await admin
+      .from("spin_wins")
+      .update({ used: true })
+      .eq("token", freeSpinToken)
+      .eq("user_id", user.id)
+      .eq("context", "TICKET")
+      .eq("used", false)
+      .gt("expires_at", new Date().toISOString())
+      .select("id")
+      .maybeSingle();
+    if (!redeem) {
       return NextResponse.json({ error: "Invalid or expired spin token" }, { status: 400 });
     }
-
-    const admin = await createAdminClient() as any;
+    const winId = redeem.id;
     const buyerEmail = profileEmail || guestEmail || null;
 
     const { data: order, error: orderErr } = await admin.from("orders").insert({
@@ -171,7 +182,7 @@ export async function POST(req: Request) {
     }
 
     // Tie the win record to the resulting order
-    await admin.from("spin_wins").update({ used_order_id: order.id }).eq("id", redeem.win_id);
+    await admin.from("spin_wins").update({ used_order_id: order.id }).eq("id", winId);
 
     if (buyerEmail) {
       const { data: emailTickets } = await admin.from("tickets").select("*").eq("order_id", order.id);

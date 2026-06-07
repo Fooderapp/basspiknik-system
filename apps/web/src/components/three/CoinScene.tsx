@@ -50,7 +50,8 @@ function Coin() {
       {/* embossed stars on both faces */}
       {[0.085, -0.085].map((z, i) => (
         <mesh key={i} position={[0, 0, z]} rotation={[i === 1 ? Math.PI : 0, 0, 0]}>
-          <extrudeGeometry args={[star, { depth: 0.05, bevelEnabled: false }]} />
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <extrudeGeometry args={[star as any, { depth: 0.05, bevelEnabled: false }]} />
           <meshStandardMaterial color="#5a3a00" metalness={0.4} roughness={0.5} />
         </mesh>
       ))}

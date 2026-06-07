@@ -45,7 +45,7 @@ export function SignUpForm({ dict }: Props) {
       password: data.password,
       options: {
         data: { name: data.name },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin}/auth/callback`,
       },
     });
 
