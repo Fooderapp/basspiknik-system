@@ -13,6 +13,17 @@ const en = {
   "nav.bar":        "Bar",
   "nav.tickets":    "Tickets",
   "nav.buy":        "Buy",
+  "nav.home":       "Home",
+
+  // Dashboard / home
+  "dash.greeting":     "Welcome back",
+  "dash.next_event":   "Your next event",
+  "dash.no_next":      "No upcoming events",
+  "dash.no_next_sub":  "Grab a ticket and it'll show up here.",
+  "dash.view_ticket":  "View ticket",
+  "dash.all_tickets":  "All tickets",
+  "dash.browse":       "Browse events",
+  "dash.tickets_count":"valid ticket(s)",
 
   // Consumer events list (Buy tab — mirrors mobile)
   "events.title":         "Buy Tickets",
@@ -430,6 +441,17 @@ const hu: typeof en = {
   "nav.bar":        "Bár",
   "nav.tickets":    "Jegyek",
   "nav.buy":        "Vásárlás",
+  "nav.home":       "Főoldal",
+
+  // Dashboard / home
+  "dash.greeting":     "Üdv újra",
+  "dash.next_event":   "Következő rendezvényed",
+  "dash.no_next":      "Nincs közelgő rendezvény",
+  "dash.no_next_sub":  "Vegyél jegyet és itt fog megjelenni.",
+  "dash.view_ticket":  "Jegy megtekintése",
+  "dash.all_tickets":  "Összes jegy",
+  "dash.browse":       "Rendezvények böngészése",
+  "dash.tickets_count":"érvényes jegy",
 
   // Consumer events list (Buy tab — mirrors mobile)
   "events.title":         "Jegyvásárlás",

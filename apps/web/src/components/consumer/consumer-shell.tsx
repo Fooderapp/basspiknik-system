@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Ticket, ShoppingCart, Wine, User, type LucideIcon } from "lucide-react";
+import { Home, ShoppingCart, Wine, User, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Dictionary } from "@/lib/i18n";
 import { t } from "@/lib/i18n";
@@ -15,13 +15,12 @@ interface NavItem {
   match: string[];
 }
 
-// Order + items mirror the mobile NativeTabs bar exactly:
-// Tickets · Buy · Bar · Profile
+// Home (dashboard) · Buy · Bar · Profile. My Tickets is reached from Home.
 const NAV: NavItem[] = [
-  { href: "/my-tickets", icon: Ticket,       key: "nav.tickets", match: ["/my-tickets"] },
-  { href: "/events",     icon: ShoppingCart, key: "nav.buy",     match: ["/events"] },
-  { href: "/menu",       icon: Wine,         key: "nav.bar",     match: ["/menu"] },
-  { href: "/profile",    icon: User,         key: "nav.profile", match: ["/profile"] },
+  { href: "/home",    icon: Home,         key: "nav.home",    match: ["/home", "/my-tickets", "/tickets"] },
+  { href: "/events",  icon: ShoppingCart, key: "nav.buy",     match: ["/events"] },
+  { href: "/menu",    icon: Wine,         key: "nav.bar",     match: ["/menu"] },
+  { href: "/profile", icon: User,         key: "nav.profile", match: ["/profile"] },
 ];
 
 function isActive(pathname: string, item: NavItem) {
@@ -42,7 +41,7 @@ export function ConsumerShell({
       {/* ── Desktop sidebar (md+) ───────────────────────────────────────────── */}
       <aside className="hidden md:flex fixed inset-y-0 left-0 z-40 w-60 flex-col border-r border-border bg-card">
         <Link href="/" className="flex h-16 items-center gap-2 px-6 font-bold text-lg tracking-tight">
-          <Ticket className="h-5 w-5" />
+          <Home className="h-5 w-5" />
           BassPiknik
         </Link>
         <nav className="flex-1 px-3 py-4 space-y-1">
