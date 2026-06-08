@@ -8,51 +8,49 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // ── Monochrome design system ───────────────────────────────────────
-        // Pure black/white. No accent hues. Hierarchy via tone + borders.
+        // ── Green-tinted design system (shared with web) ────────────────────
+        // Bright Green #9FE870 = primary accent · Forest Green #163300 surfaces
 
-        // Primary = high-contrast white on black (inverted emphasis)
+        // Primary = bright green with deep forest ink
         primary: {
-          DEFAULT: "#ffffff",
-          foreground: "#000000",
+          DEFAULT: "#9fe870",
+          foreground: "#0a1305",
         },
         // ── Surfaces ───────────────────────────────────────────────────────
-        background: "#000000",
-        foreground: "#fafafa",
+        background: "#070d05",
+        foreground: "#eef6e6",
         card: {
-          DEFAULT: "#0a0a0a",
-          foreground: "#fafafa",
+          DEFAULT: "#122d0a",
+          foreground: "#eef6e6",
         },
         // ── Muted ──────────────────────────────────────────────────────────
         muted: {
-          DEFAULT: "#171717",
-          foreground: "#8f8f8f",
+          DEFAULT: "#1c2717",
+          foreground: "#8da383",
         },
-        // ── Semantic (mono) ────────────────────────────────────────────────
-        border: "#262626",
-        input: "#262626",
-        ring: "#ffffff",
+        // ── Semantic ───────────────────────────────────────────────────────
+        border: "#25341e",
+        input: "#25341e",
+        ring: "#9fe870",
         secondary: {
-          DEFAULT: "#171717",
-          foreground: "#fafafa",
+          DEFAULT: "#1a2815",
+          foreground: "#eef6e6",
         },
         accent: {
-          DEFAULT: "#1f1f1f",
-          foreground: "#fafafa",
+          DEFAULT: "#263919",
+          foreground: "#eef6e6",
         },
-        // Destructive/success/warning kept mono so existing classes stay B&W.
-        // Meaning is carried by icons + copy, not colour.
         destructive: {
-          DEFAULT: "#fafafa",
-          foreground: "#000000",
+          DEFAULT: "#d23f3f",
+          foreground: "#ffffff",
         },
         success: {
-          DEFAULT: "#fafafa",
-          foreground: "#000000",
+          DEFAULT: "#9fe870",
+          foreground: "#0a1305",
         },
         warning: {
-          DEFAULT: "#171717",
-          foreground: "#fafafa",
+          DEFAULT: "#f59e0b",
+          foreground: "#000000",
         },
       },
     },
