@@ -22,6 +22,7 @@ const buttonVariants = cva(
         secondary:   "bg-secondary border border-border",
         ghost:       "bg-transparent",
         success:     "bg-success",
+        brand:       "bg-brand",
       },
       size: {
         default: "h-12 px-5",
@@ -43,6 +44,7 @@ const buttonTextVariants = cva("font-semibold tracking-tight", {
       secondary:   "text-secondary-foreground",
       ghost:       "text-foreground",
       success:     "text-success-foreground",
+      brand:       "text-brand-foreground",
     },
     size: {
       default: "text-base",
