@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { sendTicketConfirmation } from "@/lib/email";
 import { getSettings, type Currency } from "@/lib/settings";
+import { createBillingoInvoice, type BillingoLineItem } from "@/lib/billingo";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -138,7 +139,53 @@ export async function fulfillTicketOrder(input: FulfillInput): Promise<FulfillRe
     });
   }
 
-  await supabase.from("invoices").insert({ order_id: order.id, number: `INV-${Date.now()}` });
+  // ── Invoice — real Billingo e-invoice when configured, else local number ──
+  {
+    const appSettingsForInvoice = await getSettings();
+    const invoiceItems: BillingoLineItem[] = input.items
+      .map((item) => {
+        const tt = dbEvent.ticket_types.find((t: any) => t.id === item.ticketTypeId);
+        if (!tt) return null;
+        const unitPrice = tt.sale_enabled && tt.sale_price != null ? tt.sale_price : tt.price;
+        return { name: `${dbEvent.name} — ${tt.name}`, unitPrice, quantity: item.quantity };
+      })
+      .filter((x): x is BillingoLineItem => x !== null && x.unitPrice > 0);
+
+    // Billing details: registered buyer's profile, else guest.
+    let billing: any = null;
+    if (input.userId) {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("billing_name, billing_address, billing_city, billing_postal_code, billing_country, name, email")
+        .eq("id", input.userId)
+        .single();
+      billing = prof;
+    }
+
+    let billingoResult = null;
+    if (invoiceItems.length > 0) {
+      billingoResult = await createBillingoInvoice({
+        buyer: {
+          name: billing?.billing_name || buyerName,
+          email: buyerEmail,
+          countryCode: billing?.billing_country || "HU",
+          postCode: billing?.billing_postal_code || null,
+          city: billing?.billing_city || null,
+          address: billing?.billing_address || null,
+        },
+        items: invoiceItems,
+        currency: input.currency,
+        language: appSettingsForInvoice.language === "hu" ? "hu" : "en",
+        paid: true,
+      });
+    }
+
+    await supabase.from("invoices").insert({
+      order_id: order.id,
+      number: billingoResult?.number ?? `INV-${Date.now()}`,
+      pdf_url: billingoResult?.pdfUrl ?? null,
+    });
+  }
 
   if (input.promoCodeId) {
     await supabase.rpc("increment_promo_used", { p_promo_id: input.promoCodeId });
