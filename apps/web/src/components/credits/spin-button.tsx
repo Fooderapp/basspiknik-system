@@ -59,9 +59,10 @@ export function SpinButton({ context, eventId, items = [], dict, onWin, disabled
     return () => clearInterval(iv);
   }, [phase]);
 
-  // Mirror mobile: the lucky-roll banner only appears when credits are enabled
-  // AND the user can actually afford a spin.
-  if (!enabled || balance < spinCost) return null;
+  // Show the banner whenever the credit feature is enabled (logged-in user).
+  // When the balance is short, it renders disabled with a "need credits" hint
+  // rather than disappearing — keeps the Lucky Roll discoverable.
+  if (!enabled) return null;
 
   const canSpin = balance >= spinCost && !disabled;
 
@@ -113,7 +114,11 @@ export function SpinButton({ context, eventId, items = [], dict, onWin, disabled
         <span className="flex items-center gap-2 text-left">
           <Sparkles className="h-4 w-4 shrink-0" style={{ color: "#f59e0b" }} strokeWidth={2} />
           <span className="text-sm font-semibold" style={{ color: "#f59e0b" }}>
-            {context === "DRINK" ? dict["credits.roll_cta_drink"] : dict["credits.roll_cta"]}
+            {!canSpin
+              ? `${dict["credits.need"]} ${spinCost} ${dict["credits.balance"]}`
+              : context === "DRINK"
+              ? dict["credits.roll_cta_drink"]
+              : dict["credits.roll_cta"]}
           </span>
           <span className="hidden text-xs text-muted-foreground sm:inline">
             {dict["credits.costs"]} {spinCost} {dict["credits.balance"]}
