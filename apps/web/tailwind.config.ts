@@ -15,12 +15,16 @@ const config: Config = {
     },
     extend: {
       colors: {
-        // Brand greens — accents only (not button fills)
+        // Brand accents
         brand: {
-          DEFAULT: "#9FE870", // bright green
+          DEFAULT: "#9FE870", // bright green — positive status
           foreground: "#0a1305",
         },
         forest: "#163300", // forest green surface
+        gold: {
+          DEFAULT: "#EBE05A", // CTA / pills / slider thumb
+          foreground: "#323000",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

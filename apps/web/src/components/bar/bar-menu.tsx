@@ -336,7 +336,7 @@ export function BarMenu({ drinks, categories, dict, currency }: Props) {
           onClick={() => setActiveCategory("ALL")}
           className={`shrink-0 px-3 py-1.5 rounded-full text-[13px] whitespace-nowrap border transition-colors ${
             activeCategory === "ALL"
-              ? "bg-[#0A0A0A] text-white border-transparent font-semibold"
+              ? "bg-gold text-gold-foreground border-transparent font-semibold"
               : "bg-card border-border text-muted-foreground font-medium"
           }`}
         >
@@ -352,8 +352,8 @@ export function BarMenu({ drinks, categories, dict, currency }: Props) {
               className="shrink-0 px-3 py-1.5 rounded-full text-[13px] whitespace-nowrap flex items-center gap-1.5 border transition-colors"
               style={
                 active
-                  ? { backgroundColor: color, borderColor: "transparent", color: "#fff", fontWeight: 600 }
-                  : { backgroundColor: "#0a0a0a", borderColor: color + "55", color, fontWeight: 500 }
+                  ? { backgroundColor: "#EBE05A", borderColor: "transparent", color: "#323000", fontWeight: 600 }
+                  : { backgroundColor: "#1f1f1f", borderColor: color + "55", color, fontWeight: 500 }
               }
             >
               {tab.emoji && <span>{tab.emoji}</span>}
@@ -407,7 +407,7 @@ export function BarMenu({ drinks, categories, dict, currency }: Props) {
                     {qty === 0 ? (
                       <button
                         onClick={() => addToCart(drink)}
-                        className="flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground active:scale-95 transition-transform"
+                        className="flex items-center gap-1.5 rounded-xl bg-gold px-4 py-2.5 text-sm font-semibold text-gold-foreground active:scale-95 transition-transform"
                       >
                         <Plus className="h-[15px] w-[15px]" strokeWidth={2.25} />
                         {t("menu.add")}
@@ -435,9 +435,9 @@ export function BarMenu({ drinks, categories, dict, currency }: Props) {
       {cartCount > 0 && (
         <button
           onClick={() => setCartOpen(true)}
-          className="fixed left-4 right-4 bottom-24 md:bottom-6 z-40 mx-auto flex max-w-md items-center rounded-[18px] bg-brand px-[18px] py-[14px] text-brand-foreground shadow-[0_8px_24px_rgba(0,0,0,0.45)] active:scale-[0.98] transition-transform"
+          className="fixed left-4 right-4 bottom-24 md:bottom-6 z-40 mx-auto flex max-w-md items-center rounded-[18px] bg-gold px-[18px] py-[14px] text-gold-foreground shadow-[0_8px_24px_rgba(0,0,0,0.45)] active:scale-[0.98] transition-transform"
         >
-          <span className="flex h-[30px] w-[30px] items-center justify-center rounded-[9px] bg-[#0a1305] text-sm font-bold text-white">
+          <span className="flex h-[30px] w-[30px] items-center justify-center rounded-[9px] bg-[#323000] text-sm font-bold text-gold">
             {cartCount}
           </span>
           <span className="ml-3 flex flex-1 items-center gap-2">

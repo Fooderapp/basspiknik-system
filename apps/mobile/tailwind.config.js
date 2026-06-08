@@ -8,43 +8,47 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // ── Monochrome base + green accent (shared with web) ────────────────
-        // Surfaces black/white. Buttons dark grey. Greens = accents only.
+        // ── Deep dark-grey base · gold CTA · green status (shared w/ web) ────
+        // 60 dark grey · 30 secondary grey · 10 accent (gold + green)
 
-        // Brand greens — accents (badges, active state, highlights)
+        // Brand accents
         brand: {
-          DEFAULT: "#9fe870", // bright green
+          DEFAULT: "#9fe870", // bright green — positive status
           foreground: "#0a1305",
         },
         forest: "#163300", // forest green surface
-        // Primary = dark grey buttons
+        gold: {
+          DEFAULT: "#EBE05A", // CTA / pills / slider thumb
+          foreground: "#323000",
+        },
+        // Primary = gold CTA
         primary: {
-          DEFAULT: "#3a3a3a",
-          foreground: "#fafafa",
+          DEFAULT: "#EBE05A",
+          foreground: "#323000",
         },
-        // ── Surfaces (mono) ──────────────────────────────────────────────────
-        background: "#000000",
-        foreground: "#fafafa",
+        // ── Surfaces (deep dark grey) ─────────────────────────────────────────
+        background: "#141414",
+        foreground: "#f5f5f5",
         card: {
-          DEFAULT: "#0a0a0a",
-          foreground: "#fafafa",
+          DEFAULT: "#1f1f1f",
+          foreground: "#f5f5f5",
         },
-        // ── Muted (mono) ─────────────────────────────────────────────────────
+        // ── Muted ────────────────────────────────────────────────────────────
         muted: {
-          DEFAULT: "#171717",
-          foreground: "#8f8f8f",
+          DEFAULT: "#262626",
+          foreground: "#9a9a9a",
         },
         // ── Semantic ───────────────────────────────────────────────────────
-        border: "#262626",
-        input: "#262626",
-        ring: "#9fe870",
+        border: "#303030",
+        input: "#303030",
+        ring: "#EBE05A",
         secondary: {
-          DEFAULT: "#171717",
-          foreground: "#fafafa",
+          DEFAULT: "#2b2b2b",
+          foreground: "#f5f5f5",
         },
         accent: {
-          DEFAULT: "#1f1f1f",
-          foreground: "#fafafa",
+          DEFAULT: "#303030",
+          foreground: "#f5f5f5",
         },
         destructive: {
           DEFAULT: "#d23f3f",

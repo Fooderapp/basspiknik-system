@@ -45,8 +45,8 @@ export function SlideToConfirm({
   onConfirm,
   disabled = false,
   lockOnConfirm = true,
-  color = "#22c55e",
-  onColor = "#000000",
+  color = "#EBE05A",
+  onColor = "#323000",
   icon,
 }: SlideToConfirmProps) {
   const [trackW, setTrackW] = useState(0);

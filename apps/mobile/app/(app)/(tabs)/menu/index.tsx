@@ -190,10 +190,10 @@ export default function MenuScreen() {
                 {qty === 0 ? (
                   <PressableScale
                     onPress={() => addToCart(drink)}
-                    className="flex-row items-center gap-1.5 bg-brand rounded-xl px-4 py-2.5"
+                    className="flex-row items-center gap-1.5 bg-gold rounded-xl px-4 py-2.5"
                   >
-                    <Plus size={15} color="#0a1305" strokeWidth={2.25} />
-                    <Text className="text-brand-foreground font-semibold text-sm">Add</Text>
+                    <Plus size={15} color="#323000" strokeWidth={2.25} />
+                    <Text className="text-gold-foreground font-semibold text-sm">Add</Text>
                   </PressableScale>
                 ) : (
                   <View className="flex-row items-center gap-4 bg-secondary border border-border rounded-xl px-4 py-2">
@@ -315,7 +315,7 @@ function CartBar({
         style={{
           flexDirection: "row",
           alignItems: "center",
-          backgroundColor: "#9fe870",
+          backgroundColor: "#EBE05A",
           borderRadius: 18,
           paddingVertical: 14,
           paddingHorizontal: 18,
