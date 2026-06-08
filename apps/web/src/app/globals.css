@@ -3,63 +3,63 @@
 @tailwind utilities;
 
 @layer base {
-  /* ── Green-tinted design system (shared with mobile app) ─────────────── */
-  /* Bright Green #9FE870 = primary accent · Forest Green #163300 = surfaces */
-  /* Light theme: pale green surfaces, deep forest ink. */
+  /* ── Monochrome base + green accent (shared with mobile app) ─────────── */
+  /* Surfaces black/white. Bright Green #9FE870 used as the accent only. */
+  /* Light theme: white surfaces, black ink, green accent. */
   :root {
-    --background: 96 40% 99%;
-    --foreground: 100 45% 7%;
-    --card: 96 40% 99%;
-    --card-foreground: 100 45% 7%;
-    --popover: 96 40% 99%;
-    --popover-foreground: 100 45% 7%;
-    --primary: 96 60% 42%;
-    --primary-foreground: 96 50% 98%;
-    --secondary: 96 30% 94%;
-    --secondary-foreground: 100 45% 10%;
-    --muted: 96 30% 94%;
-    --muted-foreground: 100 12% 40%;
-    --accent: 96 45% 90%;
-    --accent-foreground: 100 45% 10%;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 4%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 4%;
+    --primary: 96 55% 38%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 0 0% 95%;
+    --accent-foreground: 0 0% 9%;
     --destructive: 0 70% 45%;
     --destructive-foreground: 0 0% 98%;
-    --border: 96 25% 86%;
-    --input: 96 25% 86%;
-    --ring: 96 60% 42%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 96 55% 38%;
     --radius: 0.5rem;
-    --chart-1: 96 72% 35%;
-    --chart-2: 96 60% 48%;
-    --chart-3: 96 55% 60%;
-    --chart-4: 96 45% 72%;
-    --chart-5: 96 40% 84%;
+    --chart-1: 96 60% 40%;
+    --chart-2: 0 0% 35%;
+    --chart-3: 0 0% 50%;
+    --chart-4: 0 0% 65%;
+    --chart-5: 0 0% 80%;
   }
 
-  /* Dark theme: deep green-black base, forest surfaces, bright-green accent. */
+  /* Dark theme: pure black surfaces, white ink, bright-green accent. */
   .dark {
-    --background: 100 30% 4%;
-    --foreground: 96 40% 94%;
-    --card: 94 65% 8%;
-    --card-foreground: 96 40% 94%;
-    --popover: 94 65% 8%;
-    --popover-foreground: 96 40% 94%;
+    --background: 0 0% 0%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 4%;
+    --popover-foreground: 0 0% 98%;
     --primary: 96 72% 67%;
-    --primary-foreground: 100 40% 6%;
-    --secondary: 96 30% 12%;
-    --secondary-foreground: 96 40% 94%;
-    --muted: 96 25% 12%;
-    --muted-foreground: 100 14% 60%;
-    --accent: 96 40% 16%;
-    --accent-foreground: 96 40% 94%;
+    --primary-foreground: 0 0% 4%;
+    --secondary: 0 0% 9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 9%;
+    --muted-foreground: 0 0% 56%;
+    --accent: 0 0% 12%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 65% 48%;
     --destructive-foreground: 0 0% 98%;
-    --border: 96 25% 16%;
-    --input: 96 25% 16%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
     --ring: 96 72% 67%;
     --chart-1: 96 72% 67%;
-    --chart-2: 96 60% 55%;
-    --chart-3: 96 55% 44%;
-    --chart-4: 96 50% 32%;
-    --chart-5: 96 45% 22%;
+    --chart-2: 0 0% 72%;
+    --chart-3: 0 0% 56%;
+    --chart-4: 0 0% 40%;
+    --chart-5: 0 0% 28%;
   }
 }
 

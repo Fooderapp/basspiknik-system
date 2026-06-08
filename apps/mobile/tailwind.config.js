@@ -8,37 +8,37 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // ── Green-tinted design system (shared with web) ────────────────────
-        // Bright Green #9FE870 = primary accent · Forest Green #163300 surfaces
+        // ── Monochrome base + green accent (shared with web) ────────────────
+        // Surfaces black/white. Bright Green #9FE870 used as the accent only.
 
-        // Primary = bright green with deep forest ink
+        // Primary = bright green accent on near-black ink
         primary: {
           DEFAULT: "#9fe870",
           foreground: "#0a1305",
         },
-        // ── Surfaces ───────────────────────────────────────────────────────
-        background: "#070d05",
-        foreground: "#eef6e6",
+        // ── Surfaces (mono) ──────────────────────────────────────────────────
+        background: "#000000",
+        foreground: "#fafafa",
         card: {
-          DEFAULT: "#122d0a",
-          foreground: "#eef6e6",
+          DEFAULT: "#0a0a0a",
+          foreground: "#fafafa",
         },
-        // ── Muted ──────────────────────────────────────────────────────────
+        // ── Muted (mono) ─────────────────────────────────────────────────────
         muted: {
-          DEFAULT: "#1c2717",
-          foreground: "#8da383",
+          DEFAULT: "#171717",
+          foreground: "#8f8f8f",
         },
         // ── Semantic ───────────────────────────────────────────────────────
-        border: "#25341e",
-        input: "#25341e",
+        border: "#262626",
+        input: "#262626",
         ring: "#9fe870",
         secondary: {
-          DEFAULT: "#1a2815",
-          foreground: "#eef6e6",
+          DEFAULT: "#171717",
+          foreground: "#fafafa",
         },
         accent: {
-          DEFAULT: "#263919",
-          foreground: "#eef6e6",
+          DEFAULT: "#1f1f1f",
+          foreground: "#fafafa",
         },
         destructive: {
           DEFAULT: "#d23f3f",
