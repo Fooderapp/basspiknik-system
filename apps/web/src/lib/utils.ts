@@ -27,8 +27,10 @@ export function slugify(text: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+/** Stripe fee for ONE card charge: 1.5% + 25 (HUF) fixed. */
 export function stripeFee(amount: number): number {
-  return Math.round((amount * 0.029 + 0.3) * 100) / 100;
+  if (amount <= 0) return 0;
+  return Math.round((amount * 0.015 + 25) * 100) / 100;
 }
 
 export function estimatedPayout(gross: number, refunds = 0): number {
