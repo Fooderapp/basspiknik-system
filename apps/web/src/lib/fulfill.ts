@@ -140,7 +140,8 @@ export async function fulfillTicketOrder(input: FulfillInput): Promise<FulfillRe
   }
 
   // ── Invoice — real Billingo e-invoice when configured, else local number ──
-  {
+  // RULE: only invoice real paid orders. Never invoice free (spin-won) tickets.
+  if (input.total > 0) {
     const appSettingsForInvoice = await getSettings();
     const invoiceItems: BillingoLineItem[] = input.items
       .map((item) => {
