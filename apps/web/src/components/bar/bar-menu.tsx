@@ -242,10 +242,10 @@ export function BarMenu({ drinks, categories, dict, currency }: Props) {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 gap-6 max-w-sm mx-auto">
         {/* Status icon */}
         <div className={`rounded-full p-5 ${
-          isFulfilled  ? "bg-primary"
+          isFulfilled  ? "bg-brand"
           : "bg-muted"
         }`}>
-          {isFulfilled  ? <CheckCircle2 className="h-12 w-12 text-primary-foreground" />
+          {isFulfilled  ? <CheckCircle2 className="h-12 w-12 text-brand-foreground" />
           : isCancelled ? <X className="h-12 w-12 text-muted-foreground" />
           : isInProgress ? <Loader2 className="h-12 w-12 text-foreground animate-spin" />
           : <Clock className="h-12 w-12 text-foreground" />}
@@ -437,7 +437,7 @@ export function BarMenu({ drinks, categories, dict, currency }: Props) {
           onClick={() => setCartOpen(true)}
           className="fixed left-4 right-4 bottom-24 md:bottom-6 z-40 mx-auto flex max-w-md items-center rounded-[18px] bg-primary px-[18px] py-[14px] text-primary-foreground shadow-[0_8px_24px_rgba(0,0,0,0.45)] active:scale-[0.98] transition-transform"
         >
-          <span className="flex h-[30px] w-[30px] items-center justify-center rounded-[9px] bg-[#0a0a0a] text-sm font-bold text-primary">
+          <span className="flex h-[30px] w-[30px] items-center justify-center rounded-[9px] bg-[#0a0a0a] text-sm font-bold text-brand">
             {cartCount}
           </span>
           <span className="ml-3 flex flex-1 items-center gap-2">

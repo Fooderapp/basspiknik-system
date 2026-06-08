@@ -9,12 +9,18 @@ module.exports = {
     extend: {
       colors: {
         // ── Monochrome base + green accent (shared with web) ────────────────
-        // Surfaces black/white. Bright Green #9FE870 used as the accent only.
+        // Surfaces black/white. Buttons dark grey. Greens = accents only.
 
-        // Primary = bright green accent on near-black ink
-        primary: {
-          DEFAULT: "#9fe870",
+        // Brand greens — accents (badges, active state, highlights)
+        brand: {
+          DEFAULT: "#9fe870", // bright green
           foreground: "#0a1305",
+        },
+        forest: "#163300", // forest green surface
+        // Primary = dark grey buttons
+        primary: {
+          DEFAULT: "#3a3a3a",
+          foreground: "#fafafa",
         },
         // ── Surfaces (mono) ──────────────────────────────────────────────────
         background: "#000000",

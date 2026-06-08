@@ -56,7 +56,7 @@ export function ConsumerShell({
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                   active
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-secondary text-brand"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >
@@ -95,14 +95,14 @@ export function ConsumerShell({
                   href={item.href}
                   className={cn(
                     "group relative flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
-                    active ? "text-primary" : "text-muted-foreground",
+                    active ? "text-brand" : "text-muted-foreground",
                   )}
                 >
                   {/* active glass highlight */}
                   <span
                     className={cn(
                       "absolute inset-x-2 inset-y-1.5 rounded-2xl transition-opacity",
-                      active ? "opacity-100 bg-primary/15 border border-primary/30" : "opacity-0",
+                      active ? "opacity-100 bg-brand/15 border border-brand/30" : "opacity-0",
                     )}
                   />
                   <Icon className="relative h-[21px] w-[21px]" strokeWidth={active ? 2.25 : 1.75} />

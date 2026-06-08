@@ -15,6 +15,12 @@ const config: Config = {
     },
     extend: {
       colors: {
+        // Brand greens — accents only (not button fills)
+        brand: {
+          DEFAULT: "#9FE870", // bright green
+          foreground: "#0a1305",
+        },
+        forest: "#163300", // forest green surface
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
