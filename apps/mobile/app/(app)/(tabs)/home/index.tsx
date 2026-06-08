@@ -1,11 +1,10 @@
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Dimensions, Image, NativeScrollEvent, NativeSyntheticEvent, RefreshControl, ScrollView, View } from "react-native";
+import { ActivityIndicator, Dimensions, Image, Linking, NativeScrollEvent, NativeSyntheticEvent, Platform, RefreshControl, ScrollView, TouchableOpacity, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
-import { CalendarDays, MapPin, Star, Plus, ShoppingBag, Wine, Sparkles, QrCode, type LucideIcon } from "lucide-react-native";
+import { CalendarDays, MapPin, Star, ShoppingBag, Wine, Sparkles, QrCode, type LucideIcon } from "lucide-react-native";
 import { Screen } from "@/components/ui/Screen";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/Button";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { Text } from "@/components/ui/text";
 import { QRImage } from "@/components/ui/QRImage";
@@ -166,6 +165,23 @@ export default function HomeScreen() {
                             </View>
                           </View>
                         </View>
+
+                        {/* Wallet button */}
+                        <TouchableOpacity
+                          activeOpacity={0.75}
+                          onPress={() => {
+                            const base = process.env.EXPO_PUBLIC_APP_URL ?? "";
+                            const endpoint = Platform.OS === "ios"
+                              ? `${base}/api/tickets/${tk.id}/pass`
+                              : `${base}/api/tickets/${tk.id}/google-wallet`;
+                            Linking.openURL(endpoint);
+                          }}
+                          style={{ marginTop: 14, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderWidth: 1, borderColor: "rgba(255,255,255,0.1)", borderRadius: 12, paddingVertical: 10, backgroundColor: "rgba(255,255,255,0.04)" }}
+                        >
+                          <Text style={{ fontSize: 13, fontWeight: "600", color: "#f5f5f5" }}>
+                            {Platform.OS === "ios" ? "Add to Apple Wallet" : "Add to Google Wallet"}
+                          </Text>
+                        </TouchableOpacity>
                       </View>
                       <View style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 4, backgroundColor: STATUS[tk.status] ?? "#6b7280" }} />
                     </Card>
@@ -182,17 +198,12 @@ export default function HomeScreen() {
               </View>
             )}
 
-            <View className="px-5 mt-4">
-              <Button variant="outline" onPress={() => router.push("/(app)/buy" as never)} icon={<Plus size={16} color="#f5f5f5" strokeWidth={2} />}>
-                <Text>Browse events</Text>
-              </Button>
-            </View>
           </>
         )}
 
         {/* Recent activity */}
         {acts.length > 0 && (
-          <View className="px-5 mt-8">
+          <View className="px-5 mt-10">
             <Text className="text-foreground text-lg font-bold tracking-tight mb-3">Recent activity</Text>
             <Card className="p-0 overflow-hidden">
               {acts.map((a, i) => {

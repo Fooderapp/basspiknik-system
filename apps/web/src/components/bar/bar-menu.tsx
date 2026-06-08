@@ -322,10 +322,10 @@ export function BarMenu({ drinks, categories, dict, currency }: Props) {
   // ─────────────────────────────────────────────────────────────────────────────
   // Main menu
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background">
 
       {/* Header — mobile app parity */}
-      <div className="mx-auto w-full max-w-4xl px-5 pt-4 pb-2">
+      <div className="mx-auto w-full max-w-4xl px-5 pt-1 pb-2">
         <h1 className="text-2xl font-bold tracking-tight">{t("menu.title")}</h1>
         <p className="text-sm text-muted-foreground">{drinks.length} {t("menu.items_available")}</p>
       </div>

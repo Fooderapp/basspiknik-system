@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { formatDate, formatCurrency } from "@/lib/utils";
-import { Ticket as TicketIcon, Star, Plus, ShoppingBag, Wine, Sparkles } from "lucide-react";
+import { Ticket as TicketIcon, Star, ShoppingBag, Wine, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TicketWallet, type WalletTicket } from "@/components/consumer/ticket-wallet";
 import { getSettings } from "@/lib/settings";
@@ -178,15 +178,9 @@ export default async function HomePage() {
         />
       )}
 
-      {walletTickets.length > 0 && (
-        <Button asChild variant="outline" className="mt-4 w-full gap-2">
-          <Link href="/events"><Plus className="h-4 w-4" />{t(dict, "dash.browse")}</Link>
-        </Button>
-      )}
-
       {/* Recent activity */}
       {recent.length > 0 && (
-        <div className="mt-8">
+        <div className="mt-10">
           <h2 className="mb-3 text-lg font-bold tracking-tight">{t(dict, "dash.activity")}</h2>
           <div className="overflow-hidden rounded-xl border border-border bg-card">
             {recent.map((a, i) => {

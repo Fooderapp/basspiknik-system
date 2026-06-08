@@ -103,7 +103,7 @@ export default function MenuScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-background items-center justify-center">
-        <ActivityIndicator size="large" color="#fafafa" />
+        <ActivityIndicator size="large" color="#EBE05A" />
       </View>
     );
   }
@@ -125,10 +125,10 @@ export default function MenuScreen() {
       >
         <Pressable
           onPress={() => setActiveCat("ALL")}
-          style={activeCat === "ALL" ? { backgroundColor: "#0A0A0A" } : undefined}
+          style={activeCat === "ALL" ? { backgroundColor: "#EBE05A" } : undefined}
           className={`px-3 py-1.5 rounded-full flex-row items-center ${activeCat === "ALL" ? "" : "bg-card border border-border"}`}
         >
-          <Text style={activeCat === "ALL" ? { color: "#fff", fontWeight: "600", fontSize: 13 } : { fontSize: 13 }}
+          <Text style={activeCat === "ALL" ? { color: "#323000", fontWeight: "600", fontSize: 13 } : { fontSize: 13 }}
             className={activeCat === "ALL" ? "" : "text-muted-foreground"}>
             All
           </Text>
@@ -139,11 +139,11 @@ export default function MenuScreen() {
             <Pressable
               key={c.id}
               onPress={() => setActiveCat(c.id)}
-              style={active ? { backgroundColor: c.color } : { borderColor: c.color + "55" }}
+              style={active ? { backgroundColor: "#EBE05A" } : { borderColor: c.color + "55" }}
               className={`px-3 py-1.5 rounded-full flex-row items-center gap-1.5 ${active ? "" : "bg-card border"}`}
             >
-              <Text style={{ fontSize: 13 }}>{c.emoji}</Text>
-              <Text style={active ? { color: "#fff", fontWeight: "600", fontSize: 13 } : { color: c.color, fontWeight: "500", fontSize: 13 }}>
+              {c.emoji ? <Text style={{ fontSize: 13 }}>{c.emoji}</Text> : null}
+              <Text style={active ? { color: "#323000", fontWeight: "600", fontSize: 13 } : { color: c.color, fontWeight: "500", fontSize: 13 }}>
                 {c.name}
               </Text>
             </Pressable>
