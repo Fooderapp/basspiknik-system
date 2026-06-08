@@ -6,9 +6,9 @@ import { NativeTabs } from "expo-router/unstable-native-tabs";
 export default function TabsLayout() {
   return (
     <NativeTabs tintColor="#EBE05A">
-      <NativeTabs.Trigger name="tickets">
-        <NativeTabs.Trigger.Label>Tickets</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf={{ default: "ticket", selected: "ticket.fill" }} drawable="ic_menu_gallery" />
+      <NativeTabs.Trigger name="home">
+        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={{ default: "house", selected: "house.fill" }} drawable="ic_menu_home" />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="buy">

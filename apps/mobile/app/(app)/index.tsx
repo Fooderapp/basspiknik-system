@@ -1,19 +1,19 @@
 import { Redirect } from "expo-router";
+import { View, ActivityIndicator } from "react-native";
 import { useAuth } from "@/context/auth";
-import type { UserRole } from "@/lib/types";
 
-// Route each role to their primary screen
-function homeRoute(role: UserRole): string {
-  switch (role) {
-    case "BARTENDER": return "/(app)/bartender";
-    case "SELLER":    return "/(app)/seller";
-    case "STAFF":     return "/(app)/checkin";
-    default:          return "/(app)/home";
-  }
-}
-
+// Everyone lands in the tab UI. Staff reach POS / Check-in / Bartender from the
+// role-gated section inside the Profile tab.
 export default function AppIndex() {
-  const { profile } = useAuth();
-  if (!profile) return null;
-  return <Redirect href={homeRoute(profile.role) as never} />;
+  const { profile, loading } = useAuth();
+
+  if (loading || !profile) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator size="large" color="#fafafa" />
+      </View>
+    );
+  }
+
+  return <Redirect href={"/(app)/home" as never} />;
 }
