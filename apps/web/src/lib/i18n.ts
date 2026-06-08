@@ -404,6 +404,9 @@ const en = {
   "credits.close":          "Close",
   "credits.not_eligible":   "Your cart isn't eligible for a spin",
   "credits.earn_hint":      "Earn credits with every purchase.",
+  "credits.roll_cta":       "Roll the dice — win free tickets!",
+  "credits.roll_cta_drink": "Roll the dice — win a free drink!",
+  "credits.costs":          "costs",
 };
 
 const hu: typeof en = {
@@ -808,6 +811,9 @@ const hu: typeof en = {
   "credits.close":          "Bezárás",
   "credits.not_eligible":   "A kosarad nem jogosult pörgetésre",
   "credits.earn_hint":      "Minden vásárlással kreditet gyűjtesz.",
+  "credits.roll_cta":       "Dobd a kockát — nyerj ingyen jegyet!",
+  "credits.roll_cta_drink": "Dobd a kockát — nyerj egy italt!",
+  "credits.costs":          "ára",
 };
 
 // ─── Public API ───────────────────────────────────────────────────────────────

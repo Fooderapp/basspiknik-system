@@ -128,12 +128,12 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
         const qty = quantities[ticket.id] ?? 0;
         const soldOut = ticket.available === 0;
         return (
-          <div key={ticket.id} className="rounded-lg border p-4">
-            <div className="flex items-start justify-between gap-4">
+          <div key={ticket.id} className="rounded-xl border bg-card p-4">
+            <div className="flex items-start justify-between gap-3">
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-1.5 mb-1">
-                  <span className="font-medium">{ticket.name}</span>
-                  <Badge variant="outline" className="text-xs">{ticket.tier}</Badge>
+                  <span className="font-semibold tracking-tight">{ticket.name}</span>
+                  <Badge variant="secondary" className="text-xs">{ticket.tier}</Badge>
                   {ticket.isBundle && (
                     <Badge variant="secondary" className="text-xs">
                       {dict["ticket.bundle"]} ×{ticket.bundleSize}
@@ -156,39 +156,32 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
                 {ticket.description && (
                   <p className="text-sm text-muted-foreground">{ticket.description}</p>
                 )}
-                <p className="text-sm text-muted-foreground mt-1">
-                  {ticket.available} {dict["ticket.per_person"]}
+                <p className="mt-1 font-semibold">
+                  {ticket.price === 0 ? dict["ticket.free"] : fmt(effectivePrice(ticket))}
+                  {ticket.saleEnabled && ticket.salePrice != null && (
+                    <span className="ml-2 text-xs font-normal text-muted-foreground line-through">{fmt(ticket.price)}</span>
+                  )}
                 </p>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <span className="font-semibold text-lg">
-                    {ticket.price === 0 ? dict["ticket.free"] : fmt(effectivePrice(ticket))}
-                  </span>
-                  {ticket.saleEnabled && ticket.salePrice != null && (
-                    <p className="text-xs text-muted-foreground line-through">{fmt(ticket.price)}</p>
-                  )}
+              {!soldOut && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline" size="icon" className="h-8 w-8"
+                    onClick={() => updateQty(ticket.id, -1, Math.min(ticket.available, ticket.maxPerOrder))}
+                    disabled={qty === 0}
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  <span className="w-5 text-center text-sm font-medium">{qty}</span>
+                  <Button
+                    variant="outline" size="icon" className="h-8 w-8"
+                    onClick={() => updateQty(ticket.id, 1, Math.min(ticket.available, ticket.maxPerOrder))}
+                    disabled={qty >= Math.min(ticket.available, ticket.maxPerOrder)}
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
                 </div>
-                {!soldOut && (
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline" size="icon" className="h-8 w-8"
-                      onClick={() => updateQty(ticket.id, -1, Math.min(ticket.available, ticket.maxPerOrder))}
-                      disabled={qty === 0}
-                    >
-                      <Minus className="h-3 w-3" />
-                    </Button>
-                    <span className="w-6 text-center text-sm font-medium">{qty}</span>
-                    <Button
-                      variant="outline" size="icon" className="h-8 w-8"
-                      onClick={() => updateQty(ticket.id, 1, Math.min(ticket.available, ticket.maxPerOrder))}
-                      disabled={qty >= Math.min(ticket.available, ticket.maxPerOrder)}
-                    >
-                      <Plus className="h-3 w-3" />
-                    </Button>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           </div>
         );

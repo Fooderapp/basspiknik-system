@@ -60,7 +60,9 @@ export function SpinButton({ context, eventId, items = [], dict, onWin, disabled
     return () => clearInterval(iv);
   }, [phase]);
 
-  if (!enabled) return null;
+  // Mirror mobile: the lucky-roll banner only appears when credits are enabled
+  // AND the user can actually afford a spin.
+  if (!enabled || balance < spinCost) return null;
 
   const canSpin = balance >= spinCost && !disabled;
 
@@ -101,19 +103,28 @@ export function SpinButton({ context, eventId, items = [], dict, onWin, disabled
 
   return (
     <>
-      <Button
+      {/* Amber lucky-roll banner — matches mobile buy footer */}
+      <button
         type="button"
-        variant="outline"
-        className="w-full gap-2 border-amber-500/40 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 hover:text-amber-300"
         onClick={doSpin}
         disabled={!canSpin}
+        className="flex w-full items-center justify-between rounded-xl border px-3 py-2.5 transition-opacity active:opacity-75 disabled:opacity-50"
+        style={{ borderColor: "#f59e0b", backgroundColor: "rgba(245,158,11,0.08)" }}
       >
-        <Sparkles className="h-4 w-4" />
-        {dict["credits.spin"]} · {spinCost} {dict["credits.spin_cost"]}
-        <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
-          <Coins className="h-3 w-3" /> {balance}
+        <span className="flex items-center gap-2 text-left">
+          <Sparkles className="h-4 w-4 shrink-0" style={{ color: "#f59e0b" }} strokeWidth={2} />
+          <span className="text-sm font-semibold" style={{ color: "#f59e0b" }}>
+            {context === "DRINK" ? dict["credits.roll_cta_drink"] : dict["credits.roll_cta"]}
+          </span>
+          <span className="hidden text-xs text-muted-foreground sm:inline">
+            {dict["credits.costs"]} {spinCost} {dict["credits.balance"]}
+          </span>
         </span>
-      </Button>
+        <span className="flex items-center gap-1">
+          <Coins className="h-3 w-3" style={{ color: "#f59e0b" }} />
+          <span className="text-xs font-semibold" style={{ color: "#f59e0b" }}>{balance}</span>
+        </span>
+      </button>
 
       <Dialog open={open} onOpenChange={(o) => { if (!o) { setOpen(false); setPhase("idle"); } }}>
         <DialogContent className="sm:max-w-sm text-center">
