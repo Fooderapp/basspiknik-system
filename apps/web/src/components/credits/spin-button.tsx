@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
-import { Coins, Sparkles } from "lucide-react";
+import { Coins, Sparkles, Dices, Star, Info } from "lucide-react";
 import { Dice3D } from "@/components/three/Dice3D";
 import type { Dictionary } from "@/lib/i18n";
 
@@ -127,43 +126,106 @@ export function SpinButton({ context, eventId, items = [], dict, onWin, disabled
       </button>
 
       <Dialog open={open} onOpenChange={(o) => { if (!o) { setOpen(false); setPhase("idle"); } }}>
-        <DialogContent className="sm:max-w-sm text-center">
-          <DialogHeader>
-            <DialogTitle className="text-center">
-              {phase === "win" ? dict["credits.win_title"]
-                : phase === "lose" ? dict["credits.lose_title"]
-                : dict["credits.spin"]}
+        <DialogContent className="sm:max-w-sm bg-background p-0 overflow-hidden">
+          {/* Header — amber dice chip + title, like mobile */}
+          <DialogHeader className="px-5 pt-5 pb-1">
+            <DialogTitle className="flex items-center gap-2 text-left">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: "#f59e0b" }}>
+                <Dices className="h-[18px] w-[18px] text-black" strokeWidth={2.25} />
+              </span>
+              <span className="text-xl font-bold tracking-tight">{dict["credits.lucky_roll"]}</span>
             </DialogTitle>
-            <DialogDescription className="text-center">
-              {phase === "win" ? dict["credits.win_body"]
-                : phase === "lose" ? dict["credits.lose_body"]
-                : dict["credits.spinning"]}
-            </DialogDescription>
+            <DialogDescription className="sr-only">{dict["credits.double_six"]}</DialogDescription>
           </DialogHeader>
 
-          <div className="py-2">
-            <Dice3D rolling={phase === "spinning"} faces={faces} win={phase === "win"} height={160} />
-          </div>
-
-          <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
-            <Coins className="h-4 w-4" /> {balance} {dict["credits.balance"]}
-          </div>
-
-          {phase === "win" && (
-            <Button className="w-full mt-2" onClick={() => setOpen(false)}>
-              {context === "DRINK" ? dict["credits.claim_free_drink"] : dict["credits.claim_free"]}
-            </Button>
-          )}
-          {phase === "lose" && (
-            <div className="flex gap-2 mt-2">
-              <Button variant="outline" className="flex-1" onClick={() => setOpen(false)}>
-                {dict["credits.close"]}
-              </Button>
-              <Button className="flex-1" disabled={balance < spinCost} onClick={doSpin}>
-                {dict["credits.spin_again"]}
-              </Button>
+          <div className="flex flex-col items-center px-5 pb-6">
+            {/* Marquee */}
+            <div className="mb-5 flex items-center gap-2">
+              <Star className="h-3.5 w-3.5" style={{ color: "#fbbf24" }} fill="#fbbf24" strokeWidth={2} />
+              <span className="text-[11px] font-bold tracking-[3px] text-amber-400">{dict["credits.double_six"]}</span>
+              <Star className="h-3.5 w-3.5" style={{ color: "#fbbf24" }} fill="#fbbf24" strokeWidth={2} />
             </div>
-          )}
+
+            {/* Dice tray — glows amber on win */}
+            <div
+              className={`relative rounded-[28px] border-2 px-5 py-4 transition-all ${phase === "win" ? "animate-pulse" : ""}`}
+              style={{
+                backgroundColor: "#0c0c0f",
+                borderColor: phase === "win" ? "rgba(245,158,11,1)" : "rgba(245,158,11,0.18)",
+                boxShadow: phase === "win" ? "0 0 26px rgba(245,158,11,0.7)" : "none",
+                width: 252,
+                maxWidth: "100%",
+              }}
+            >
+              <Dice3D rolling={phase === "spinning"} faces={faces} win={phase === "win"} height={150} />
+            </div>
+
+            {/* Phase message */}
+            <div className="mt-3 flex h-7 items-center text-center">
+              {phase === "win" && <span className="text-base font-bold text-amber-400">{dict["credits.win_msg"]}</span>}
+              {phase === "lose" && <span className="text-base font-bold text-muted-foreground">{dict["credits.lose_msg"]}</span>}
+              {phase === "spinning" && <span className="text-sm text-muted-foreground">{dict["credits.spinning"]}</span>}
+              {phase === "idle" && <span className="text-sm text-muted-foreground">{dict["credits.tap_roll"]}</span>}
+            </div>
+
+            {/* Balance */}
+            <div className="mt-1 flex items-center gap-1.5">
+              <Star className="h-3 w-3" style={{ color: "#fbbf24" }} fill="#fbbf24" strokeWidth={2} />
+              <span className="text-sm text-muted-foreground">
+                <span className="font-bold text-foreground">{balance}</span> {dict["credits.balance"]} · {spinCost} {dict["credits.per_roll"]}
+              </span>
+            </div>
+
+            {/* Actions */}
+            <div className="mt-5 flex w-full flex-col gap-3">
+              {(phase === "idle" || phase === "spinning") && (
+                <button
+                  onClick={doSpin}
+                  disabled={!canSpin}
+                  className={`flex h-[58px] items-center justify-center gap-2 rounded-2xl text-base font-bold transition active:opacity-90 ${
+                    canSpin ? "bg-[#f59e0b] text-black" : "bg-[#27272a] text-muted-foreground"
+                  } ${canSpin && phase === "idle" ? "animate-pulse" : ""}`}
+                >
+                  <Dices className="h-[18px] w-[18px]" strokeWidth={2.25} />
+                  {phase === "spinning"
+                    ? dict["credits.spinning"]
+                    : canSpin
+                    ? `${dict["credits.roll"]} · ${spinCost} ${dict["credits.balance"]}`
+                    : `${dict["credits.need"]} ${spinCost} ${dict["credits.balance"]}`}
+                </button>
+              )}
+
+              {phase === "win" && (
+                <button
+                  onClick={() => setOpen(false)}
+                  className="flex h-[58px] items-center justify-center rounded-2xl bg-[#f59e0b] text-base font-bold text-black active:opacity-90"
+                >
+                  🎟 {context === "DRINK" ? dict["credits.claim_free_drink"] : dict["credits.claim_free"]}
+                </button>
+              )}
+
+              {phase === "lose" && (
+                <button
+                  onClick={doSpin}
+                  disabled={balance < spinCost}
+                  className="h-14 rounded-2xl bg-secondary text-base font-semibold text-foreground transition active:opacity-80 disabled:opacity-50"
+                >
+                  {balance >= spinCost
+                    ? `${dict["credits.spin_again"]} · ${spinCost} ${dict["credits.balance"]}`
+                    : dict["credits.not_enough"]}
+                </button>
+              )}
+
+              <button onClick={() => setOpen(false)} className="py-1.5 text-sm text-muted-foreground active:opacity-60">
+                {phase === "win" ? dict["credits.skip_pay"] : dict["credits.close"]}
+              </button>
+
+              <div className="flex items-start gap-2 px-1">
+                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/50" strokeWidth={1.75} />
+                <span className="text-xs text-muted-foreground/70">{dict["credits.info_hint"]}</span>
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </>

@@ -407,6 +407,16 @@ const en = {
   "credits.roll_cta":       "Roll the dice — win free tickets!",
   "credits.roll_cta_drink": "Roll the dice — win a free drink!",
   "credits.costs":          "costs",
+  "credits.lucky_roll":     "Lucky Roll",
+  "credits.double_six":     "DOUBLE SIX = FREE CHECKOUT",
+  "credits.win_msg":        "🎉 DOUBLE SIX! Free checkout unlocked",
+  "credits.lose_msg":       "Not this time — roll again!",
+  "credits.tap_roll":       "Tap to roll the dice",
+  "credits.roll":           "ROLL",
+  "credits.per_roll":       "per roll",
+  "credits.need":           "Need",
+  "credits.skip_pay":       "Skip — pay normally",
+  "credits.info_hint":      "Tap Roll to throw the dice. Land double six to win a completely free checkout — no payment needed.",
 };
 
 const hu: typeof en = {
@@ -814,6 +824,16 @@ const hu: typeof en = {
   "credits.roll_cta":       "Dobd a kockát — nyerj ingyen jegyet!",
   "credits.roll_cta_drink": "Dobd a kockát — nyerj egy italt!",
   "credits.costs":          "ára",
+  "credits.lucky_roll":     "Szerencsedobás",
+  "credits.double_six":     "DUPLA HATOS = INGYEN VÁSÁRLÁS",
+  "credits.win_msg":        "🎉 DUPLA HATOS! Ingyenes vásárlás feloldva",
+  "credits.lose_msg":       "Most nem sikerült — dobd újra!",
+  "credits.tap_roll":       "Koppints a dobáshoz",
+  "credits.roll":           "DOBÁS",
+  "credits.per_roll":       "/ dobás",
+  "credits.need":           "Kell",
+  "credits.skip_pay":       "Kihagyom — fizetek normál módon",
+  "credits.info_hint":      "Koppints a Dobásra a kockákhoz. Dobj dupla hatost az ingyenes vásárlásért — fizetés nélkül.",
 };
 
 // ─── Public API ───────────────────────────────────────────────────────────────
