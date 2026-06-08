@@ -24,6 +24,14 @@ const en = {
   "dash.all_tickets":  "All tickets",
   "dash.browse":       "Browse events",
   "dash.tickets_count":"valid ticket(s)",
+  "dash.show_entry":   "Show at entry",
+  "dash.activity":     "Recent activity",
+  "act.bought":        "Tickets purchased",
+  "act.won":           "Free tickets won",
+  "act.bar":           "Bar order",
+  "act.credit_earn":   "Credits earned",
+  "act.credit_spend":  "Credits spent",
+  "act.credits":       "credits",
 
   // Consumer events list (Buy tab — mirrors mobile)
   "events.title":         "Buy Tickets",
@@ -458,6 +466,14 @@ const hu: typeof en = {
   "dash.all_tickets":  "Összes jegy",
   "dash.browse":       "Rendezvények böngészése",
   "dash.tickets_count":"érvényes jegy",
+  "dash.show_entry":   "Mutasd be a beléptetésnél",
+  "dash.activity":     "Legutóbbi tevékenység",
+  "act.bought":        "Jegyvásárlás",
+  "act.won":           "Nyert ingyen jegyek",
+  "act.bar":           "Bárrendelés",
+  "act.credit_earn":   "Kredit jóváírás",
+  "act.credit_spend":  "Kredit levonás",
+  "act.credits":       "kredit",
 
   // Consumer events list (Buy tab — mirrors mobile)
   "events.title":         "Jegyvásárlás",
