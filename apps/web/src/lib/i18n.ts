@@ -253,6 +253,8 @@ const en = {
   // Bar menu (public)
   "menu.title":            "Bar Menu",
   "menu.subtitle":         "Order your drinks — show the QR at the bar.",
+  "menu.items_available":  "items available",
+  "menu.view_order":       "View order",
   "menu.all":              "All",
   "menu.cat_cocktail":     "Cocktails",
   "menu.cat_beer":         "Beers",
@@ -655,6 +657,8 @@ const hu: typeof en = {
   // Bar menu (public)
   "menu.title":            "Bármenü",
   "menu.subtitle":         "Rendeld meg italod — mutasd a QR kódot a bárban.",
+  "menu.items_available":  "elérhető tétel",
+  "menu.view_order":       "Rendelés megtekintése",
   "menu.all":              "Összes",
   "menu.cat_cocktail":     "Koktélok",
   "menu.cat_beer":         "Sörök",

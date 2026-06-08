@@ -5,12 +5,11 @@ import { toast } from "sonner";
 import QRCode from "qrcode";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
-import { ShoppingCart, Plus, Minus, Trash2, Wine, CheckCircle2, RefreshCw, Pencil, X, Clock, Loader2, AlertTriangle, Sparkles } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Trash2, CheckCircle2, RefreshCw, Pencil, X, Clock, Loader2, AlertTriangle, Sparkles, Star } from "lucide-react";
 import { SpinButton } from "@/components/credits/spin-button";
 import type { Drink, DrinkCategory, DrinkCategoryRow } from "@/lib/supabase/types";
 import type { Dictionary } from "@/lib/i18n";
@@ -39,6 +38,7 @@ interface CategoryTab {
   key: string;
   label: string;
   color?: string;
+  emoji?: string;
 }
 
 type OrderResult = { id: string; qrToken: string; total: number };
@@ -71,7 +71,7 @@ export function BarMenu({ drinks, categories, dict, currency }: Props) {
     for (const cat of categories) {
       if (drinks.some(d => d.category_id === cat.id)) {
         seenDbIds.add(cat.id);
-        tabs.push({ key: `db:${cat.id}`, label: cat.name, color: cat.color });
+        tabs.push({ key: `db:${cat.id}`, label: cat.name, color: cat.color, emoji: cat.emoji });
       }
     }
 
@@ -324,124 +324,105 @@ export function BarMenu({ drinks, categories, dict, currency }: Props) {
   return (
     <div className="min-h-screen bg-background">
 
-      {/* Header */}
-      <div className="border-b bg-card sticky top-0 z-20">
-        <div className="container max-w-4xl py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold flex items-center gap-2">
-              <Wine className="h-5 w-5 text-primary" />
-              {t("menu.title")}
-            </h1>
-            <p className="text-sm text-muted-foreground hidden sm:block">{t("menu.subtitle")}</p>
-          </div>
-          <Button
-            variant={cartCount > 0 ? "default" : "outline"}
-            onClick={() => setCartOpen(true)}
-            className="gap-2 relative"
-          >
-            <ShoppingCart className="h-4 w-4" />
-            {cartCount > 0 && (
-              <span className="font-semibold">{cartCount}</span>
-            )}
-            {cartCount > 0 && (
-              <span className="ml-1 font-semibold">{fmt(cartTotal)}</span>
-            )}
-          </Button>
-        </div>
+      {/* Header — mobile app parity */}
+      <div className="mx-auto w-full max-w-4xl px-5 pt-4 pb-2">
+        <h1 className="text-2xl font-bold tracking-tight">{t("menu.title")}</h1>
+        <p className="text-sm text-muted-foreground">{drinks.length} {t("menu.items_available")}</p>
+      </div>
 
-        {/* Category tabs */}
-        <div className="container max-w-4xl pb-3 flex gap-2 overflow-x-auto scrollbar-hide">
-          <button
-            onClick={() => setActiveCategory("ALL")}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-              activeCategory === "ALL"
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            }`}
-          >
-            {t("menu.all")}
-          </button>
-          {categoryTabs.map((tab) => (
+      {/* Category pills — emoji + category colour, like mobile */}
+      <div className="mx-auto w-full max-w-4xl px-5 mb-2 flex gap-2 overflow-x-auto scrollbar-hide py-1">
+        <button
+          onClick={() => setActiveCategory("ALL")}
+          className={`shrink-0 px-3 py-1.5 rounded-full text-[13px] whitespace-nowrap border transition-colors ${
+            activeCategory === "ALL"
+              ? "bg-[#0A0A0A] text-white border-transparent font-semibold"
+              : "bg-card border-border text-muted-foreground font-medium"
+          }`}
+        >
+          {t("menu.all")}
+        </button>
+        {categoryTabs.map((tab) => {
+          const active = activeCategory === tab.key;
+          const color = tab.color ?? "#888888";
+          return (
             <button
               key={tab.key}
               onClick={() => setActiveCategory(tab.key)}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${
-                activeCategory === tab.key
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
+              className="shrink-0 px-3 py-1.5 rounded-full text-[13px] whitespace-nowrap flex items-center gap-1.5 border transition-colors"
+              style={
+                active
+                  ? { backgroundColor: color, borderColor: "transparent", color: "#fff", fontWeight: 600 }
+                  : { backgroundColor: "#0a0a0a", borderColor: color + "55", color, fontWeight: 500 }
+              }
             >
+              {tab.emoji && <span>{tab.emoji}</span>}
               {tab.label}
             </button>
-          ))}
-        </div>
+          );
+        })}
       </div>
 
-      {/* Drink grid */}
-      <div className="container max-w-4xl py-6">
+      {/* Drink list — single column on mobile (app parity), grid on desktop */}
+      <div className="mx-auto w-full max-w-4xl px-5 pt-2 pb-28">
         {filtered.length === 0 ? (
           <div className="rounded-lg border border-dashed p-12 text-center text-muted-foreground">
             {t("menu.cat_other")}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="flex flex-col gap-3 md:grid md:grid-cols-2 lg:grid-cols-3">
             {filtered.map((drink) => {
               const effectivePrice = drink.sale_enabled && drink.sale_price ? drink.sale_price : drink.price;
               const qty = getQty(drink.id);
               return (
-                <div key={drink.id} className="rounded-xl border bg-card overflow-hidden flex flex-col">
-                  {drink.image_url && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={drink.image_url} alt={drink.name} className="w-full h-36 object-cover" />
-                  )}
-                  <div className="p-4 flex flex-col flex-1 gap-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
-                          {drink.is_popular && (
-                            <Badge className="text-[10px] px-1.5 py-0">{t("menu.popular")}</Badge>
-                          )}
-                          {drink.sale_enabled && (
-                            <Badge variant="destructive" className="text-[10px] px-1.5 py-0">{t("menu.sale")}</Badge>
-                          )}
+                <div key={drink.id} className="rounded-xl border bg-card p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 mr-3">
+                      <p className="font-bold text-base tracking-tight leading-snug">{drink.name}</p>
+                      {drink.description && (
+                        <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{drink.description}</p>
+                      )}
+                      {drink.allergens && drink.allergens.length > 0 && (
+                        <div className="flex items-center gap-1 mt-1">
+                          <AlertTriangle className="h-3 w-3 text-muted-foreground shrink-0" strokeWidth={1.75} />
+                          <span className="text-xs text-muted-foreground">{drink.allergens.join(", ")}</span>
                         </div>
-                        <p className="font-semibold text-sm leading-snug">{drink.name}</p>
-                        {drink.description && (
-                          <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{drink.description}</p>
-                        )}
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="font-bold text-sm">{fmt(effectivePrice)}</p>
-                        {drink.sale_enabled && drink.sale_price && (
-                          <p className="text-xs text-muted-foreground line-through">{fmt(drink.price)}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {drink.allergens && drink.allergens.length > 0 && (
-                      <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                        <AlertTriangle className="h-3 w-3 shrink-0" /> {drink.allergens.join(", ")}
-                      </p>
-                    )}
-
-                    <div className="mt-auto pt-2">
-                      {qty === 0 ? (
-                        <Button size="sm" className="w-full gap-1.5" onClick={() => addToCart(drink)}>
-                          <Plus className="h-3.5 w-3.5" />
-                          {t("menu.add")}
-                        </Button>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline" className="h-8 w-8 p-0" onClick={() => adjustQty(drink.id, -1)}>
-                            <Minus className="h-3.5 w-3.5" />
-                          </Button>
-                          <span className="flex-1 text-center font-semibold text-sm">{qty}</span>
-                          <Button size="sm" variant="outline" className="h-8 w-8 p-0" onClick={() => adjustQty(drink.id, 1)}>
-                            <Plus className="h-3.5 w-3.5" />
-                          </Button>
+                      )}
+                      {drink.is_popular && (
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <Star className="h-3 w-3 fill-foreground text-foreground" strokeWidth={1.75} />
+                          <span className="text-xs">{t("menu.popular")}</span>
                         </div>
                       )}
                     </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-bold text-base">{fmt(effectivePrice)}</p>
+                      {drink.sale_enabled && drink.sale_price && (
+                        <p className="text-xs text-muted-foreground line-through">{fmt(drink.price)}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    {qty === 0 ? (
+                      <button
+                        onClick={() => addToCart(drink)}
+                        className="flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2.5 text-sm font-semibold text-background active:scale-95 transition-transform"
+                      >
+                        <Plus className="h-[15px] w-[15px]" strokeWidth={2.25} />
+                        {t("menu.add")}
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-4 rounded-xl border border-border bg-secondary px-4 py-2">
+                        <button onClick={() => adjustQty(drink.id, -1)} className="active:scale-90 transition-transform">
+                          <Minus className="h-[18px] w-[18px]" strokeWidth={2} />
+                        </button>
+                        <span className="w-6 text-center font-bold">{qty}</span>
+                        <button onClick={() => adjustQty(drink.id, 1)} className="active:scale-90 transition-transform">
+                          <Plus className="h-[18px] w-[18px]" strokeWidth={2} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -450,9 +431,26 @@ export function BarMenu({ drinks, categories, dict, currency }: Props) {
         )}
       </div>
 
+      {/* Sticky bottom cart bar — white pill, like mobile */}
+      {cartCount > 0 && (
+        <button
+          onClick={() => setCartOpen(true)}
+          className="fixed left-4 right-4 bottom-24 md:bottom-6 z-40 mx-auto flex max-w-md items-center rounded-[18px] bg-[#fafafa] px-[18px] py-[14px] text-[#0A0A0A] shadow-[0_8px_24px_rgba(0,0,0,0.45)] active:scale-[0.98] transition-transform"
+        >
+          <span className="flex h-[30px] w-[30px] items-center justify-center rounded-[9px] bg-[#0A0A0A] text-sm font-bold text-white">
+            {cartCount}
+          </span>
+          <span className="ml-3 flex flex-1 items-center gap-2">
+            <ShoppingCart className="h-4 w-4" strokeWidth={2} />
+            <span className="text-[15px] font-bold">{t("menu.view_order")}</span>
+          </span>
+          <span className="text-base font-extrabold">{fmt(cartTotal)}</span>
+        </button>
+      )}
+
       {/* Cart sheet */}
       <Sheet open={cartOpen} onOpenChange={setCartOpen}>
-        <SheetContent side="right" className="flex flex-col w-full sm:max-w-md">
+        <SheetContent side="bottom" className="flex flex-col h-[92vh] rounded-t-2xl sm:max-w-md sm:mx-auto">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
               <ShoppingCart className="h-4 w-4" />
