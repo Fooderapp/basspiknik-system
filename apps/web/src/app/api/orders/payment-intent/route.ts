@@ -71,10 +71,13 @@ export async function POST(req: Request) {
 
   const { data: profileData } = await admin.from("profiles").select("*").eq("id", user.id).single();
   const profile = profileData as Profile | null;
-  if (profile?.loyalty_discount && !promoCode) discountAmount = subtotal * 0.1;
+  // loyalty_discount is tracked for reporting but NOT deducted from the charge —
+  // this matches the web Stripe Checkout flow which also doesn't apply it to line_items.
+  const loyaltyDiscount = (profile?.loyalty_discount && !promoCode) ? subtotal * 0.1 : 0;
 
-  const taxAmount = subtotal * (event.tax_rate / 100);
-  const total = Math.max(0, subtotal - discountAmount + taxAmount);
+  // Ticket prices in Hungary are tax-inclusive; taxAmount is metadata only.
+  // Charged total = subtotal minus promo code discount only (loyalty tracked separately).
+  const total = Math.max(0, subtotal - discountAmount);
   const buyerEmail = profile?.email ?? user.email ?? null;
   const buyerName = profile?.billing_name ?? profile?.name ?? null;
 
@@ -121,8 +124,8 @@ export async function POST(req: Request) {
       items: JSON.stringify(items),
       promoCodeId,
       currency,
-      discountAmount: discountAmount.toString(),
-      taxAmount: taxAmount.toString(),
+      discountAmount: (discountAmount + loyaltyDiscount).toString(),
+      taxAmount: String(Math.round(subtotal * ((event.tax_rate ?? 0) / 100))),
     },
   });
 

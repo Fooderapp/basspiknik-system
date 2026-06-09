@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, FileText, Mail, Globe, Save, Eye, EyeOff, Loader2, type LucideIcon } from "lucide-react";
@@ -97,6 +98,35 @@ export function SystemConfigForm() {
             </CardHeader>
             <CardContent className="space-y-4">
               {groupKeys.map((k) => {
+                // Boolean toggle keys (e.g. STRIPE_SIMULATED)
+                const isBoolean = k.placeholder === "true / false";
+                if (isBoolean) {
+                  const currentVal = drafts[k.key] !== undefined ? drafts[k.key] : (k.isSet ? k.preview : "false");
+                  const checked = currentVal === "true";
+                  return (
+                    <div key={k.key} className="flex items-center justify-between rounded-lg border border-border p-3">
+                      <div className="space-y-0.5">
+                        <Label htmlFor={k.key} className="flex items-center gap-2 cursor-pointer">
+                          {k.label}
+                          <Badge variant={k.source === "db" ? "default" : "outline"} className="text-[10px]">
+                            {k.source === "db" ? "DB" : k.isSet ? "env" : "not set"}
+                          </Badge>
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          {checked
+                            ? "Simulated reader active — use test Stripe keys (sk_test_…) for full testing"
+                            : "Off — real Tap to Pay hardware required"}
+                        </p>
+                      </div>
+                      <Switch
+                        id={k.key}
+                        checked={checked}
+                        onCheckedChange={(v) => setDrafts((d) => ({ ...d, [k.key]: v ? "true" : "false" }))}
+                      />
+                    </div>
+                  );
+                }
+
                 const isSecret = k.secret && !reveal[k.key];
                 const draft = drafts[k.key];
                 const showVal = draft !== undefined ? draft : "";

@@ -147,8 +147,13 @@ export async function fulfillTicketOrder(input: FulfillInput): Promise<FulfillRe
       .map((item) => {
         const tt = dbEvent.ticket_types.find((t: any) => t.id === item.ticketTypeId);
         if (!tt) return null;
-        const unitPrice = tt.sale_enabled && tt.sale_price != null ? tt.sale_price : tt.price;
-        return { name: `${dbEvent.name} — ${tt.name}`, unitPrice, quantity: item.quantity };
+        const bundleTotal = tt.sale_enabled && tt.sale_price != null ? tt.sale_price : tt.price;
+        // For bundles: invoice shows individual tickets (quantity × bundle_size, price ÷ bundle_size)
+        // so the customer sees "2 × 4 000 HUF = 8 000 HUF" instead of "1 × 8 000 HUF".
+        const bundleSize = (tt.is_bundle && tt.bundle_size) ? tt.bundle_size : 1;
+        const invoiceQty = item.quantity * bundleSize;
+        const invoiceUnit = bundleSize > 1 ? Math.round(bundleTotal / bundleSize) : bundleTotal;
+        return { name: `${dbEvent.name} — ${tt.name}`, unitPrice: invoiceUnit, quantity: invoiceQty };
       })
       .filter((x): x is BillingoLineItem => x !== null && x.unitPrice > 0);
 

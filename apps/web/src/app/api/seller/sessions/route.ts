@@ -143,7 +143,11 @@ export async function POST(req: Request) {
       .single();
 
     if (item.unitPrice > 0) {
-      invoiceItems.push({ name: `${eventName} — ${tt?.name ?? "Ticket"}`, unitPrice: item.unitPrice, quantity: item.quantity });
+      // For bundles: expand to individual tickets on the invoice.
+      const bundleSize = (tt?.is_bundle && tt?.bundle_size) ? tt.bundle_size : 1;
+      const invoiceQty = item.quantity * bundleSize;
+      const invoiceUnit = bundleSize > 1 ? Math.round(item.unitPrice / bundleSize) : item.unitPrice;
+      invoiceItems.push({ name: `${eventName} — ${tt?.name ?? "Ticket"}`, unitPrice: invoiceUnit, quantity: invoiceQty });
     }
 
     const { data: orderItem, error: itemErr } = await supabase

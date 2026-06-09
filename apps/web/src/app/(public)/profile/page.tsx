@@ -4,6 +4,7 @@ import { User, Mail, Hash, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SignOutButton } from "@/components/consumer/sign-out-button";
+import { BillingSection } from "@/components/consumer/billing-section";
 import { getSettings } from "@/lib/settings";
 import { getDictionary, t } from "@/lib/i18n";
 
@@ -106,6 +107,17 @@ export default async function ProfilePage() {
           </>
         )}
       </div>
+
+      {/* Billing address */}
+      <BillingSection
+        initial={{
+          billing_name:        p.billing_name        ?? "",
+          billing_address:     p.billing_address     ?? "",
+          billing_city:        p.billing_city        ?? "",
+          billing_postal_code: p.billing_postal_code ?? "",
+          billing_country:     p.billing_country     ?? "Magyarország",
+        }}
+      />
 
       <SignOutButton label={t(dict, "profile.sign_out")} />
     </div>
