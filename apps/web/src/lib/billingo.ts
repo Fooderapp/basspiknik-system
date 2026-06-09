@@ -135,7 +135,12 @@ export async function createBillingoInvoice(input: BillingoInvoiceInput): Promis
         vat,
         currency: input.currency,
       })),
-      settings: { should_send_letter: false, round: "five", without_financial_fulfillment: false },
+      // round "five" only valid for HUF; other currencies must use "two".
+      settings: {
+        should_send_letter: false,
+        round: input.currency === "HUF" ? "five" : "two",
+        without_financial_fulfillment: false,
+      },
     };
 
     const doc = await billingoFetch("/documents", { method: "POST", body: JSON.stringify(body) });

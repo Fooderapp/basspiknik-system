@@ -196,17 +196,10 @@ export default function BuyEventScreen() {
         throw new Error(error.message);
       }
 
-      // Estimate credits earned (server awards them via webhook asynchronously)
+      // Credits: server awards a flat amount per paid order (NOT per ticket).
       const { data: cs } = await (supabase as any)
         .from("app_settings").select("credits_per_ticket").eq("id", "global").single();
-      const creditsPerTicket = cs?.credits_per_ticket ?? 4;
-      const totalTicketsBought = Object.entries(quantities)
-        .filter(([, q]) => q > 0)
-        .reduce((acc, [id, qty]) => {
-          const tt = ticketTypes.find(t => t.id === id);
-          return acc + qty * (tt?.is_bundle && tt?.bundle_size ? tt.bundle_size : 1);
-        }, 0);
-      const creditsEarned = totalTicketsBought * creditsPerTicket;
+      const creditsEarned = cs?.credits_per_ticket ?? 4;
 
       Alert.alert(
         "🎉 Payment successful!",
