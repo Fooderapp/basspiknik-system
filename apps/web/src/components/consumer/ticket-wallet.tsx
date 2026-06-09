@@ -2,7 +2,7 @@
 
 import { useRef, useState, useCallback } from "react";
 import Link from "next/link";
-import { CalendarDays, MapPin, QrCode, RotateCcw, Ticket as TicketIcon, ChevronRight } from "lucide-react";
+import { CalendarDays, MapPin, QrCode, Ticket as TicketIcon, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { WalletButtons } from "@/components/consumer/wallet-buttons";
 
@@ -111,8 +111,6 @@ function TicketCard({
             ) : (
               <div className="h-full w-full bg-gradient-to-br from-gold/30 to-brand/20" />
             )}
-            <div className="absolute -bottom-3 left-1/2 h-6 w-28 -translate-x-1/2 rounded-t-full bg-card" />
-
             {/* Specular sheen */}
             <div
               className="pointer-events-none absolute inset-0"
@@ -152,7 +150,9 @@ function TicketCard({
                 />
               </div>
               <div className="min-w-0 flex-1">
-                <Badge variant="success" className="text-[10px]">{validLabel}</Badge>
+                <Badge variant={tk.status === "VALID" ? "success" : "secondary"} className="text-[10px]">
+                  {tk.status === "VALID" ? validLabel : tk.status === "USED" ? "Used" : tk.status}
+                </Badge>
                 <p className="mt-1 truncate text-sm font-medium">{tk.ticketName}</p>
                 <p className="text-xs text-muted-foreground">{tk.index} / {tk.count}</p>
                 <p className="mt-2 flex items-center gap-1 text-[11px] text-muted-foreground">
@@ -176,19 +176,9 @@ function TicketCard({
             transform: "rotateY(180deg)",
             borderRadius: "24px",
           }}
-          className="flex flex-col items-center justify-center overflow-hidden rounded-3xl border border-border bg-card p-8"
+          className="flex items-center justify-center overflow-hidden rounded-3xl border border-border bg-card"
         >
-          {/* Banner over the QR (when set) */}
-          {tk.banner && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={tk.banner} alt="" className="mb-4 h-12 w-full max-w-[260px] rounded-lg object-cover" />
-          )}
-          <p className="mb-5 text-[10px] font-semibold tracking-[3px] text-muted-foreground uppercase">
-            Entry Pass
-          </p>
-          <p className="mb-5 text-center text-lg font-bold tracking-tight line-clamp-2">{tk.eventName}</p>
-
-          {/* Large QR */}
+          {/* Large QR — centered only */}
           <div
             className="rounded-2xl bg-white p-4"
             style={{ boxShadow: "0 0 32px rgba(235,224,90,0.2)" }}
@@ -202,23 +192,6 @@ function TicketCard({
               className="block"
             />
           </div>
-
-          <div className="mt-5 flex flex-wrap justify-center gap-3 text-xs text-muted-foreground">
-            {tk.date && (
-              <span className="flex items-center gap-1">
-                <CalendarDays className="h-3.5 w-3.5" />{tk.date}
-              </span>
-            )}
-            {tk.venue && (
-              <span className="flex items-center gap-1">
-                <MapPin className="h-3.5 w-3.5" /><span className="line-clamp-1">{tk.venue}</span>
-              </span>
-            )}
-          </div>
-
-          <p className="mt-6 flex items-center gap-1.5 text-[11px] text-muted-foreground/50">
-            <RotateCcw className="h-3 w-3" />Tap to flip back
-          </p>
         </div>
       </div>
     </div>

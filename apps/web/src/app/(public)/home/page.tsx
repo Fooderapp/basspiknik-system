@@ -48,12 +48,12 @@ export default async function HomePage() {
       .from("tickets")
       .select("id, status, ticket_name, tier, order_id, qr_code, created_at, orders!inner(user_id), events(name, venue, start_date, cover_image_url, banner_image_url), ticket_types(image_url)")
       .eq("orders.user_id", user.id)
-      .eq("status", "VALID"),
+      .in("status", ["VALID", "USED"]),
     supabase
       .from("tickets")
       .select("id, status, ticket_name, tier, order_id, qr_code, created_at, events(name, venue, start_date, cover_image_url, banner_image_url), ticket_types(image_url)")
       .eq("transferred_to_user_id", user.id)
-      .eq("status", "VALID"),
+      .in("status", ["VALID", "USED"]),
     supabase
       .from("orders")
       .select("id, total, created_at, status, events(name)")
@@ -88,7 +88,7 @@ export default async function HomePage() {
     const bd = b.created_at ? new Date(b.created_at).getTime() : 0;
     return bd - ad; // newest purchase first
   });
-  const walletTickets: WalletTicket[] = sorted.map((tk: any) => {
+  const allWalletTickets: WalletTicket[] = sorted.map((tk: any) => {
     const idx = (orderSeen.get(tk.order_id) ?? 0) + 1;
     orderSeen.set(tk.order_id, idx);
     return {
@@ -107,6 +107,9 @@ export default async function HomePage() {
       count: orderCounts.get(tk.order_id) ?? 1,
     };
   });
+  // If every ticket has been scanned (USED), show only the most recent one in the wallet
+  const allUsed = allWalletTickets.length > 0 && allWalletTickets.every((t) => t.status === "USED");
+  const walletTickets = allUsed ? [allWalletTickets[0]] : allWalletTickets;
 
   // ── Merge recent activity ──
   const acts: Activity[] = [];

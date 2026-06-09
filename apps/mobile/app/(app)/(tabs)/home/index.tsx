@@ -9,7 +9,7 @@ import Animated, {
 } from "react-native-reanimated";
 import {
   CalendarDays, MapPin, Star, ShoppingBag, Wine, Sparkles, QrCode,
-  RotateCcw, Ticket as TicketIcon, ChevronRight, type LucideIcon,
+  Ticket as TicketIcon, ChevronRight, type LucideIcon,
 } from "lucide-react-native";
 import { Screen } from "@/components/ui/Screen";
 import { Card } from "@/components/ui/Card";
@@ -93,12 +93,6 @@ function FlipCard({
               {(tk.ticket_types?.image_url || tk.events?.banner_image_url || tk.events?.cover_image_url)
                 ? <Image source={{ uri: (tk.ticket_types?.image_url ?? tk.events?.banner_image_url ?? tk.events?.cover_image_url)! }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
                 : <View style={{ flex: 1, backgroundColor: "rgba(235,224,90,0.18)" }} />}
-              <View style={{
-                position: "absolute", bottom: -12,
-                left: CARD_W / 2 - 56, width: 112, height: 24,
-                borderTopLeftRadius: 999, borderTopRightRadius: 999,
-                backgroundColor: "#1f1f1f",
-              }} />
             </View>
 
             <View className="p-5">
@@ -125,7 +119,7 @@ function FlipCard({
                   <QRImage value={tk.qr_code} size={76} />
                 </View>
                 <View className="flex-1">
-                  <Badge label="Valid" variant="success" />
+                  <Badge label={tk.status === "USED" ? "Used" : "Valid"} variant={tk.status === "USED" ? "secondary" : "success"} />
                   <Text className="text-foreground text-sm font-medium mt-1" numberOfLines={1}>
                     {tk.ticket_name ?? "Ticket"}
                   </Text>
@@ -146,43 +140,15 @@ function FlipCard({
           </Card>
         </Animated.View>
 
-        {/* ── BACK FACE ── */}
+        {/* ── BACK FACE — QR only ── */}
         <Animated.View style={backAnim} shouldRasterizeIOS renderToHardwareTextureAndroid>
-          <View style={{ padding: 28, alignItems: "center" }}>
-            <Text className="text-muted-foreground text-[10px] font-semibold tracking-widest mb-5" style={{ textTransform: "uppercase" }}>
-              Entry Pass
-            </Text>
-            <Text className="text-foreground text-lg font-bold tracking-tight text-center mb-5" numberOfLines={2}>
-              {tk.events?.name ?? tk.ticket_name ?? "Ticket"}
-            </Text>
-
-            {/* Large QR */}
+          <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
             <View style={{
               backgroundColor: "#ffffff", borderRadius: 20, padding: 16,
               shadowColor: "#EBE05A", shadowOpacity: 0.25, shadowRadius: 20,
               shadowOffset: { width: 0, height: 0 },
             }}>
               <QRImage value={tk.qr_code} size={180} />
-            </View>
-
-            <View className="flex-row items-center gap-3 mt-6">
-              {tk.events?.start_date && (
-                <View className="flex-row items-center gap-1.5">
-                  <CalendarDays size={13} color="#9a9a9a" strokeWidth={1.75} />
-                  <Text className="text-muted-foreground text-xs">{formatDate(tk.events.start_date)}</Text>
-                </View>
-              )}
-              {tk.events?.venue && (
-                <View className="flex-row items-center gap-1.5">
-                  <MapPin size={13} color="#9a9a9a" strokeWidth={1.75} />
-                  <Text className="text-muted-foreground text-xs" numberOfLines={1}>{tk.events.venue}</Text>
-                </View>
-              )}
-            </View>
-
-            <View className="flex-row items-center gap-1.5 mt-6 opacity-50">
-              <RotateCcw size={12} color="#9a9a9a" strokeWidth={1.75} />
-              <Text className="text-muted-foreground text-[11px]">Tap to flip back</Text>
             </View>
           </View>
         </Animated.View>
@@ -211,10 +177,10 @@ export default function HomeScreen() {
     ] = await Promise.all([
       (supabase as any).from("tickets")
         .select("id, status, ticket_name, tier, order_id, qr_code, created_at, orders!inner(user_id), events(name, venue, start_date, cover_image_url, banner_image_url), ticket_types(image_url)")
-        .eq("orders.user_id", uid).eq("status", "VALID"),
+        .eq("orders.user_id", uid).in("status", ["VALID", "USED"]),
       (supabase as any).from("tickets")
         .select("id, status, ticket_name, tier, order_id, qr_code, created_at, events(name, venue, start_date, cover_image_url, banner_image_url), ticket_types(image_url)")
-        .eq("transferred_to_user_id", uid).eq("status", "VALID"),
+        .eq("transferred_to_user_id", uid).in("status", ["VALID", "USED"]),
       (supabase as any).rpc("get_credit_balance", { p_user_id: uid }),
       (supabase as any).from("orders").select("id, total, created_at, events(name)")
         .eq("user_id", uid).eq("status", "PAID").order("created_at", { ascending: false }).limit(5),
@@ -235,7 +201,9 @@ export default function HomeScreen() {
       const bd = b.created_at ? new Date(b.created_at).getTime() : 0;
       return bd - ad; // newest purchase first
     });
-    setTickets(raw as WTicket[]);
+    // If every ticket has been scanned (USED), only keep the most recent one in the wallet
+    const allCheckedIn = raw.length > 0 && raw.every((t: WTicket) => t.status === "USED");
+    setTickets(allCheckedIn ? [raw[0]] : (raw as WTicket[]));
     setCounts(cmap);
     setCredits(typeof bal === "number" ? bal : 0);
 
