@@ -352,16 +352,16 @@ export default function HomeScreen() {
               </View>
             )}
 
-            {/* Wallet button — one, for active ticket */}
-            {activeTicket && !!process.env.EXPO_PUBLIC_APP_URL && (
+            {/* Wallet button — iOS only (profile-level Apple Wallet pass) */}
+            {Platform.OS === "ios" && !!process.env.EXPO_PUBLIC_APP_URL && (
               <View className="px-5 mt-4">
                 <PressableScale
                   pressedScale={0.97}
                   onPress={() => {
                     const base = process.env.EXPO_PUBLIC_APP_URL!;
                     const tok = session?.access_token ?? "";
-                    const path = Platform.OS === "ios" ? "pass" : "google-wallet";
-                    const endpoint = `${base}/api/tickets/${activeTicket.id}/${path}?token=${encodeURIComponent(tok)}`;
+                    // /api/wallet = existing working Apple Wallet pass endpoint
+                    const endpoint = `${base}/api/wallet?token=${encodeURIComponent(tok)}`;
                     Linking.openURL(endpoint).catch(() => {});
                   }}
                   style={{
@@ -371,7 +371,7 @@ export default function HomeScreen() {
                   }}
                 >
                   <Text style={{ fontSize: 13, fontWeight: "600", color: "#f5f5f5" }}>
-                    {Platform.OS === "ios" ? "Add to Apple Wallet" : "Add to Google Wallet"}
+                    Add to Apple Wallet
                   </Text>
                 </PressableScale>
               </View>
