@@ -28,6 +28,9 @@ type TapState = "idle" | "discovering" | "connecting" | "ready" | "processing" |
 type BuyerMode = "guest" | "registered";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
+// Set EXPO_PUBLIC_STRIPE_SIMULATED=true in .env to use simulated Tap to Pay
+// (works with Stripe test-mode keys — no real card needed).
+const SIMULATED = process.env.EXPO_PUBLIC_STRIPE_SIMULATED === "true";
 
 export default function SellerScreen() {
   const insets = useSafeAreaInsets();
@@ -200,7 +203,7 @@ export default function SellerScreen() {
     }
     const { error } = await discoverReaders({
       discoveryMethod: "tapToPay",
-      simulated: false,
+      simulated: SIMULATED,
     });
     if (error) {
       if (watchdogRef.current) clearTimeout(watchdogRef.current);
@@ -304,8 +307,10 @@ export default function SellerScreen() {
       setSuccessInfo({ total: data.total, ticketCount: data.ticketCount });
       setCart([]); setBuyerName(""); setBuyerEmail(""); setRegisteredProfile(null); setConfirmOpen(false);
       if (data.orderId) sendConfirmation(data.orderId);
-    } catch (e: any) { Alert.alert("Error", e.message); }
-    finally { setSelling(false); }
+    } catch (e: any) {
+      Alert.alert("Error", e.message);
+      throw e; // let SlideToConfirm spring back
+    } finally { setSelling(false); }
   }
 
   // ── Tap to Pay sale ──
@@ -380,6 +385,7 @@ export default function SellerScreen() {
       setTapState("ready");
       setTapMessage("Ready to accept payment");
       Alert.alert("Payment failed", e.message);
+      throw e; // let SlideToConfirm spring back so seller can retry or switch to cash
     } finally {
       setSelling(false);
     }
