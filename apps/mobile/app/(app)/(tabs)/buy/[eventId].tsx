@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, View } from "react-native";
 import { useLocalSearchParams, router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useStripe } from "@stripe/stripe-react-native";
+import { useStripe, initStripe } from "@stripe/stripe-react-native";
 import { ChevronLeft, Minus, Plus, Tag, CalendarDays, MapPin, Sparkles, Star } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth";
@@ -196,7 +196,18 @@ export default function BuyEventScreen() {
       const data = await res.json();
       if (!res.ok || !data.paymentIntent) throw new Error(data.error ?? "Checkout failed");
 
-      // 2. Initialise the native PaymentSheet.
+      // 2. Re-initialise Stripe with the publishable key returned by the server.
+      //    This ensures the key always matches the account that created the
+      //    PaymentIntent — critical when the Stripe account changes without a
+      //    mobile rebuild (e.g. switching from UK → HU account).
+      if (data.publishableKey) {
+        await initStripe({
+          publishableKey: data.publishableKey,
+          merchantIdentifier: "merchant.com.eventos.mobile",
+        });
+      }
+
+      // 3. Initialise the native PaymentSheet.
       const init = await initPaymentSheet({
         merchantDisplayName: event?.name ?? "EventOS",
         customerId: data.customer,
@@ -210,7 +221,7 @@ export default function BuyEventScreen() {
       });
       if (init.error) throw new Error(init.error.message);
 
-      // 3. Present it. Tickets are created by the payment_intent.succeeded webhook.
+      // 4. Present it. Tickets are created by the payment_intent.succeeded webhook.
       const { error } = await presentPaymentSheet();
       if (error) {
         if (error.code === "Canceled") return; // user dismissed — no-op
