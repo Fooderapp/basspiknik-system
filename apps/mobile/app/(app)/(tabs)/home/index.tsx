@@ -359,9 +359,9 @@ export default function HomeScreen() {
                   pressedScale={0.97}
                   onPress={() => {
                     const base = process.env.EXPO_PUBLIC_APP_URL!;
-                    const endpoint = Platform.OS === "ios"
-                      ? `${base}/api/tickets/${activeTicket.id}/pass`
-                      : `${base}/api/tickets/${activeTicket.id}/google-wallet`;
+                    const tok = session?.access_token ?? "";
+                    const path = Platform.OS === "ios" ? "pass" : "google-wallet";
+                    const endpoint = `${base}/api/tickets/${activeTicket.id}/${path}?token=${encodeURIComponent(tok)}`;
                     Linking.openURL(endpoint).catch(() => {});
                   }}
                   style={{

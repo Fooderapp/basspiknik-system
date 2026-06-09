@@ -1,27 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
- * GET /api/tickets/[id]/pass
+ * GET /api/tickets/[id]/pass?token=<supabase_access_token>
  *
  * Returns an Apple Wallet .pkpass file for the given ticket.
+ * `token` query param allows mobile apps to authenticate without web cookies.
  *
- * Requires:
+ * Requires (env vars to enable pass generation):
  *   APPLE_PASS_TEAM_ID        — Apple Developer Team ID
  *   APPLE_PASS_TYPE_ID        — Pass Type Identifier (e.g. pass.com.yourapp.ticket)
  *   APPLE_PASS_CERT_PEM       — Signer certificate (PEM)
  *   APPLE_PASS_KEY_PEM        — Private key (PEM)
  *   APPLE_PASS_WWDR_PEM       — Apple WWDR intermediate certificate (PEM)
- *
- * Without those env vars the endpoint returns 501.
  */
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+
+  // ── Auth: cookie session OR ?token= from mobile ──
+  let userId: string | null = null;
+
+  const bearerToken = req.nextUrl.searchParams.get("token");
+  if (bearerToken) {
+    const admin = createAdminClient() as any;
+    const { data: { user } } = await admin.auth.getUser(bearerToken);
+    userId = user?.id ?? null;
+  } else {
+    const supabase = await createClient() as any;
+    const { data: { user } } = await supabase.auth.getUser();
+    userId = user?.id ?? null;
+  }
+
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   if (
     !process.env.APPLE_PASS_TEAM_ID ||
@@ -34,21 +52,17 @@ export async function GET(
     );
   }
 
-  // Auth: ensure ticket belongs to current user
-  const supabase = await createClient() as any;
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const { data: ticket } = await supabase
+  // Verify ticket belongs to this user
+  const adminDb = createAdminClient() as any;
+  const { data: ticket } = await adminDb
     .from("tickets")
     .select("id, qr_code, ticket_name, tier, status, events(name, venue, start_date)")
     .eq("id", id)
-    .or(`orders.user_id.eq.${user.id},transferred_to_user_id.eq.${user.id}`)
     .single();
 
   if (!ticket) return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
 
-  // TODO: generate .pkpass using passkit-generator package
+  // TODO: generate .pkpass using passkit-generator
   // https://github.com/alexandercerutti/passkit-generator
-  return NextResponse.json({ error: "Pass generation not yet implemented" }, { status: 501 });
+  return NextResponse.json({ error: "Pass generation not yet implemented. Add APPLE_PASS_* env vars and install passkit-generator." }, { status: 501 });
 }
