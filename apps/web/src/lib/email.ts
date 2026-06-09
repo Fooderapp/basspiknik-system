@@ -45,7 +45,7 @@ interface SendTicketConfirmationInput {
 export async function sendTicketConfirmation(input: SendTicketConfirmationInput) {
   const {
     to, buyerName, eventName, eventDate, eventVenue, tickets, total, orderId,
-    language = "en", currency = "EUR",
+    language = "hu", currency = "HUF",
   } = input;
 
   const dict = getDictionary(language);

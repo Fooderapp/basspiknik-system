@@ -28,7 +28,7 @@ export async function GET() {
     .single();
 
   if (error || !data)
-    return NextResponse.json({ currency: "EUR", language: "en" });
+    return NextResponse.json({ currency: "HUF", language: "hu" });
 
   return NextResponse.json(data);
 }

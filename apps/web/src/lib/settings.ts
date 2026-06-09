@@ -8,7 +8,7 @@ export interface AppSettings {
   language: Language;
 }
 
-const DEFAULTS: AppSettings = { currency: "EUR", language: "en" };
+const DEFAULTS: AppSettings = { currency: "HUF", language: "hu" };
 
 /** Read app settings. Falls back to defaults if the row doesn't exist yet.
  *  Uses the admin client so it works in API routes (bypasses RLS). */
@@ -23,8 +23,8 @@ export async function getSettings(): Promise<AppSettings> {
       .single();
     if (!data) return DEFAULTS;
     return {
-      currency: (data.currency ?? "EUR") as Currency,
-      language: (data.language ?? "en") as Language,
+      currency: (data.currency ?? "HUF") as Currency,
+      language: (data.language ?? "hu") as Language,
     };
   } catch {
     return DEFAULTS;

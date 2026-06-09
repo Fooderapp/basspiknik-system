@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
     const meta = session.metadata ?? {};
-    const currency = ((meta.currency as Currency) || "EUR");
+    const currency = ((meta.currency as Currency) || "HUF");
 
     const result = await fulfillTicketOrder({
       eventId: meta.eventId,
