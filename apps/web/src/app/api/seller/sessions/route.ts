@@ -1,7 +1,23 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { getSettings } from "@/lib/settings";
+import { createBillingoInvoice, type BillingoLineItem } from "@/lib/billingo";
 import type { Profile } from "@/lib/supabase/types";
+
+/** POS payment method → canonical orders.payment_method enum. */
+const ORDER_PM: Record<string, string> = {
+  CASH: "CASH",
+  CARD: "CARD_TERMINAL",
+  TERMINAL: "CARD_TERMINAL",
+};
+
+/** POS payment method → Billingo payment_method enum. */
+const BILLINGO_PM: Record<string, string> = {
+  CASH: "cash",
+  CARD: "bankcard",
+  TERMINAL: "bankcard",
+};
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -38,6 +54,7 @@ export async function POST(req: Request) {
 
   const { eventId, paymentMethod, items, buyerName, buyerEmail, notes } = parsed.data;
   const supabase = await createAdminClient() as any;
+  const settings = await getSettings();
 
   const totalAmount = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
   const totalQty = items.reduce((sum, i) => sum + i.quantity, 0);
@@ -49,13 +66,13 @@ export async function POST(req: Request) {
       event_id: eventId,
       user_id: profile.id,
       status: "PAID",
-      payment_method: paymentMethod,
+      payment_method: ORDER_PM[paymentMethod] ?? "CASH",
       stripe_payment_intent_id: `SELLER_${Date.now()}`,
       subtotal: totalAmount,
       tax_amount: 0,
       discount_amount: 0,
       total: totalAmount,
-      currency: "eur",
+      currency: settings.currency,
       guest_name: buyerName ?? null,
       guest_email: buyerEmail || null,
     })
@@ -64,6 +81,11 @@ export async function POST(req: Request) {
 
   if (orderErr) return NextResponse.json({ error: orderErr.message }, { status: 500 });
 
+  // Event name for invoice line items
+  const { data: ev } = await supabase.from("events").select("name").eq("id", eventId).single();
+  const eventName = ev?.name ?? "Event";
+  const invoiceItems: BillingoLineItem[] = [];
+
   // Create order items + tickets
   for (const item of items) {
     const { data: tt } = await supabase
@@ -71,6 +93,10 @@ export async function POST(req: Request) {
       .select("name, tier, is_bundle, bundle_size, is_door_ticket")
       .eq("id", item.ticketTypeId)
       .single();
+
+    if (item.unitPrice > 0) {
+      invoiceItems.push({ name: `${eventName} — ${tt?.name ?? "Ticket"}`, unitPrice: item.unitPrice, quantity: item.quantity });
+    }
 
     const { data: orderItem, error: itemErr } = await supabase
       .from("order_items")
@@ -133,7 +159,35 @@ export async function POST(req: Request) {
     notes: notes ?? null,
   });
 
-  return NextResponse.json({ orderId: order.id, totalAmount, totalQty }, { status: 201 });
+  // ── Invoice — POS cash/terminal sales are real sales → invoice them.
+  // RULE: only invoice paid orders (total > 0). Free comps get no invoice.
+  let invoiceNumber: string | null = null;
+  if (totalAmount > 0 && invoiceItems.length > 0) {
+    let billingoResult = null;
+    try {
+      billingoResult = await createBillingoInvoice({
+        buyer: {
+          name: buyerName || "Vásárló",
+          email: buyerEmail || null,
+          countryCode: "HU",
+        },
+        items: invoiceItems,
+        currency: settings.currency,
+        language: settings.language === "hu" ? "hu" : "en",
+        paid: true,
+        paymentMethod: BILLINGO_PM[paymentMethod] ?? "cash",
+      });
+    } catch { /* fall through to local number */ }
+
+    invoiceNumber = billingoResult?.number ?? `INV-${Date.now()}`;
+    await supabase.from("invoices").insert({
+      order_id: order.id,
+      number: invoiceNumber,
+      pdf_url: billingoResult?.pdfUrl ?? null,
+    });
+  }
+
+  return NextResponse.json({ orderId: order.id, totalAmount, totalQty, invoiceNumber }, { status: 201 });
 }
 
 export async function GET(req: Request) {

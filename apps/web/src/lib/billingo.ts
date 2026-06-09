@@ -45,6 +45,8 @@ export interface BillingoInvoiceInput {
   language?: "hu" | "en";
   /** Whether the order is already paid (true for online card). */
   paid?: boolean;
+  /** Override the default payment method (e.g. "cash" / "bankcard" for POS). */
+  paymentMethod?: string;
 }
 
 export interface BillingoInvoiceResult {
@@ -126,7 +128,7 @@ export async function createBillingoInvoice(input: BillingoInvoiceInput): Promis
   if (!(await billingoEnabled())) return null;
 
   const vat = (await getConfig("BILLINGO_VAT")) || "27%";
-  const paymentMethod = (await getConfig("BILLINGO_PAYMENT_METHOD")) || "online_bankcard";
+  const paymentMethod = input.paymentMethod || (await getConfig("BILLINGO_PAYMENT_METHOD")) || "online_bankcard";
   const blockId = Number(await getConfig("BILLINGO_BLOCK_ID"));
   const bankAccountRaw = await getConfig("BILLINGO_BANK_ACCOUNT_ID");
   const bankAccountId = bankAccountRaw ? Number(bankAccountRaw) : undefined;
