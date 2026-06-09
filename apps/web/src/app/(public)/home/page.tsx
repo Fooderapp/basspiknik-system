@@ -46,12 +46,12 @@ export default async function HomePage() {
     supabase.rpc("get_credit_balance", { p_user_id: user.id }),
     supabase
       .from("tickets")
-      .select("id, status, ticket_name, tier, order_id, qr_code, orders!inner(user_id), events(name, venue, start_date, cover_image_url, banner_image_url), ticket_types(image_url)")
+      .select("id, status, ticket_name, tier, order_id, qr_code, created_at, orders!inner(user_id), events(name, venue, start_date, cover_image_url, banner_image_url), ticket_types(image_url)")
       .eq("orders.user_id", user.id)
       .eq("status", "VALID"),
     supabase
       .from("tickets")
-      .select("id, status, ticket_name, tier, order_id, qr_code, events(name, venue, start_date, cover_image_url, banner_image_url), ticket_types(image_url)")
+      .select("id, status, ticket_name, tier, order_id, qr_code, created_at, events(name, venue, start_date, cover_image_url, banner_image_url), ticket_types(image_url)")
       .eq("transferred_to_user_id", user.id)
       .eq("status", "VALID"),
     supabase
@@ -84,9 +84,9 @@ export default async function HomePage() {
   for (const tk of rawTickets) orderCounts.set(tk.order_id, (orderCounts.get(tk.order_id) ?? 0) + 1);
   const orderSeen = new Map<string, number>();
   const sorted = [...rawTickets].sort((a: any, b: any) => {
-    const ad = a.events?.start_date ? new Date(a.events.start_date).getTime() : Infinity;
-    const bd = b.events?.start_date ? new Date(b.events.start_date).getTime() : Infinity;
-    return ad - bd;
+    const ad = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const bd = b.created_at ? new Date(b.created_at).getTime() : 0;
+    return bd - ad; // newest purchase first
   });
   const walletTickets: WalletTicket[] = sorted.map((tk: any) => {
     const idx = (orderSeen.get(tk.order_id) ?? 0) + 1;

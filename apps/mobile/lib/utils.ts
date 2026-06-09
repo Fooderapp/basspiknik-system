@@ -1,4 +1,4 @@
-export function formatCurrency(amount: number, currency = "EUR"): string {
+export function formatCurrency(amount: number, currency = "HUF"): string {
   const formatted = new Intl.NumberFormat("hu-HU", {
     style: "currency",
     currency,

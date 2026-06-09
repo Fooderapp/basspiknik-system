@@ -3,6 +3,7 @@ import {
   View, TouchableOpacity, ActivityIndicator,
   ScrollView, Alert, Vibration, Pressable,
 } from "react-native";
+import Animated, { ZoomIn } from "react-native-reanimated";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Camera, ChevronLeft, StickyNote, Check } from "lucide-react-native";
@@ -11,6 +12,7 @@ import { formatCurrency } from "@/lib/utils";
 import type { DrinkOrder, DrinkOrderItem, Drink } from "@/lib/types";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/Button";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 
 type ItemWithDrink = DrinkOrderItem & { drinks: Pick<Drink, "name" | "price"> };
@@ -248,22 +250,27 @@ export default function BartenderScreen() {
 
             {/* Items */}
             <View className="gap-3">
-              {items.map(item => {
+              {items.map((item, i) => {
                 const done = !!item.fulfilled_at;
                 return (
-                  <Pressable
+                  <PressableScale
                     key={item.id}
                     onPress={() => toggleItem(item.id, !done)}
-                    style={done ? { backgroundColor: "#22C55E18", borderColor: "#22C55E55" } : undefined}
-                    className={`rounded-2xl p-4 flex-row items-center gap-4 border active:opacity-80 ${
-                      done ? "" : "bg-card border-border"
+                    pressedScale={0.97}
+                    style={done ? { backgroundColor: "#22C55E18", borderColor: "#22C55E55", borderWidth: 1, borderRadius: 16 } : undefined}
+                    className={`rounded-2xl p-4 flex-row items-center gap-4 ${
+                      done ? "" : "border border-border bg-card"
                     }`}
                   >
                     <View
                       style={done ? { backgroundColor: "#22C55E", borderColor: "#22C55E" } : undefined}
                       className={`w-9 h-9 rounded-full border-2 items-center justify-center ${done ? "" : "border-border"}`}
                     >
-                      {done && <Check size={18} color="#ffffff" strokeWidth={2.5} />}
+                      {done && (
+                        <Animated.View entering={ZoomIn.springify().damping(10).stiffness(180)}>
+                          <Check size={18} color="#ffffff" strokeWidth={2.5} />
+                        </Animated.View>
+                      )}
                     </View>
                     <View className="flex-1">
                       <Text className={`font-semibold text-base ${done ? "text-white/40 line-through" : "text-white"}`}>
@@ -273,7 +280,7 @@ export default function BartenderScreen() {
                         × {item.quantity}  ·  {formatCurrency(item.unit_price)}
                       </Text>
                     </View>
-                  </Pressable>
+                  </PressableScale>
                 );
               })}
             </View>

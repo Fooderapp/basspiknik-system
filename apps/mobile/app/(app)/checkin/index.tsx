@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Modal, Pressable, Vibration, View } from "react-native";
+import Animated, { ZoomIn } from "react-native-reanimated";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -11,6 +12,7 @@ import { formatDate } from "@/lib/utils";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { PressableScale } from "@/components/ui/PressableScale";
 
 interface ScanResult {
   success: boolean;
@@ -128,7 +130,7 @@ export default function CheckInScreen() {
               </View>
             }
             renderItem={({ item }) => (
-              <Pressable onPress={() => setEvent(item)} className="mb-3 active:opacity-75">
+              <PressableScale onPress={() => setEvent(item)} style={{ marginBottom: 12 }} pressedScale={0.97}>
                 <Card>
                   <Text className="text-foreground font-semibold text-base tracking-tight" numberOfLines={1}>
                     {item.name}
@@ -137,7 +139,7 @@ export default function CheckInScreen() {
                     {formatDate(item.start_date)}{item.venue ? ` · ${item.venue}` : ""}
                   </Text>
                 </Card>
-              </Pressable>
+              </PressableScale>
             )}
           />
         )}
@@ -204,11 +206,15 @@ export default function CheckInScreen() {
       {/* Result modal */}
       <Modal visible={!!result} transparent animationType="slide" onRequestClose={dismiss}>
         <Pressable className="flex-1 justify-end" onPress={dismiss}>
-          <View style={{ backgroundColor: accent }} className="mx-4 mb-8 rounded-3xl p-6">
+          <Animated.View
+            entering={ZoomIn.springify().damping(14).stiffness(160)}
+            style={{ backgroundColor: accent }}
+            className="mx-4 mb-8 rounded-3xl p-6"
+          >
 
-            <View className="items-center mb-3">
+            <Animated.View entering={ZoomIn.delay(80).springify().damping(10)} className="items-center mb-3">
               <ResultIcon />
-            </View>
+            </Animated.View>
 
             <Text className="text-white text-xl font-bold text-center mb-1 tracking-tight">
               {headline()}
@@ -244,7 +250,7 @@ export default function CheckInScreen() {
             >
               <Text className="text-white font-semibold">Scan Next</Text>
             </Pressable>
-          </View>
+          </Animated.View>
         </Pressable>
       </Modal>
     </View>

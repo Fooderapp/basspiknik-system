@@ -15,6 +15,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth";
 import { formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { Card, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Text } from "@/components/ui/text";
 import { Badge } from "@/components/ui/badge";
@@ -383,9 +384,9 @@ export default function CompassScreen() {
               const isSelected = selected?.id === f.id;
 
               return (
-                <Pressable
+                <PressableScale
                   onPress={() => setSelected(isSelected ? null : f)}
-                  className="active:opacity-70"
+                  pressedScale={0.97}
                 >
                   <View className={`flex-row items-center gap-3 py-3 px-4 rounded-xl mb-2 border ${isSelected ? "bg-card border-foreground" : "bg-card border-border"} ${seen.ghost ? "opacity-40" : ""}`}>
                     {/* Status dot */}
@@ -409,7 +410,7 @@ export default function CompassScreen() {
                       </View>
                     )}
                   </View>
-                </Pressable>
+                </PressableScale>
               );
             }}
           />

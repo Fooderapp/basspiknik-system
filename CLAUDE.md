@@ -36,6 +36,10 @@ All UI components come from **shadcn/ui**: https://ui.shadcn.com
 - Client components: receive `dict: Dictionary` as a prop, use `dict["key"]` or a local `t` helper
 - Keys follow `section.specific_name` format (e.g. `menu.place_order`, `bar.fulfill`)
 
+## Git — MANDATORY
+- **Always push to GitHub after every commit** — `git push` immediately after `git commit`
+- Never leave commits local-only
+
 ## Conventions
 - Server components fetch directly from Supabase
 - Client components use `fetch()` to hit `/api/*` routes

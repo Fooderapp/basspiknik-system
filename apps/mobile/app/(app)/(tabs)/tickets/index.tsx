@@ -1,28 +1,28 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Dimensions, Linking, Platform, Pressable, RefreshControl, ScrollView, View } from "react-native";
+import { ActivityIndicator, Alert, Linking, Platform, RefreshControl, ScrollView, View } from "react-native";
 import { router } from "expo-router";
-import { Apple, Wallet, Ticket as TicketIcon, User, ChevronRight } from "lucide-react-native";
+import { Apple, Wallet, Ticket as TicketIcon, ChevronRight } from "lucide-react-native";
 import { Screen } from "@/components/ui/Screen";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/Button";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { Text } from "@/components/ui/text";
-import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth";
 import type { Ticket } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
-const GAP = 12;
-const H_PAD = 20;
-const CARD_WIDTH = (Dimensions.get("window").width - H_PAD * 2 - GAP) / 2;
 
 const STATUS_VARIANT: Record<string, "success" | "muted" | "destructive" | "secondary"> = {
   VALID:     "success",
   USED:      "muted",
   CANCELLED: "destructive",
   REFUNDED:  "secondary",
+};
+const STRIPE: Record<string, string> = {
+  VALID: "#22c55e", USED: "#6b7280", CANCELLED: "#ef4444", REFUNDED: "#a1a1aa",
 };
 
 export default function TicketsScreen() {
@@ -94,8 +94,9 @@ export default function TicketsScreen() {
       padded={false}
     >
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: H_PAD, paddingBottom: 32, paddingTop: 8 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40, paddingTop: 8 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fafafa" />}
+        showsVerticalScrollIndicator={false}
       >
         {/* Wallet buttons */}
         {hasValid && (
@@ -111,50 +112,43 @@ export default function TicketsScreen() {
           </View>
         )}
 
-        {/* 2-column grid */}
         {tickets.length === 0 ? (
           <View className="items-center py-20">
             <View className="w-14 h-14 rounded-2xl items-center justify-center mb-4 border border-border bg-muted">
               <TicketIcon size={24} color="#8f8f8f" strokeWidth={1.75} />
             </View>
             <Text className="text-foreground font-semibold text-lg tracking-tight">No tickets yet</Text>
-            <Text className="text-muted-foreground text-sm mt-1">Your purchased tickets appear here</Text>
+            <Text className="text-muted-foreground text-sm mt-1 mb-5">Your purchased tickets appear here</Text>
+            <Button onPress={() => router.push("/(app)/buy" as never)}>
+              <Text>Browse events</Text>
+            </Button>
           </View>
         ) : (
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: GAP }}>
+          <View className="gap-3">
             {tickets.map(item => (
-              <Pressable
+              <PressableScale
                 key={item.id}
                 onPress={() => router.push(`/(app)/tickets/${item.id}` as never)}
-                className="active:opacity-75"
-                style={{ width: CARD_WIDTH }}
+                pressedScale={0.97}
               >
-                <Card className="flex-1">
-                  <View className="mb-2">
-                    <Badge label={item.status} variant={STATUS_VARIANT[item.status] ?? "secondary"} />
+                <Card className="flex-row items-center gap-4 overflow-hidden p-4">
+                  {/* status stripe */}
+                  <View className="absolute left-0 top-0 bottom-0 w-1.5" style={{ backgroundColor: STRIPE[item.status] ?? "#6b7280" }} />
+                  <View className="w-11 h-11 rounded-2xl items-center justify-center border border-border bg-muted ml-1">
+                    <TicketIcon size={19} color="#fafafa" strokeWidth={1.75} />
                   </View>
-                  <View className="w-9 h-9 rounded-xl items-center justify-center mb-3 border border-border bg-muted">
-                    <TicketIcon size={17} color="#fafafa" strokeWidth={1.75} />
-                  </View>
-                  <Text className="text-foreground font-semibold text-sm tracking-tight" numberOfLines={2}>
-                    {item.ticket_name ?? "Ticket"}
-                  </Text>
-                  <Text className="text-muted-foreground text-xs mt-1" numberOfLines={1}>
-                    {formatDate(item.created_at)}
-                  </Text>
-                  {item.holder_name && (
-                    <View className="flex-row items-center gap-1 mt-1.5">
-                      <User size={11} color="#8f8f8f" strokeWidth={1.75} />
-                      <Text className="text-muted-foreground text-xs" numberOfLines={1}>{item.holder_name}</Text>
+                  <View className="flex-1">
+                    <Text className="text-foreground font-semibold text-base tracking-tight" numberOfLines={1}>
+                      {item.ticket_name ?? "Ticket"}
+                    </Text>
+                    <View className="flex-row items-center gap-2 mt-1">
+                      <Badge label={item.status} variant={STATUS_VARIANT[item.status] ?? "secondary"} />
+                      <Text className="text-muted-foreground text-xs">{formatDate(item.created_at)}</Text>
                     </View>
-                  )}
-                  <Separator className="mt-3 mb-2" />
-                  <View className="flex-row items-center justify-between">
-                    <Text className="text-muted-foreground text-xs">QR</Text>
-                    <ChevronRight size={13} color="#8f8f8f" strokeWidth={1.75} />
                   </View>
+                  <ChevronRight size={18} color="#8f8f8f" strokeWidth={1.75} />
                 </Card>
-              </Pressable>
+              </PressableScale>
             ))}
           </View>
         )}

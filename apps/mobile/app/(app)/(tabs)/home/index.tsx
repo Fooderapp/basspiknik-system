@@ -5,7 +5,7 @@ import {
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import Animated, {
-  interpolate, useAnimatedStyle, useSharedValue, withSpring,
+  Easing, interpolate, useAnimatedStyle, useSharedValue, withTiming,
 } from "react-native-reanimated";
 import {
   CalendarDays, MapPin, Star, ShoppingBag, Wine, Sparkles, QrCode,
@@ -33,7 +33,7 @@ const MAX_CARDS = 8;
 
 interface WTicket {
   id: string; status: string; ticket_name: string | null; tier: string | null;
-  order_id: string; qr_code: string;
+  order_id: string; qr_code: string; created_at: string | null;
   events?: { name: string; venue: string | null; start_date: string; cover_image_url: string | null; banner_image_url: string | null } | null;
   ticket_types?: { image_url: string | null } | null;
 }
@@ -71,7 +71,7 @@ function FlipCard({
 
   function toggle() {
     flipped.current = !flipped.current;
-    flip.value = withSpring(flipped.current ? 1 : 0, { stiffness: 200, damping: 22 });
+    flip.value = withTiming(flipped.current ? 1 : 0, { duration: 480, easing: Easing.out(Easing.cubic) });
   }
 
   return (
@@ -86,7 +86,7 @@ function FlipCard({
     >
       <Pressable onPress={toggle} android_ripple={null}>
         {/* ── FRONT FACE ── */}
-        <Animated.View style={frontAnim}>
+        <Animated.View style={frontAnim} shouldRasterizeIOS renderToHardwareTextureAndroid>
           <Card className="overflow-hidden p-0" style={{ borderRadius: 20 }}>
             {/* Banner (4:1) / cover + pocket notch — 4:1 box so a 480×120 image fills exactly */}
             <View style={{ height: CARD_W / 4 }} className="bg-secondary overflow-hidden">
@@ -147,7 +147,7 @@ function FlipCard({
         </Animated.View>
 
         {/* ── BACK FACE ── */}
-        <Animated.View style={backAnim}>
+        <Animated.View style={backAnim} shouldRasterizeIOS renderToHardwareTextureAndroid>
           <View style={{ padding: 28, alignItems: "center" }}>
             <Text className="text-muted-foreground text-[10px] font-semibold tracking-widest mb-5" style={{ textTransform: "uppercase" }}>
               Entry Pass
@@ -210,10 +210,10 @@ export default function HomeScreen() {
       { data: orders }, { data: drinks }, { data: creds },
     ] = await Promise.all([
       (supabase as any).from("tickets")
-        .select("id, status, ticket_name, tier, order_id, qr_code, orders!inner(user_id), events(name, venue, start_date, cover_image_url, banner_image_url), ticket_types(image_url)")
+        .select("id, status, ticket_name, tier, order_id, qr_code, created_at, orders!inner(user_id), events(name, venue, start_date, cover_image_url, banner_image_url), ticket_types(image_url)")
         .eq("orders.user_id", uid).eq("status", "VALID"),
       (supabase as any).from("tickets")
-        .select("id, status, ticket_name, tier, order_id, qr_code, events(name, venue, start_date, cover_image_url, banner_image_url), ticket_types(image_url)")
+        .select("id, status, ticket_name, tier, order_id, qr_code, created_at, events(name, venue, start_date, cover_image_url, banner_image_url), ticket_types(image_url)")
         .eq("transferred_to_user_id", uid).eq("status", "VALID"),
       (supabase as any).rpc("get_credit_balance", { p_user_id: uid }),
       (supabase as any).from("orders").select("id, total, created_at, events(name)")
@@ -231,9 +231,9 @@ export default function HomeScreen() {
     const cmap: Record<string, { total: number }> = {};
     for (const t of raw) cmap[t.order_id] = { total: (cmap[t.order_id]?.total ?? 0) + 1 };
     raw.sort((a: WTicket, b: WTicket) => {
-      const ad = a.events?.start_date ? new Date(a.events.start_date).getTime() : Infinity;
-      const bd = b.events?.start_date ? new Date(b.events.start_date).getTime() : Infinity;
-      return ad - bd;
+      const ad = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const bd = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return bd - ad; // newest purchase first
     });
     setTickets(raw as WTicket[]);
     setCounts(cmap);

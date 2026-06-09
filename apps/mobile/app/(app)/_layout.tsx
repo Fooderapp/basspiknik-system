@@ -15,17 +15,15 @@ export default function AppLayout() {
 
   if (!session) return <Redirect href="/(auth)/login" />;
 
+  // Root stack: the liquid-glass tab bar lives in (tabs); full-screen tools
+  // (scanners / POS) and the role redirect sit alongside it so they cover the
+  // tab bar when pushed.
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#000000" } }}>
-      <Stack.Screen name="index" />
-      <Stack.Screen name="profile" />
-      <Stack.Screen name="compass/index" />
-      <Stack.Screen name="buy/index" />
-      <Stack.Screen name="buy/[eventId]" />
-      <Stack.Screen name="tickets/[id]" options={{ presentation: "modal" }} />
-      <Stack.Screen name="transfer" options={{ presentation: "modal" }} />
-      <Stack.Screen name="menu/order" options={{ presentation: "modal" }} />
-      <Stack.Screen name="bartender/[orderId]" options={{ presentation: "modal" }} />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="checkin/index" />
+      <Stack.Screen name="seller/index" />
+      <Stack.Screen name="bartender/index" />
     </Stack>
   );
 }

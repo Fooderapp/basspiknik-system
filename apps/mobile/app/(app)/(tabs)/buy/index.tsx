@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
-  Pressable,
   RefreshControl,
   View,
 } from "react-native";
@@ -12,6 +11,7 @@ import { CalendarDays, MapPin, ShoppingBag, Tag } from "lucide-react-native";
 import { Screen } from "@/components/ui/Screen";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/badge";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { Text } from "@/components/ui/text";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/lib/supabase";
@@ -106,10 +106,11 @@ export default function BuyTicketsScreen() {
           const ticketCount = (event.ticket_types ?? []).length;
 
           return (
-            <Pressable
+            <PressableScale
               onPress={() => openEvent(event.id)}
-              className="mb-3 active:opacity-75"
+              style={{ marginBottom: 12 }}
               disabled={soldOut}
+              pressedScale={0.97}
             >
               <Card className="overflow-hidden p-0">
                 {/* Cover image */}
@@ -179,7 +180,7 @@ export default function BuyTicketsScreen() {
                   </View>
                 </View>
               </Card>
-            </Pressable>
+            </PressableScale>
           );
         }}
       />

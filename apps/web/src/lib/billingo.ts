@@ -96,11 +96,20 @@ async function billingoFetch(path: string, init: RequestInit): Promise<any> {
       ...(init.headers ?? {}),
     },
   });
+  // Read body once as text so we can use it in both error reporting and JSON parsing.
+  const body = await res.text().catch(() => "");
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`Billingo ${path} → ${res.status}: ${text.slice(0, 300)}`);
+    throw new Error(`Billingo ${path} → ${res.status}: ${body.slice(0, 300)}`);
   }
-  return res.json();
+  // /send and similar action endpoints return 200/204 with an empty body — don't
+  // try to JSON.parse("") as that throws "Unexpected end of JSON input".
+  if (!body) return {};
+  try {
+    return JSON.parse(body);
+  } catch {
+    // Non-JSON response (e.g. plain-text "OK") — return as-is so callers don't crash.
+    return { _raw: body };
+  }
 }
 
 /** Create (always-new) partner for the buyer, return its id. */
@@ -171,6 +180,28 @@ export async function createBillingoInvoice(input: BillingoInvoiceInput): Promis
     };
 
     const doc = await billingoFetch("/documents", { method: "POST", body: JSON.stringify(body) });
+
+    // Explicitly send the invoice by email.
+    // should_send_letter in the create payload is unreliable on some Billingo plans;
+    // the /send endpoint is the guaranteed delivery mechanism.
+    // Note: billingoFetch now handles empty-body responses (200/204) without throwing.
+    if (input.buyer.email && doc.id) {
+      try {
+        await billingoFetch(`/documents/${doc.id}/send`, {
+          method: "POST",
+          body: JSON.stringify({ emails: [input.buyer.email] }),
+        });
+        console.log(`Billingo send OK — document ${doc.id} → ${input.buyer.email}`);
+      } catch (sendErr) {
+        // Non-fatal: invoice exists, but email delivery failed.
+        // Full error is logged so it shows in Vercel function logs.
+        console.error(
+          `Billingo send FAILED — document ${doc.id} → ${input.buyer.email}:`,
+          sendErr instanceof Error ? sendErr.message : String(sendErr),
+        );
+      }
+    }
+
     return {
       documentId: doc.id as number,
       number: (doc.invoice_number as string) || `BILLINGO-${doc.id}`,

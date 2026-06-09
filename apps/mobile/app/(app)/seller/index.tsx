@@ -86,6 +86,7 @@ export default function SellerScreen() {
     collectPaymentMethod,
     confirmPaymentIntent,
     cancelCollectPaymentMethod,
+    setSimulatorConfiguration,
     connectedReader: stripeReader,
   } = useStripeTerminal({
     onUpdateDiscoveredReaders: useCallback(async (readers: Reader.Type[]) => {
@@ -395,19 +396,24 @@ export default function SellerScreen() {
       if (retrieveError) throw new Error(retrieveError.message);
       if (!retrieved) throw new Error("Failed to retrieve payment intent");
 
-      // 3. Collect payment (tap card to iPhone)
-      setTapMessage("Hold card near iPhone…");
+      // 3. Collect payment (tap card to iPhone).
+      // In simulated mode, configure a test card first so the SDK auto-resolves
+      // without needing a physical NFC tap.
+      setTapMessage(runtimeConfig.stripeSimulated ? "Simulating card tap…" : "Hold card near iPhone…");
+      if (runtimeConfig.stripeSimulated) {
+        await setSimulatorConfiguration({ simulatedCard: { testCardNumber: "4242424242424242" } });
+      }
       const { paymentIntent: collected, error: collectError } = await collectPaymentMethod({ paymentIntent: retrieved });
       if (collectError) throw new Error(collectError.message);
       if (!collected) throw new Error("No payment intent after collect");
 
       // 4. Confirm payment
       setTapMessage("Confirming…");
-      const { error: confirmError } = await confirmPaymentIntent({ paymentIntent: collected });
+      const { paymentIntent: confirmed, error: confirmError } = await confirmPaymentIntent({ paymentIntent: collected });
       if (confirmError) throw new Error(confirmError.message);
 
-      // 4. Issue tickets + Billingo invoice via API
-      const data = await createPosOrder(paymentIntent.id ?? undefined);
+      // 5. Issue tickets + Billingo invoice via API
+      const data = await createPosOrder((confirmed ?? collected).id ?? undefined);
 
       setTapState("success");
       setTapMessage("Payment accepted!");
