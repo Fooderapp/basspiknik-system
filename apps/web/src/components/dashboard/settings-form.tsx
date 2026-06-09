@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Globe, DollarSign, Save, Coins } from "lucide-react";
+import { Globe, DollarSign, Save, Coins, Receipt } from "lucide-react";
 import type { AppSettings, Currency, Language } from "@/lib/settings";
 
 const CURRENCIES: { value: Currency; label: string; symbol: string; note?: string }[] = [
@@ -35,6 +35,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
   const [creditsPerDrink, setCreditsPerDrink] = useState(1);
   const [spinCost, setSpinCost] = useState(4);
   const [spinWinRate, setSpinWinRate] = useState(20);
+  const [invoicePosCash, setInvoicePosCash] = useState(true);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
 
@@ -48,6 +49,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
         if (d.credits_per_drink != null) setCreditsPerDrink(d.credits_per_drink);
         if (d.spin_cost != null) setSpinCost(d.spin_cost);
         if (d.spin_win_rate != null) setSpinWinRate(d.spin_win_rate);
+        if (d.invoice_pos_cash !== undefined) setInvoicePosCash(!!d.invoice_pos_cash);
       })
       .catch(() => {});
   }, []);
@@ -66,7 +68,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           currency, language, creditsEnabled, creditsPerTicket,
-          creditsPerDrink, spinCost, spinWinRate,
+          creditsPerDrink, spinCost, spinWinRate, invoicePosCash,
         }),
       });
       const data = await res.json();
@@ -213,6 +215,34 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
           <p className="text-xs text-muted-foreground">
             Win chance ≈ {spinWinRate > 0 ? (100 / spinWinRate).toFixed(1) : "0"}% per spin.
           </p>
+        </CardContent>
+      </Card>
+
+      {/* Invoicing */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Receipt className="h-4 w-4" />
+            Invoicing
+          </CardTitle>
+          <CardDescription>
+            Billingo e-invoices are always issued for online and POS card-terminal sales.
+            Free (spin-won) tickets are never invoiced.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Invoice POS cash sales</Label>
+              <p className="text-xs text-muted-foreground">
+                When off, cash sales at the door skip invoicing. Card terminal sales still invoice.
+              </p>
+            </div>
+            <Switch
+              checked={invoicePosCash}
+              onCheckedChange={(v) => { setInvoicePosCash(v); setDirty(true); }}
+            />
+          </div>
         </CardContent>
       </Card>
 

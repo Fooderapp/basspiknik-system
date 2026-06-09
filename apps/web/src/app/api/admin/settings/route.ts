@@ -13,6 +13,7 @@ const schema = z.object({
   creditsPerDrink: z.coerce.number().int().min(0).max(1000).optional(),
   spinCost: z.coerce.number().int().min(1).max(1000).optional(),
   spinWinRate: z.coerce.number().int().min(1).max(100000).optional(),
+  invoicePosCash: z.boolean().optional(),
 });
 
 export async function GET() {
@@ -23,7 +24,7 @@ export async function GET() {
   const supabase = await createAdminClient() as any;
   const { data, error } = await supabase
     .from("app_settings")
-    .select("currency, language, credits_enabled, credits_per_ticket, credits_per_drink, spin_cost, spin_win_rate, updated_at")
+    .select("currency, language, credits_enabled, credits_per_ticket, credits_per_drink, spin_cost, spin_win_rate, invoice_pos_cash, updated_at")
     .eq("id", "global")
     .single();
 
@@ -55,6 +56,7 @@ export async function POST(req: Request) {
   if (d.creditsPerDrink  !== undefined) update.credits_per_drink  = d.creditsPerDrink;
   if (d.spinCost         !== undefined) update.spin_cost          = d.spinCost;
   if (d.spinWinRate      !== undefined) update.spin_win_rate      = d.spinWinRate;
+  if (d.invoicePosCash   !== undefined) update.invoice_pos_cash   = d.invoicePosCash;
 
   const supabase = await createAdminClient() as any;
   const { error } = await supabase

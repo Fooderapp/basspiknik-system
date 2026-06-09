@@ -159,10 +159,15 @@ export async function POST(req: Request) {
     notes: notes ?? null,
   });
 
-  // ── Invoice — POS cash/terminal sales are real sales → invoice them.
+  // ── Invoice — POS card-terminal always; cash only when the toggle is on.
   // RULE: only invoice paid orders (total > 0). Free comps get no invoice.
   let invoiceNumber: string | null = null;
-  if (totalAmount > 0 && invoiceItems.length > 0) {
+  const { data: invSetting } = await supabase
+    .from("app_settings").select("invoice_pos_cash").eq("id", "global").single();
+  const cashInvoicingOn = invSetting?.invoice_pos_cash ?? true;
+  const skipCash = paymentMethod === "CASH" && !cashInvoicingOn;
+
+  if (totalAmount > 0 && invoiceItems.length > 0 && !skipCash) {
     let billingoResult = null;
     try {
       billingoResult = await createBillingoInvoice({
