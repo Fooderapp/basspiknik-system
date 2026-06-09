@@ -79,8 +79,18 @@ export async function POST(req: Request) {
   const buyerName = profile?.billing_name ?? profile?.name ?? null;
 
   // Reuse or create a Stripe customer keyed off the profile.
+  // When the Stripe account changes, the stored customer ID no longer exists —
+  // catch that case and create a fresh customer in the new account.
   const stripe = await getStripe();
   let customerId = (profile as any)?.stripe_customer_id as string | undefined;
+  if (customerId) {
+    try {
+      const existing = await stripe.customers.retrieve(customerId);
+      if ((existing as any).deleted) customerId = undefined; // deleted customer — recreate
+    } catch {
+      customerId = undefined; // "No such customer" in new account — recreate
+    }
+  }
   if (!customerId) {
     const customer = await stripe.customers.create({
       email: buyerEmail ?? undefined,
