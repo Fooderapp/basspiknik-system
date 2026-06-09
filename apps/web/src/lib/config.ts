@@ -33,6 +33,7 @@ export const CONFIG_KEYS = [
   { key: "STRIPE_SECRET_KEY", group: "Stripe", label: "Secret key", secret: true, placeholder: "sk_live_…" },
   { key: "STRIPE_WEBHOOK_SECRET", group: "Stripe", label: "Webhook signing secret", secret: true, placeholder: "whsec_…" },
   { key: "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY", group: "Stripe", label: "Publishable key", secret: false, placeholder: "pk_live_…", clientBuild: true },
+  { key: "STRIPE_TERMINAL_LOCATION_ID", group: "Stripe", label: "Terminal location ID", secret: false, placeholder: "tml_…" },
   { key: "BILLINGO_API_KEY", group: "Billingo", label: "API key", secret: true },
   { key: "BILLINGO_BLOCK_ID", group: "Billingo", label: "Document block ID", secret: false },
   { key: "BILLINGO_BANK_ACCOUNT_ID", group: "Billingo", label: "Bank account ID", secret: false },

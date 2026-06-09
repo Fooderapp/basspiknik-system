@@ -19,6 +19,7 @@ const schema = z.object({
  *  native PaymentSheet. Bearer-token authed (the mobile app is always signed in).
  *  Tickets are created by the payment_intent.succeeded webhook (source=mobile_native). */
 export async function POST(req: Request) {
+  try {
   const authHeader = req.headers.get("authorization");
   const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
   if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -123,4 +124,8 @@ export async function POST(req: Request) {
     total,
     currency,
   });
+  } catch (err: any) {
+    console.error("[orders/payment-intent]", err);
+    return NextResponse.json({ error: err.message ?? "Internal error" }, { status: 500 });
+  }
 }

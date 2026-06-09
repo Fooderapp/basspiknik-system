@@ -27,8 +27,7 @@ type PaymentMethod = "cash" | "tap";
 type TapState = "idle" | "discovering" | "connecting" | "ready" | "processing" | "success" | "error";
 type BuyerMode = "guest" | "registered";
 
-const API_URL     = process.env.EXPO_PUBLIC_API_URL ?? "";
-const LOCATION_ID = process.env.EXPO_PUBLIC_STRIPE_LOCATION_ID ?? "";
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
 
 export default function SellerScreen() {
   const insets = useSafeAreaInsets();
@@ -57,6 +56,7 @@ export default function SellerScreen() {
   const [connectedReader, setConnectedReader] = useState<Reader | null>(null);
   const tapStateRef = useRef<TapState>("idle");
   const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const locationIdRef = useRef<string>("");
   useEffect(() => { tapStateRef.current = tapState; }, [tapState]);
 
   // Sync SDK's persisted reader connection to local state on mount / reconnect.
@@ -89,7 +89,7 @@ export default function SellerScreen() {
       const { error } = await connectReader({
         discoveryMethod: "tapToPay",
         reader: readers[0],
-        locationId: LOCATION_ID,
+        locationId: locationIdRef.current,
       });
       if (watchdogRef.current) clearTimeout(watchdogRef.current);
       if (error) {
@@ -161,6 +161,22 @@ export default function SellerScreen() {
 
     setTapState("discovering");
     setTapMessage("Looking for reader…");
+
+    // Resolve the Stripe Terminal location ID at runtime from the backend.
+    // This avoids hardcoded env vars and works when switching Stripe accounts.
+    if (!locationIdRef.current) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const r = await fetch(`${API_URL}/api/terminal/location`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
+          });
+          const d = await r.json();
+          if (d?.locationId) locationIdRef.current = d.locationId;
+        }
+      } catch { /* fall through — Stripe SDK may use cached location */ }
+    }
 
     // Watchdog: Tap to Pay discovery can hang forever if the connection-token
     // endpoint is unreachable or the device/network can't reach Stripe.
