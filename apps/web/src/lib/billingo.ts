@@ -159,10 +159,11 @@ export async function createBillingoInvoice(input: BillingoInvoiceInput): Promis
         vat,
         currency: input.currency,
       })),
-      // round "five" only valid for HUF; other currencies must use "two".
+      // Billingo round enum: none/half/one/five/ten/fifty/hundred/thousand.
+      // HUF cash rounds to 5; decimal currencies (EUR) must NOT round → "none".
       settings: {
         should_send_letter: false,
-        round: input.currency === "HUF" ? "five" : "two",
+        round: input.currency === "HUF" ? "five" : "none",
         without_financial_fulfillment: false,
       },
     };

@@ -38,8 +38,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  for (const u of parsed.data.updates) {
-    await setConfig(u.key, u.value);
+  try {
+    for (const u of parsed.data.updates) {
+      await setConfig(u.key, u.value);
+    }
+  } catch (e: any) {
+    return NextResponse.json({ error: e?.message ?? "Save failed" }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true, keys: await getConfigStatus() });

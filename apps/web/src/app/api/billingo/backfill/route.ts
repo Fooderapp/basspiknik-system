@@ -136,7 +136,7 @@ export async function POST(req: Request) {
     electronic: true,
     paid: true,
     items,
-    settings: { should_send_letter: false, round: currency === "HUF" ? "five" : "two", without_financial_fulfillment: false },
+    settings: { should_send_letter: false, round: currency === "HUF" ? "five" : "none", without_financial_fulfillment: false },
   };
   const doc = await bfetch("/documents", key, { method: "POST", body: JSON.stringify(docBody) });
   if (!doc.ok) {

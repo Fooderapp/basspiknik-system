@@ -62,12 +62,19 @@ export function invalidateConfigCache() {
   cache = null;
 }
 
-/** Upsert a config value (null/"" → unset, falls back to env). */
+/** Upsert a config value (null/"" → unset, falls back to env). Throws on failure
+ *  (e.g. the system_config table/migration is missing) so the UI can report it. */
 export async function setConfig(key: string, value: string | null): Promise<void> {
   const sb = (await createAdminClient()) as any;
-  await sb
+  const { error } = await sb
     .from("system_config")
     .upsert({ key, value: value && value.length ? value : null, updated_at: new Date().toISOString() });
+  if (error) {
+    throw new Error(
+      `Could not save "${key}": ${error.message}. ` +
+      `Has migration 026_system_config.sql been run (+ PostgREST schema reloaded)?`,
+    );
+  }
   invalidateConfigCache();
 }
 
