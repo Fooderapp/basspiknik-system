@@ -28,7 +28,7 @@ export async function GET(
 
   const bearerToken = req.nextUrl.searchParams.get("token");
   if (bearerToken) {
-    const admin = createAdminClient() as any;
+    const admin = await createAdminClient() as any;
     const { data: { user } } = await admin.auth.getUser(bearerToken);
     userId = user?.id ?? null;
   } else {
