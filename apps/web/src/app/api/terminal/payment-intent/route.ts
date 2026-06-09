@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getStripe } from "@/lib/stripe";
+import { getSettings, toStripeAmount } from "@/lib/settings";
 
 export async function POST(req: Request) {
   try {
@@ -33,35 +34,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // TODO: default currency must match the Stripe account's country currency.
-    // GBP = UK Ltd account (current). Change to "eur" (Eurozone account)
-    // or "huf" (Hungarian account) once Stripe entity is confirmed.
-    // card_present (Tap to Pay) does NOT accept a currency that differs from
-    // the account's settlement currency unless multi-currency is enabled.
-    const { amount, currency = "gbp", metadata = {} } = await req.json();
-
-    if (!amount || amount < 50) {
-      return NextResponse.json({ error: "Amount must be at least 50 cents" }, { status: 400 });
+    // amount arrives as display-unit value (e.g. 5000 for 5000 HUF).
+    const { amount, metadata = {} } = await req.json();
+    if (!amount || amount <= 0) {
+      return NextResponse.json({ error: "Amount required" }, { status: 400 });
     }
 
-    // card_present (Tap to Pay) settles in the Stripe account's country currency.
-    // A GB account only accepts GBP, a Eurozone account only EUR, etc.
-    // Validate up front so a mismatch returns a clear message instead of
-    // Stripe's cryptic "card_present ... not supported in GB".
+    // Always use the app's configured currency — card_present (Tap to Pay)
+    // MUST use the Stripe account's settlement currency.
+    const settings = await getSettings();
+    const currency = settings.currency.toLowerCase(); // "huf", "eur", etc.
+
     const stripe = await getStripe();
-    const account = await stripe.accounts.retrieve();
-    const accountCurrency = account.default_currency?.toLowerCase();
-    if (accountCurrency && accountCurrency !== currency.toLowerCase()) {
-      return NextResponse.json(
-        {
-          error: `Tap to Pay currency mismatch: this Stripe account (country ${account.country}) settles in ${accountCurrency.toUpperCase()}, but the charge requested ${currency.toUpperCase()}. In-person card_present payments must use the account country's currency. Use a Eurozone Stripe account for EUR.`,
-        },
-        { status: 400 },
-      );
-    }
-
     const paymentIntent = await stripe.paymentIntents.create({
-      amount,
+      amount: toStripeAmount(amount, settings.currency),
       currency,
       payment_method_types: ["card_present"],
       capture_method: "automatic",

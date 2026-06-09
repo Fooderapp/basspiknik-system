@@ -330,11 +330,10 @@ export default function SellerScreen() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          amount: Math.round(cartTotal * 100), // cents
-          // TODO: currency must match Stripe account country's default currency.
-          // Currently GBP for UK Ltd account. Switch to EUR (Eurozone account)
-          // or HUF (Hungarian account) once the Stripe entity is confirmed.
-          currency: "gbp",
+          // Send display-unit amount (e.g. 5000 for 5000 HUF).
+          // Backend converts to Stripe minor units via toStripeAmount() and
+          // always uses the app-configured currency — never trust client currency.
+          amount: cartTotal,
           metadata: {
             event_id: selectedEvent.id,
             buyer_name: buyerName.trim() || null,
