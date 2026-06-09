@@ -1,4 +1,5 @@
 import "../global.css";
+import { useEffect, useState } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -8,14 +9,29 @@ import { StripeProvider } from "@stripe/stripe-react-native";
 import { AuthProvider } from "@/context/auth";
 import { fetchConnectionToken } from "@/lib/stripe-terminal";
 
-const STRIPE_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
+// Build-time fallback; the real key is fetched from /api/public-config at startup
+// so the publishable key can be managed from the admin dashboard (no rebuild).
+const ENV_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
 
 export default function RootLayout() {
+  const [publishableKey, setPublishableKey] = useState(ENV_PUBLISHABLE_KEY);
+
+  useEffect(() => {
+    if (!API_URL) return;
+    fetch(`${API_URL}/api/public-config`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.stripePublishableKey) setPublishableKey(d.stripePublishableKey);
+      })
+      .catch(() => {/* keep build-time key */});
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <StripeProvider
-          publishableKey={STRIPE_PUBLISHABLE_KEY}
+          publishableKey={publishableKey}
           merchantIdentifier="merchant.com.eventos.mobile"
         >
           <StripeTerminalProvider

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient as createSbClient } from "@supabase/supabase-js";
 import { getStripe } from "@/lib/stripe";
+import { getConfig } from "@/lib/config";
 import { getSettings, toStripeAmount } from "@/lib/settings";
 import { createAdminClient } from "@/lib/supabase/server";
 import type { Event, TicketType, PromoCode, Profile } from "@/lib/supabase/types";
@@ -118,7 +119,7 @@ export async function POST(req: Request) {
     paymentIntent: paymentIntent.client_secret,
     ephemeralKey: ephemeralKey.secret,
     customer: customerId,
-    publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+    publishableKey: await getConfig("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"),
     total,
     currency,
   });
