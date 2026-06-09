@@ -16,6 +16,8 @@
  *   BILLINGO_BANK_ACCOUNT_ID  — bank account id (numeric) to show on the invoice
  */
 
+import { getConfig } from "@/lib/config";
+
 const BASE = "https://api.billingo.hu/v3";
 
 export interface BillingoBuyer {
@@ -51,8 +53,8 @@ export interface BillingoInvoiceResult {
   pdfUrl: string | null;
 }
 
-function apiKey(): string | null {
-  return process.env.BILLINGO_API_KEY || null;
+async function apiKey(): Promise<string | null> {
+  return (await getConfig("BILLINGO_API_KEY")) || null;
 }
 
 /** Billingo requires an ISO-3166-1 alpha-2 country code. Profiles often store
@@ -76,12 +78,12 @@ export function normalizeCountryCode(raw?: string | null): string {
   return COUNTRY_MAP[key] || "HU";
 }
 
-export function billingoEnabled(): boolean {
-  return !!apiKey() && !!process.env.BILLINGO_BLOCK_ID;
+export async function billingoEnabled(): Promise<boolean> {
+  return !!(await apiKey()) && !!(await getConfig("BILLINGO_BLOCK_ID"));
 }
 
 async function billingoFetch(path: string, init: RequestInit): Promise<any> {
-  const key = apiKey();
+  const key = await apiKey();
   if (!key) throw new Error("BILLINGO_API_KEY not set");
   const res = await fetch(`${BASE}${path}`, {
     ...init,
@@ -121,14 +123,13 @@ async function createPartner(buyer: BillingoBuyer): Promise<number> {
  * configured or on any error (caller falls back to a local invoice number).
  */
 export async function createBillingoInvoice(input: BillingoInvoiceInput): Promise<BillingoInvoiceResult | null> {
-  if (!billingoEnabled()) return null;
+  if (!(await billingoEnabled())) return null;
 
-  const vat = process.env.BILLINGO_VAT || "27%";
-  const paymentMethod = process.env.BILLINGO_PAYMENT_METHOD || "online_bankcard";
-  const blockId = Number(process.env.BILLINGO_BLOCK_ID);
-  const bankAccountId = process.env.BILLINGO_BANK_ACCOUNT_ID
-    ? Number(process.env.BILLINGO_BANK_ACCOUNT_ID)
-    : undefined;
+  const vat = (await getConfig("BILLINGO_VAT")) || "27%";
+  const paymentMethod = (await getConfig("BILLINGO_PAYMENT_METHOD")) || "online_bankcard";
+  const blockId = Number(await getConfig("BILLINGO_BLOCK_ID"));
+  const bankAccountRaw = await getConfig("BILLINGO_BANK_ACCOUNT_ID");
+  const bankAccountId = bankAccountRaw ? Number(bankAccountRaw) : undefined;
   const today = new Date().toISOString().slice(0, 10);
 
   try {

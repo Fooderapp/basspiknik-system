@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentProfile } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
+import { getConfig } from "@/lib/config";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -35,10 +36,11 @@ async function probe(path: string, key: string) {
 /** POST a real invoice using the SAME body shape as billingo.ts, returning the
  *  RAW Billingo response so we can see the exact validation error. */
 async function tryCreateInvoice(key: string) {
-  const vat = process.env.BILLINGO_VAT || "27%";
-  const paymentMethod = process.env.BILLINGO_PAYMENT_METHOD || "online_bankcard";
-  const blockId = Number(process.env.BILLINGO_BLOCK_ID);
-  const bankAccountId = process.env.BILLINGO_BANK_ACCOUNT_ID ? Number(process.env.BILLINGO_BANK_ACCOUNT_ID) : undefined;
+  const vat = (await getConfig("BILLINGO_VAT")) || "27%";
+  const paymentMethod = (await getConfig("BILLINGO_PAYMENT_METHOD")) || "online_bankcard";
+  const blockId = Number(await getConfig("BILLINGO_BLOCK_ID"));
+  const bankAccountRaw = await getConfig("BILLINGO_BANK_ACCOUNT_ID");
+  const bankAccountId = bankAccountRaw ? Number(bankAccountRaw) : undefined;
   const today = new Date().toISOString().slice(0, 10);
 
   // 1. partner
@@ -98,9 +100,9 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized — admin only" }, { status: 403 });
   }
 
-  const key = process.env.BILLINGO_API_KEY || null;
-  const blockId = process.env.BILLINGO_BLOCK_ID || null;
-  const bankAccountId = process.env.BILLINGO_BANK_ACCOUNT_ID || null;
+  const key = (await getConfig("BILLINGO_API_KEY")) || null;
+  const blockId = (await getConfig("BILLINGO_BLOCK_ID")) || null;
+  const bankAccountId = (await getConfig("BILLINGO_BANK_ACCOUNT_ID")) || null;
   const doCreate = new URL(req.url).searchParams.get("create") === "1";
 
   // Recent orders + their invoice rows — shows whether the buy flow ran and
@@ -136,12 +138,12 @@ export async function GET(req: Request) {
     BILLINGO_API_KEY: key ? `set (${key.length} chars)` : "MISSING",
     BILLINGO_BLOCK_ID: blockId ?? "MISSING",
     BILLINGO_BANK_ACCOUNT_ID: bankAccountId ?? "not set (may be required)",
-    BILLINGO_VAT: process.env.BILLINGO_VAT || "27% (default)",
-    BILLINGO_PAYMENT_METHOD: process.env.BILLINGO_PAYMENT_METHOD || "online_bankcard (default)",
+    BILLINGO_VAT: (await getConfig("BILLINGO_VAT")) || "27% (default)",
+    BILLINGO_PAYMENT_METHOD: (await getConfig("BILLINGO_PAYMENT_METHOD")) || "online_bankcard (default)",
   };
 
   if (!key) {
-    return NextResponse.json({ ok: false, env, hint: "Set BILLINGO_API_KEY in Vercel and redeploy." });
+    return NextResponse.json({ ok: false, env, hint: "Set BILLINGO_API_KEY in admin settings or Vercel." });
   }
 
   // Probe the API to confirm the key works + list blocks/accounts.

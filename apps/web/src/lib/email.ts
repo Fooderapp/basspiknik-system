@@ -1,12 +1,11 @@
 import { Resend } from "resend";
 import { generateTicketPdf } from "./ticket-pdf";
 import { getDictionary, t } from "./i18n";
+import { getConfig } from "./config";
 import type { Language, Currency } from "./settings";
 
-// RESEND_API_KEY  = from resend.com → API Keys
+// RESEND_API_KEY  = from resend.com → API Keys (admin dashboard or env)
 // RESEND_FROM     = verified sender, e.g. "EventOS <tickets@mail.basspiknik.com>"
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 function formatEventDate(iso: string, lang: Language) {
   const locale = lang === "hu" ? "hu-HU" : "en-US";
@@ -154,7 +153,10 @@ export async function sendTicketConfirmation(input: SendTicketConfirmationInput)
 </html>
   `.trim();
 
-  const from = process.env.RESEND_FROM ?? "EventOS <onboarding@resend.dev>";
+  const apiKey = await getConfig("RESEND_API_KEY");
+  if (!apiKey) throw new Error("RESEND_API_KEY is not configured (admin → settings or env).");
+  const resend = new Resend(apiKey);
+  const from = (await getConfig("RESEND_FROM")) ?? "EventOS <onboarding@resend.dev>";
   const subject = language === "hu"
     ? `${t(dict, "email.subject")} ${eventName} ${t(dict, "email.subject_suffix")}`
     : `${t(dict, "email.subject")} ${eventName} ${t(dict, "email.subject_suffix")}`;

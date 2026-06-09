@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentProfile } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { normalizeCountryCode } from "@/lib/billingo";
+import { getConfig } from "@/lib/config";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -37,7 +38,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized — admin only" }, { status: 403 });
   }
 
-  const key = process.env.BILLINGO_API_KEY;
+  const key = await getConfig("BILLINGO_API_KEY");
   if (!key) return NextResponse.json({ error: "BILLINGO_API_KEY not set" }, { status: 400 });
 
   const admin = await createAdminClient() as any;
@@ -80,10 +81,11 @@ export async function POST(req: Request) {
     billing = prof;
   }
 
-  const vat = process.env.BILLINGO_VAT || "27%";
-  const paymentMethod = process.env.BILLINGO_PAYMENT_METHOD || "online_bankcard";
-  const blockId = Number(process.env.BILLINGO_BLOCK_ID);
-  const bankAccountId = process.env.BILLINGO_BANK_ACCOUNT_ID ? Number(process.env.BILLINGO_BANK_ACCOUNT_ID) : undefined;
+  const vat = (await getConfig("BILLINGO_VAT")) || "27%";
+  const paymentMethod = (await getConfig("BILLINGO_PAYMENT_METHOD")) || "online_bankcard";
+  const blockId = Number(await getConfig("BILLINGO_BLOCK_ID"));
+  const bankAccountRaw = await getConfig("BILLINGO_BANK_ACCOUNT_ID");
+  const bankAccountId = bankAccountRaw ? Number(bankAccountRaw) : undefined;
   const today = new Date().toISOString().slice(0, 10);
   const currency = order.currency || "HUF";
 

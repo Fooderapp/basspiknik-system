@@ -1,4 +1,5 @@
-import { stripe } from "@/lib/stripe";
+import type Stripe from "stripe";
+import { getStripe } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
@@ -25,8 +26,9 @@ export default async function SuccessPage({
 
   if (!session_id) redirect(`/events/${slug}`);
 
-  let session: Awaited<ReturnType<typeof stripe.checkout.sessions.retrieve>> | null = null;
+  let session: Stripe.Checkout.Session | null = null;
   try {
+    const stripe = await getStripe();
     session = await stripe.checkout.sessions.retrieve(session_id, { expand: ["line_items"] });
   } catch {
     redirect(`/events/${slug}`);

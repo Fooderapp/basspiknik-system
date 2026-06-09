@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient as createSbClient } from "@supabase/supabase-js";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { getSettings, toStripeAmount } from "@/lib/settings";
 import { createAdminClient } from "@/lib/supabase/server";
 import type { Event, TicketType, PromoCode, Profile } from "@/lib/supabase/types";
@@ -77,6 +77,7 @@ export async function POST(req: Request) {
   const buyerName = profile?.billing_name ?? profile?.name ?? null;
 
   // Reuse or create a Stripe customer keyed off the profile.
+  const stripe = await getStripe();
   let customerId = (profile as any)?.stripe_customer_id as string | undefined;
   if (!customerId) {
     const customer = await stripe.customers.create({

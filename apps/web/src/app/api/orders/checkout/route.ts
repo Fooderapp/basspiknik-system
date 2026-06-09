@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient as createSbClient } from "@supabase/supabase-js";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { getSettings, toStripeAmount, fromStripeAmount } from "@/lib/settings";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { sendTicketConfirmation } from "@/lib/email";
@@ -208,6 +208,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ url: `/my-tickets?free=1`, free: true });
   }
 
+  const stripe = await getStripe();
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     line_items: lineItems as any,

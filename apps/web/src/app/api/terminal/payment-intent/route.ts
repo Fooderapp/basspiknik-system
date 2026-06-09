@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 
 export async function POST(req: Request) {
   try {
@@ -48,6 +48,7 @@ export async function POST(req: Request) {
     // A GB account only accepts GBP, a Eurozone account only EUR, etc.
     // Validate up front so a mismatch returns a clear message instead of
     // Stripe's cryptic "card_present ... not supported in GB".
+    const stripe = await getStripe();
     const account = await stripe.accounts.retrieve();
     const accountCurrency = account.default_currency?.toLowerCase();
     if (accountCurrency && accountCurrency !== currency.toLowerCase()) {
