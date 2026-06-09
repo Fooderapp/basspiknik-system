@@ -88,8 +88,8 @@ function FlipCard({
         {/* ── FRONT FACE ── */}
         <Animated.View style={frontAnim}>
           <Card className="overflow-hidden p-0" style={{ borderRadius: 20 }}>
-            {/* Banner (4:1) / cover + pocket notch */}
-            <View style={{ height: 110 }} className="bg-secondary overflow-hidden">
+            {/* Banner (4:1) / cover + pocket notch — 4:1 box so a 480×120 image fills exactly */}
+            <View style={{ height: CARD_W / 4 }} className="bg-secondary overflow-hidden">
               {(tk.ticket_types?.image_url || tk.events?.banner_image_url || tk.events?.cover_image_url)
                 ? <Image source={{ uri: (tk.ticket_types?.image_url ?? tk.events?.banner_image_url ?? tk.events?.cover_image_url)! }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
                 : <View style={{ flex: 1, backgroundColor: "rgba(235,224,90,0.18)" }} />}
@@ -138,9 +138,9 @@ function FlipCard({
               </View>
             </View>
 
-            {/* Status stripe */}
+            {/* Status bar — bottom, coloured by state */}
             <View style={{
-              position: "absolute", right: 0, top: 0, bottom: 0, width: 4,
+              position: "absolute", left: 0, right: 0, bottom: 0, height: 4,
               backgroundColor: STATUS[tk.status] ?? "#6b7280",
             }} />
           </Card>

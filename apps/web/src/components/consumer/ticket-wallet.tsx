@@ -103,8 +103,8 @@ function TicketCard({
           }}
           className="relative overflow-hidden rounded-3xl border border-border bg-card text-left"
         >
-          {/* Banner (4:1) / cover + pocket notch */}
-          <div className="relative h-28 w-full overflow-hidden bg-secondary">
+          {/* Banner (4:1) / cover + pocket notch — 4:1 box so a 480×120 image fills exactly */}
+          <div className="relative aspect-[4/1] w-full overflow-hidden bg-secondary">
             {tk.banner || tk.cover ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={(tk.banner ?? tk.cover)!} alt="" className="h-full w-full object-cover" />
@@ -162,8 +162,8 @@ function TicketCard({
             </div>
           </div>
 
-          {/* Status stripe */}
-          <span className="absolute right-0 top-0 h-full w-1" style={{ backgroundColor: STATUS[tk.status] ?? "#6b7280" }} />
+          {/* Status bar — bottom, coloured by state */}
+          <span className="absolute bottom-0 left-0 right-0 h-1" style={{ backgroundColor: STATUS[tk.status] ?? "#6b7280" }} />
         </div>
 
         {/* ── BACK FACE ── */}
