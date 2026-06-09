@@ -16,6 +16,7 @@ async function getProfile(): Promise<Profile | null> {
 const updateSchema = z.object({
   name: z.string().min(1).optional(),
   description: z.string().optional().nullable(),
+  imageUrl: z.string().url().optional().nullable(),
   price: z.number().min(0).optional(),
   quantity: z.number().min(1).optional(),
   tier: z.enum(["EARLY_BIRD", "GENERAL", "LATE", "DOOR", "VIP", "FREE"]).optional(),
@@ -44,7 +45,7 @@ export async function PATCH(
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const { name, description, price, quantity, tier, maxPerOrder, entriesPerTicket,
+  const { name, description, imageUrl, price, quantity, tier, maxPerOrder, entriesPerTicket,
           saleStartsAt, saleEndsAt, isBundle, bundleSize, isDoorTicket, saleEnabled, salePrice } = parsed.data;
 
   const supabase = await createAdminClient() as any;
@@ -53,6 +54,7 @@ export async function PATCH(
     .update({
       ...(name !== undefined && { name }),
       ...(description !== undefined && { description }),
+      ...(imageUrl !== undefined && { image_url: imageUrl }),
       ...(price !== undefined && { price }),
       ...(quantity !== undefined && { quantity }),
       ...(tier !== undefined && { tier }),

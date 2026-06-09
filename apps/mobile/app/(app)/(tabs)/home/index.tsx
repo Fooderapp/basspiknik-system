@@ -35,6 +35,7 @@ interface WTicket {
   id: string; status: string; ticket_name: string | null; tier: string | null;
   order_id: string; qr_code: string;
   events?: { name: string; venue: string | null; start_date: string; cover_image_url: string | null; banner_image_url: string | null } | null;
+  ticket_types?: { image_url: string | null } | null;
 }
 interface Act {
   id: string; kind: "buy" | "won" | "bar" | "credit";
@@ -89,8 +90,8 @@ function FlipCard({
           <Card className="overflow-hidden p-0" style={{ borderRadius: 20 }}>
             {/* Banner (4:1) / cover + pocket notch */}
             <View style={{ height: 110 }} className="bg-secondary overflow-hidden">
-              {(tk.events?.banner_image_url || tk.events?.cover_image_url)
-                ? <Image source={{ uri: (tk.events?.banner_image_url ?? tk.events?.cover_image_url)! }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+              {(tk.ticket_types?.image_url || tk.events?.banner_image_url || tk.events?.cover_image_url)
+                ? <Image source={{ uri: (tk.ticket_types?.image_url ?? tk.events?.banner_image_url ?? tk.events?.cover_image_url)! }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
                 : <View style={{ flex: 1, backgroundColor: "rgba(235,224,90,0.18)" }} />}
               <View style={{
                 position: "absolute", bottom: -12,
@@ -209,10 +210,10 @@ export default function HomeScreen() {
       { data: orders }, { data: drinks }, { data: creds },
     ] = await Promise.all([
       (supabase as any).from("tickets")
-        .select("id, status, ticket_name, tier, order_id, qr_code, orders!inner(user_id), events(name, venue, start_date, cover_image_url, banner_image_url)")
+        .select("id, status, ticket_name, tier, order_id, qr_code, orders!inner(user_id), events(name, venue, start_date, cover_image_url, banner_image_url), ticket_types(image_url)")
         .eq("orders.user_id", uid).eq("status", "VALID"),
       (supabase as any).from("tickets")
-        .select("id, status, ticket_name, tier, order_id, qr_code, events(name, venue, start_date, cover_image_url, banner_image_url)")
+        .select("id, status, ticket_name, tier, order_id, qr_code, events(name, venue, start_date, cover_image_url, banner_image_url), ticket_types(image_url)")
         .eq("transferred_to_user_id", uid).eq("status", "VALID"),
       (supabase as any).rpc("get_credit_balance", { p_user_id: uid }),
       (supabase as any).from("orders").select("id, total, created_at, events(name)")

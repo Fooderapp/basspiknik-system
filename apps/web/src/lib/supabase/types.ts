@@ -71,6 +71,7 @@ export interface Database {
           event_id: string
           name: string
           description: string | null
+          image_url: string | null
           price: number
           quantity: number
           sold: number

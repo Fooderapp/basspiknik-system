@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
+import { BannerImageUploader } from "@/components/events/banner-image-uploader";
 import { Plus, Pencil, Trash2, Ticket, Users, Tag, PackageOpen, RefreshCcw, DoorOpen, type LucideIcon } from "lucide-react";
 import type { TicketType } from "@/lib/supabase/types";
 
@@ -37,6 +38,7 @@ const TIER_COLORS: Record<string, string> = {
 const schema = z.object({
   name: z.string().min(1, "Name required"),
   description: z.string().optional(),
+  imageUrl: z.string().url().optional().or(z.literal("")).or(z.null()),
   price: z.coerce.number().min(0, "Price must be 0 or more"),
   quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
   tier: z.enum(TIERS),
@@ -110,6 +112,7 @@ export function TicketTypeManager({ eventId, initialTicketTypes }: Props) {
     reset({
       name: tt.name,
       description: tt.description ?? "",
+      imageUrl: (tt as any).image_url ?? "",
       price: tt.price,
       quantity: tt.quantity,
       tier: tt.tier,
@@ -136,6 +139,7 @@ export function TicketTypeManager({ eventId, initialTicketTypes }: Props) {
         body: JSON.stringify({
           name: data.name,
           description: data.description || null,
+          imageUrl: data.imageUrl || null,
           price: data.price,
           quantity: data.quantity,
           tier: data.tier,
@@ -292,6 +296,16 @@ export function TicketTypeManager({ eventId, initialTicketTypes }: Props) {
             <div className="space-y-1">
               <Label>Description</Label>
               <Textarea rows={2} placeholder="Optional details shown to buyers…" {...register("description")} />
+            </div>
+
+            {/* Ticket image (4:1) — shown on the ticket card + PDF */}
+            <div className="space-y-1">
+              <Label>Ticket Image (4:1)</Label>
+              <BannerImageUploader
+                value={watch("imageUrl") ?? undefined}
+                onChange={(url) => setValue("imageUrl", url ?? "")}
+              />
+              <p className="text-xs text-muted-foreground">480×120 artwork shown on this ticket&apos;s card and PDF.</p>
             </div>
 
             {/* Price + Quantity */}

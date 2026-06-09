@@ -211,7 +211,7 @@ export async function fulfillTicketOrder(input: FulfillInput): Promise<FulfillRe
   let emailError = "";
 
   if (buyerEmail) {
-    const { data: emailTickets } = await supabase.from("tickets").select("*").eq("order_id", order.id);
+    const { data: emailTickets } = await supabase.from("tickets").select("*, ticket_types(image_url)").eq("order_id", order.id);
     try {
       await sendTicketConfirmation({
         to: buyerEmail,
@@ -226,6 +226,7 @@ export async function fulfillTicketOrder(input: FulfillInput): Promise<FulfillRe
           ticketName: t.ticket_name ?? "Ticket",
           tier: t.tier ?? "GENERAL",
           holderName: t.holder_name || undefined,
+          imageUrl: t.ticket_types?.image_url ?? null,
         })),
         total: input.total,
         orderId: order.id,

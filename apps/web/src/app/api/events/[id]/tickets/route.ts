@@ -8,6 +8,7 @@ import type { Profile, TicketType } from "@/lib/supabase/types";
 const ticketTypeSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional().nullable(),
+  imageUrl: z.string().url().optional().nullable(),
   price: z.number().min(0),
   quantity: z.number().min(1),
   tier: z.enum(["EARLY_BIRD", "GENERAL", "LATE", "DOOR", "VIP", "FREE"]).default("GENERAL"),
@@ -52,6 +53,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     event_id: id,
     name: d.name,
     description: d.description ?? null,
+    image_url: d.imageUrl ?? null,
     price: d.price,
     quantity: d.quantity,
     tier: d.tier,

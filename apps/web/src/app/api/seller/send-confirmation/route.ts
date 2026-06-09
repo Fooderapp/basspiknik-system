@@ -59,7 +59,7 @@ export async function POST(req: Request) {
 
   const { data: tickets } = await supabaseAdmin
     .from("tickets")
-    .select("*")
+    .select("*, ticket_types(image_url)")
     .eq("order_id", orderId) as any;
 
   if (!tickets?.length) return NextResponse.json({ error: "No tickets found" }, { status: 404 });
@@ -79,6 +79,7 @@ export async function POST(req: Request) {
       ticketName: t.ticket_name ?? "Ticket",
       tier: t.tier ?? "GENERAL",
       holderName: t.holder_name || undefined,
+      imageUrl: t.ticket_types?.image_url ?? null,
     })),
     total: order.total,
     orderId: order.id,

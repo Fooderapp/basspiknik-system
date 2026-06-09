@@ -26,6 +26,7 @@ interface TicketForEmail {
   ticketName: string;
   tier: string;
   holderName?: string;
+  imageUrl?: string | null;
 }
 
 interface SendTicketConfirmationInput {
@@ -61,7 +62,8 @@ export async function sendTicketConfirmation(input: SendTicketConfirmationInput)
         eventName,
         eventDate,
         eventVenue,
-        eventBannerUrl,
+        // Per-ticket-type image wins; else the event banner.
+        eventBannerUrl: tk.imageUrl ?? eventBannerUrl,
         orderId,
         tickets: [tk],
         language,

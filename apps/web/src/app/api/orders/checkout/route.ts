@@ -185,7 +185,7 @@ export async function POST(req: Request) {
     await admin.from("spin_wins").update({ used_order_id: order.id }).eq("id", winId);
 
     if (buyerEmail) {
-      const { data: emailTickets } = await admin.from("tickets").select("*").eq("order_id", order.id);
+      const { data: emailTickets } = await admin.from("tickets").select("*, ticket_types(image_url)").eq("order_id", order.id);
       try {
         await sendTicketConfirmation({
           to: buyerEmail,
@@ -197,6 +197,7 @@ export async function POST(req: Request) {
           tickets: (emailTickets ?? []).map((t: any) => ({
             id: t.id, qrCode: t.qr_code, ticketName: t.ticket_name ?? "Ticket",
             tier: t.tier ?? "GENERAL", holderName: t.holder_name || undefined,
+            imageUrl: t.ticket_types?.image_url ?? null,
           })),
           total: 0,
           orderId: order.id,
