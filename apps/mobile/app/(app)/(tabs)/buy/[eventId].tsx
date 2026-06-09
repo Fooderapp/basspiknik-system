@@ -47,6 +47,7 @@ export default function BuyEventScreen() {
   const [spinning, setSpinning]     = useState(false);
   const [spinResult, setSpinResult] = useState<{ win: boolean; token?: string; balance?: number } | null>(null);
   const [freeToken, setFreeToken]   = useState<string | null>(null);
+  const [spinEligible, setSpinEligible] = useState(false);
 
   // Fetch credit balance + settings — called on mount and every time screen focuses
   const fetchCredits = useCallback(async () => {
@@ -82,6 +83,26 @@ export default function BuyEventScreen() {
 
   // Refresh balance whenever user navigates back to this screen
   useFocusEffect(useCallback(() => { void fetchCredits(); }, [fetchCredits]));
+
+  // Re-check spin eligibility whenever the cart changes (conditions + credits).
+  useEffect(() => {
+    if (!session || !spinEnabled) { setSpinEligible(false); return; }
+    const items = Object.entries(quantities).filter(([, q]) => q > 0).map(([ticketTypeId, quantity]) => ({ ticketTypeId, quantity }));
+    if (items.length === 0) { setSpinEligible(false); return; }
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/credits/spin-eligibility`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+          body: JSON.stringify({ eventId, items }),
+        });
+        const data = await res.json();
+        if (!cancelled) setSpinEligible(!!data.eligible);
+      } catch { if (!cancelled) setSpinEligible(false); }
+    }, 250);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [quantities, spinEnabled, session, eventId]);
 
   const fmt = (n: number) => formatCurrency(n, currency);
   const priceOf = (t: TicketType) => (t.sale_enabled && t.sale_price != null ? t.sale_price : t.price);
@@ -323,8 +344,8 @@ export default function BuyEventScreen() {
             </Text>
           </View>
 
-          {/* Free spin banner — shows when credits enabled + user has enough */}
-          {spinEnabled && !freeToken && credits >= spinCost && (
+          {/* Free spin banner — only when cart meets spin conditions + enough credits */}
+          {spinEligible && !freeToken && (
             <Pressable
               onPress={() => { setSpinResult(null); setSpinOpen(true); }}
               className="flex-row items-center justify-between rounded-xl border px-3 py-2.5 mb-3 active:opacity-75"
