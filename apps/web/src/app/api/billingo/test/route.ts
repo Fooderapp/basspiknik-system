@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentProfile } from "@/lib/auth";
+import { createAdminClient } from "@/lib/supabase/server";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -102,6 +103,35 @@ export async function GET(req: Request) {
   const bankAccountId = process.env.BILLINGO_BANK_ACCOUNT_ID || null;
   const doCreate = new URL(req.url).searchParams.get("create") === "1";
 
+  // Recent orders + their invoice rows — shows whether the buy flow ran and
+  // whether it issued a real Billingo number or the INV-<ts> fallback.
+  let recentOrders: any = undefined;
+  try {
+    const admin = await createAdminClient() as any;
+    const { data: orders } = await admin
+      .from("orders")
+      .select("id, total, status, payment_method, created_at, stripe_payment_intent_id, invoices(number, pdf_url)")
+      .order("created_at", { ascending: false })
+      .limit(5);
+    recentOrders = (orders ?? []).map((o: any) => ({
+      id: o.id.slice(0, 8),
+      total: o.total,
+      status: o.status,
+      payment_method: o.payment_method,
+      created_at: o.created_at,
+      hasPaymentIntent: !!o.stripe_payment_intent_id,
+      invoice: o.invoices?.[0]
+        ? {
+            number: o.invoices[0].number,
+            isBillingo: !String(o.invoices[0].number).startsWith("INV-"),
+            pdf: o.invoices[0].pdf_url,
+          }
+        : "NO INVOICE ROW",
+    }));
+  } catch (e: any) {
+    recentOrders = { error: e?.message ?? String(e) };
+  }
+
   const env = {
     BILLINGO_API_KEY: key ? `set (${key.length} chars)` : "MISSING",
     BILLINGO_BLOCK_ID: blockId ?? "MISSING",
@@ -140,6 +170,7 @@ export async function GET(req: Request) {
     ok: blocks.ok && accounts.ok,
     env,
     keyWorks: blocks.ok,
+    recentOrders,
     createResult,
     documentBlocks: blocks.ok ? blockList.map((b) => ({ id: b.id, name: b.name })) : blocks,
     bankAccounts: accounts.ok ? acctList.map((a) => ({ id: a.id, name: a.name, account_number: a.account_number })) : accounts,
