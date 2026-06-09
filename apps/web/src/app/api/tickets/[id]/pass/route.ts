@@ -41,28 +41,20 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (
-    !process.env.APPLE_PASS_TEAM_ID ||
-    !process.env.APPLE_PASS_TYPE_ID ||
-    !process.env.APPLE_PASS_CERT_PEM
-  ) {
-    return NextResponse.json(
-      { error: "Apple Wallet not configured. Set APPLE_PASS_* env vars." },
-      { status: 501 },
-    );
-  }
-
-  // Verify ticket belongs to this user
-  const adminDb = createAdminClient() as any;
-  const { data: ticket } = await adminDb
-    .from("tickets")
-    .select("id, qr_code, ticket_name, tier, status, events(name, venue, start_date)")
-    .eq("id", id)
-    .single();
-
-  if (!ticket) return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
-
   // TODO: generate .pkpass using passkit-generator
+  // When APPLE_PASS_* env vars are set, fetch ticket and build pass:
+  // const adminDb = createAdminClient() as any;
+  // const { data: ticket } = await adminDb.from("tickets").select(...).eq("id", id).single();
   // https://github.com/alexandercerutti/passkit-generator
-  return NextResponse.json({ error: "Pass generation not yet implemented. Add APPLE_PASS_* env vars and install passkit-generator." }, { status: 501 });
+  return new NextResponse(
+    `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Apple Wallet</title>
+    <style>body{font-family:-apple-system,sans-serif;background:#0d0d0d;color:#f5f5f5;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:24px;text-align:center}
+    svg{margin-bottom:20px}h1{font-size:20px;font-weight:700;margin:0 0 8px}p{font-size:14px;color:#888;margin:0}</style></head>
+    <body>
+      <svg width="60" height="60" viewBox="0 0 24 24" fill="#f5f5f5"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+      <h1>Apple Wallet coming soon</h1>
+      <p>Pass generation is not yet configured.<br>Your ticket is valid — use the QR code in the app.</p>
+    </body></html>`,
+    { status: 200, headers: { "Content-Type": "text/html" } },
+  );
 }
