@@ -1,6 +1,20 @@
-import { createAdminClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
+/**
+ * Pure service-role client — NO cookies/session, so requests always run as
+ * `service_role` and bypass RLS. (createAdminClient from supabase/ssr attaches
+ * the caller's auth cookie, which downgrades to `authenticated` and is blocked
+ * by system_config's RLS.)
+ */
+function serviceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false, autoRefreshToken: false } },
+  );
+}
 
 /**
  * Runtime system configuration with DB-first, env-fallback resolution.
@@ -37,7 +51,7 @@ let cache: { values: Record<string, string | null>; at: number } | null = null;
 async function loadAll(): Promise<Record<string, string | null>> {
   if (cache && Date.now() - cache.at < TTL_MS) return cache.values;
   try {
-    const sb = (await createAdminClient()) as any;
+    const sb = serviceClient() as any;
     const { data } = await sb.from("system_config").select("key, value");
     const values: Record<string, string | null> = {};
     for (const row of data ?? []) values[row.key] = row.value;
@@ -65,7 +79,7 @@ export function invalidateConfigCache() {
 /** Upsert a config value (null/"" → unset, falls back to env). Throws on failure
  *  (e.g. the system_config table/migration is missing) so the UI can report it. */
 export async function setConfig(key: string, value: string | null): Promise<void> {
-  const sb = (await createAdminClient()) as any;
+  const sb = serviceClient() as any;
   const { error } = await sb
     .from("system_config")
     .upsert({ key, value: value && value.length ? value : null, updated_at: new Date().toISOString() });
