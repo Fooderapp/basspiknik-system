@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentProfile } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
+import { normalizeCountryCode } from "@/lib/billingo";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -91,7 +92,7 @@ export async function POST(req: Request) {
     name: billing?.billing_name || billing?.name || order.guest_name || "Vásárló",
     emails: (billing?.email || order.guest_email) ? [billing?.email || order.guest_email] : [],
     address: {
-      country_code: billing?.billing_country || "HU",
+      country_code: normalizeCountryCode(billing?.billing_country),
       post_code: billing?.billing_postal_code || "",
       city: billing?.billing_city || "",
       address: billing?.billing_address || "",

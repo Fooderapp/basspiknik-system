@@ -55,6 +55,27 @@ function apiKey(): string | null {
   return process.env.BILLINGO_API_KEY || null;
 }
 
+/** Billingo requires an ISO-3166-1 alpha-2 country code. Profiles often store
+ *  the full country name ("Magyarország", "Hungary"). Map the common ones and
+ *  fall back to "HU" for anything that isn't already a 2-letter code. */
+const COUNTRY_MAP: Record<string, string> = {
+  magyarorszag: "HU", hungary: "HU", magyar: "HU",
+  austria: "AT", osztrak: "AT", ausztria: "AT",
+  germany: "DE", deutschland: "DE", nemetorszag: "DE",
+  slovakia: "SK", szlovakia: "SK",
+  romania: "RO", romania_hu: "RO",
+};
+export function normalizeCountryCode(raw?: string | null): string {
+  if (!raw) return "HU";
+  const trimmed = raw.trim();
+  if (/^[A-Za-z]{2}$/.test(trimmed)) return trimmed.toUpperCase();
+  const key = trimmed
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, ""); // strip combining accents → "magyarország" → "magyarorszag"
+  return COUNTRY_MAP[key] || "HU";
+}
+
 export function billingoEnabled(): boolean {
   return !!apiKey() && !!process.env.BILLINGO_BLOCK_ID;
 }
@@ -84,7 +105,7 @@ async function createPartner(buyer: BillingoBuyer): Promise<number> {
     name: buyer.name || "Vásárló",
     emails: buyer.email ? [buyer.email] : [],
     address: {
-      country_code: buyer.countryCode || "HU",
+      country_code: normalizeCountryCode(buyer.countryCode),
       post_code: buyer.postCode || "",
       city: buyer.city || "",
       address: buyer.address || "",
