@@ -25,6 +25,11 @@ async function bfetch(path: string, key: string, init: RequestInit) {
   return { ok: res.ok, status: res.status, body: json ?? text.slice(0, 800) };
 }
 
+// Allow GET so it can be triggered straight from the browser address bar.
+export async function GET(req: Request) {
+  return POST(req);
+}
+
 export async function POST(req: Request) {
   const profile = await getCurrentProfile();
   if (profile?.role !== "ADMIN") {
