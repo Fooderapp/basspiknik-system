@@ -50,6 +50,7 @@ export interface Database {
           name: string
           description: string | null
           cover_image_url: string | null
+          banner_image_url: string | null
           start_date: string
           end_date: string | null
           venue: string | null

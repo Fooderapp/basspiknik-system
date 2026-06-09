@@ -18,6 +18,14 @@ const STATUS_COLORS: Record<EventStatus, "secondary" | "success" | "destructive"
   ARCHIVED: "outline",
 };
 
+// Bottom status bar colour per state.
+const STATUS_BAR: Record<EventStatus, string> = {
+  DRAFT: "#6b7280",
+  PUBLISHED: "#9FE870",
+  CANCELLED: "#ef4444",
+  ARCHIVED: "#3f3f46",
+};
+
 export default async function EventsPage() {
   const profile = await getCurrentProfile();
   if (!["ADMIN", "EDITOR"].includes(profile?.role ?? "")) redirect("/dashboard");
@@ -55,8 +63,8 @@ export default async function EventsPage() {
             const pct = totalCapacity > 0 ? Math.round((totalSold / totalCapacity) * 100) : 0;
             return (
               <Link key={event.id} href={`/dashboard/events/${event.id}`}>
-                <Card className="hover:border-primary transition-colors cursor-pointer">
-                  <CardContent className="p-4">
+                <Card className="relative overflow-hidden hover:border-primary transition-colors cursor-pointer">
+                  <CardContent className="p-4 pb-5">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
@@ -71,6 +79,11 @@ export default async function EventsPage() {
                       </div>
                     </div>
                   </CardContent>
+                  {/* status bar — bottom, coloured by state */}
+                  <span
+                    className="absolute bottom-0 left-0 right-0 h-1"
+                    style={{ backgroundColor: STATUS_BAR[event.status] }}
+                  />
                 </Card>
               </Link>
             );

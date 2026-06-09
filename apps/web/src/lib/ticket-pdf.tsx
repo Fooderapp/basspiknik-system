@@ -147,6 +147,7 @@ export interface PdfTicketInput {
   eventName: string;
   eventDate: string;
   eventVenue?: string;
+  eventBannerUrl?: string | null;
   orderId: string;
   language?: Language;
   tickets: Array<{
@@ -180,6 +181,15 @@ export async function generateTicketPdf(input: PdfTicketInput): Promise<Buffer> 
   const doc = (
     <Document title={`Tickets — ${input.eventName}`} author="EventOS">
       <Page size="A4" style={styles.page}>
+
+        {/* Event banner (4:1) */}
+        {input.eventBannerUrl && (
+          // eslint-disable-next-line jsx-a11y/alt-text
+          <Image
+            src={input.eventBannerUrl}
+            style={{ width: "100%", height: 110, objectFit: "cover", borderRadius: 8, marginBottom: 16 }}
+          />
+        )}
 
         {/* Header */}
         <View style={styles.header}>

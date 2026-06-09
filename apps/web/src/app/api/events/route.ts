@@ -8,6 +8,7 @@ const createEventSchema = z.object({
   name: z.string().min(2),
   description: z.string().optional(),
   coverImageUrl: z.string().url().optional().nullable(),
+  bannerImageUrl: z.string().url().optional().nullable(),
   startDate: z.string(),
   endDate: z.string().optional(),
   venue: z.string().optional(),
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
   const parsed = createEventSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const { name, description, coverImageUrl, startDate, endDate, venue, address, capacity, status, taxRate } = parsed.data;
+  const { name, description, coverImageUrl, bannerImageUrl, startDate, endDate, venue, address, capacity, status, taxRate } = parsed.data;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = await createAdminClient() as any;
   const baseSlug = slugify(name);
@@ -63,6 +64,7 @@ export async function POST(req: Request) {
     name, slug,
     description: description ?? null,
     cover_image_url: coverImageUrl ?? null,
+    banner_image_url: bannerImageUrl ?? null,
     start_date: startDate,
     end_date: endDate ?? null,
     venue: venue ?? null,

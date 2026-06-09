@@ -46,12 +46,12 @@ export default async function HomePage() {
     supabase.rpc("get_credit_balance", { p_user_id: user.id }),
     supabase
       .from("tickets")
-      .select("id, status, ticket_name, tier, order_id, qr_code, orders!inner(user_id), events(name, venue, start_date, cover_image_url)")
+      .select("id, status, ticket_name, tier, order_id, qr_code, orders!inner(user_id), events(name, venue, start_date, cover_image_url, banner_image_url)")
       .eq("orders.user_id", user.id)
       .eq("status", "VALID"),
     supabase
       .from("tickets")
-      .select("id, status, ticket_name, tier, order_id, qr_code, events(name, venue, start_date, cover_image_url)")
+      .select("id, status, ticket_name, tier, order_id, qr_code, events(name, venue, start_date, cover_image_url, banner_image_url)")
       .eq("transferred_to_user_id", user.id)
       .eq("status", "VALID"),
     supabase
@@ -97,6 +97,7 @@ export default async function HomePage() {
       date: tk.events?.start_date ? formatDate(tk.events.start_date) : null,
       venue: tk.events?.venue ?? null,
       cover: tk.events?.cover_image_url ?? null,
+      banner: tk.events?.banner_image_url ?? null,
       qrCode: tk.qr_code,
       ticketName: tk.ticket_name ?? "Ticket",
       tier: tk.tier ?? null,

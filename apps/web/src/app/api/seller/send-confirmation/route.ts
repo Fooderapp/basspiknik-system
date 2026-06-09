@@ -36,7 +36,7 @@ export async function POST(req: Request) {
 
   const { data: order } = await supabaseAdmin
     .from("orders")
-    .select("*, events(name, start_date, venue)")
+    .select("*, events(name, start_date, venue, banner_image_url)")
     .eq("id", orderId)
     .single() as any;
 
@@ -72,6 +72,7 @@ export async function POST(req: Request) {
     eventName: order.events.name,
     eventDate: order.events.start_date,
     eventVenue: order.events.venue ?? undefined,
+    eventBannerUrl: order.events.banner_image_url ?? null,
     tickets: tickets.map((t: any) => ({
       id: t.id,
       qrCode: t.qr_code,

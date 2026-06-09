@@ -219,6 +219,7 @@ export async function fulfillTicketOrder(input: FulfillInput): Promise<FulfillRe
         eventName: dbEvent.name,
         eventDate: dbEvent.start_date,
         eventVenue: dbEvent.venue || undefined,
+        eventBannerUrl: dbEvent.banner_image_url ?? null,
         tickets: (emailTickets ?? []).map((t: any) => ({
           id: t.id,
           qrCode: t.qr_code,

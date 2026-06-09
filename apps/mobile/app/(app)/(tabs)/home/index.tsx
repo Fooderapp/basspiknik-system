@@ -9,7 +9,7 @@ import Animated, {
 } from "react-native-reanimated";
 import {
   CalendarDays, MapPin, Star, ShoppingBag, Wine, Sparkles, QrCode,
-  RotateCcw, type LucideIcon,
+  RotateCcw, Ticket as TicketIcon, ChevronRight, type LucideIcon,
 } from "lucide-react-native";
 import { Screen } from "@/components/ui/Screen";
 import { Card } from "@/components/ui/Card";
@@ -29,10 +29,12 @@ const STATUS: Record<string, string> = {
   VALID: "#9FE870", USED: "#6b7280", CANCELLED: "#ef4444", REFUNDED: "#a1a1aa",
 };
 
+const MAX_CARDS = 8;
+
 interface WTicket {
   id: string; status: string; ticket_name: string | null; tier: string | null;
   order_id: string; qr_code: string;
-  events?: { name: string; venue: string | null; start_date: string; cover_image_url: string | null } | null;
+  events?: { name: string; venue: string | null; start_date: string; cover_image_url: string | null; banner_image_url: string | null } | null;
 }
 interface Act {
   id: string; kind: "buy" | "won" | "bar" | "credit";
@@ -85,10 +87,10 @@ function FlipCard({
         {/* ── FRONT FACE ── */}
         <Animated.View style={frontAnim}>
           <Card className="overflow-hidden p-0" style={{ borderRadius: 20 }}>
-            {/* Cover + pocket notch */}
+            {/* Banner (4:1) / cover + pocket notch */}
             <View style={{ height: 110 }} className="bg-secondary overflow-hidden">
-              {tk.events?.cover_image_url
-                ? <Image source={{ uri: tk.events.cover_image_url }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+              {(tk.events?.banner_image_url || tk.events?.cover_image_url)
+                ? <Image source={{ uri: (tk.events?.banner_image_url ?? tk.events?.cover_image_url)! }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
                 : <View style={{ flex: 1, backgroundColor: "rgba(235,224,90,0.18)" }} />}
               <View style={{
                 position: "absolute", bottom: -12,
@@ -122,10 +124,7 @@ function FlipCard({
                   <QRImage value={tk.qr_code} size={76} />
                 </View>
                 <View className="flex-1">
-                  <View className="flex-row flex-wrap items-center gap-1.5">
-                    {tk.tier && <Badge label={tk.tier.replace("_", " ")} variant="secondary" />}
-                    <Badge label="Valid" variant="success" />
-                  </View>
+                  <Badge label="Valid" variant="success" />
                   <Text className="text-foreground text-sm font-medium mt-1" numberOfLines={1}>
                     {tk.ticket_name ?? "Ticket"}
                   </Text>
@@ -152,12 +151,9 @@ function FlipCard({
             <Text className="text-muted-foreground text-[10px] font-semibold tracking-widest mb-5" style={{ textTransform: "uppercase" }}>
               Entry Pass
             </Text>
-            <Text className="text-foreground text-lg font-bold tracking-tight text-center mb-1" numberOfLines={2}>
+            <Text className="text-foreground text-lg font-bold tracking-tight text-center mb-5" numberOfLines={2}>
               {tk.events?.name ?? tk.ticket_name ?? "Ticket"}
             </Text>
-            {tk.tier && (
-              <Text className="text-muted-foreground text-xs mb-5">{tk.tier.replace("_", " ")}</Text>
-            )}
 
             {/* Large QR */}
             <View style={{
@@ -213,10 +209,10 @@ export default function HomeScreen() {
       { data: orders }, { data: drinks }, { data: creds },
     ] = await Promise.all([
       (supabase as any).from("tickets")
-        .select("id, status, ticket_name, tier, order_id, qr_code, orders!inner(user_id), events(name, venue, start_date, cover_image_url)")
+        .select("id, status, ticket_name, tier, order_id, qr_code, orders!inner(user_id), events(name, venue, start_date, cover_image_url, banner_image_url)")
         .eq("orders.user_id", uid).eq("status", "VALID"),
       (supabase as any).from("tickets")
-        .select("id, status, ticket_name, tier, order_id, qr_code, events(name, venue, start_date, cover_image_url)")
+        .select("id, status, ticket_name, tier, order_id, qr_code, events(name, venue, start_date, cover_image_url, banner_image_url)")
         .eq("transferred_to_user_id", uid).eq("status", "VALID"),
       (supabase as any).rpc("get_credit_balance", { p_user_id: uid }),
       (supabase as any).from("orders").select("id, total, created_at, events(name)")
@@ -323,7 +319,7 @@ export default function HomeScreen() {
               scrollEventThrottle={16}
               contentContainerStyle={{ paddingHorizontal: 20 }}
             >
-              {tickets.map((tk, n) => {
+              {tickets.slice(0, MAX_CARDS).map((tk) => {
                 const idx = (orderSeen[tk.order_id] ?? 0) + 1;
                 orderSeen[tk.order_id] = idx;
                 const total = counts[tk.order_id]?.total ?? 1;
@@ -333,24 +329,45 @@ export default function HomeScreen() {
                     tk={tk}
                     idx={idx}
                     total={total}
-                    isLast={n === tickets.length - 1}
+                    isLast={false}
                   />
                 );
               })}
+
+              {/* Final CTA card → My Tickets */}
+              <PressableScale
+                pressedScale={0.98}
+                onPress={() => router.push("/(app)/tickets" as never)}
+                style={{ width: CARD_W }}
+              >
+                <View
+                  style={{ minHeight: 260, borderRadius: 20, borderWidth: 1, borderColor: "#303030", borderStyle: "dashed" }}
+                  className="items-center justify-center gap-3 bg-card/50 p-8"
+                >
+                  <View className="w-14 h-14 rounded-full items-center justify-center bg-secondary">
+                    <TicketIcon size={24} color="#EBE05A" strokeWidth={1.75} />
+                  </View>
+                  <Text className="text-foreground font-semibold">
+                    {tickets.length > MAX_CARDS ? `All ${tickets.length} tickets` : "My Tickets"}
+                  </Text>
+                  <View className="flex-row items-center gap-1">
+                    <Text className="text-muted-foreground text-sm">View all</Text>
+                    <ChevronRight size={16} color="#9a9a9a" strokeWidth={1.75} />
+                  </View>
+                </View>
+              </PressableScale>
             </ScrollView>
 
-            {/* Dot nav */}
-            {tickets.length > 1 && (
-              <View className="flex-row justify-center gap-1.5 mt-3">
-                {tickets.map((_, i) => (
-                  <View key={i} style={{
-                    height: 6, borderRadius: 999,
-                    width: i === active ? 20 : 6,
-                    backgroundColor: i === active ? "#EBE05A" : "rgba(154,154,154,0.4)",
-                  }} />
-                ))}
-              </View>
-            )}
+            {/* Dot nav — shown cards + 1 CTA */}
+            <View className="flex-row justify-center gap-1.5 mt-3">
+              {Array.from({ length: Math.min(tickets.length, MAX_CARDS) + 1 }).map((_, i) => (
+                <View key={i} style={{
+                  height: 6, borderRadius: 999,
+                  width: i === active ? 20 : 6,
+                  backgroundColor: i === active ? "#EBE05A" : "rgba(154,154,154,0.4)",
+                }} />
+              ))}
+            </View>
 
             {/* Wallet button — iOS only (profile-level Apple Wallet pass) */}
             {Platform.OS === "ios" && !!process.env.EXPO_PUBLIC_APP_URL && (

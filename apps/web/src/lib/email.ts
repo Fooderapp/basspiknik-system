@@ -34,6 +34,7 @@ interface SendTicketConfirmationInput {
   eventName: string;
   eventDate: string;
   eventVenue?: string;
+  eventBannerUrl?: string | null;
   tickets: TicketForEmail[];
   total: number;
   orderId: string;
@@ -43,7 +44,7 @@ interface SendTicketConfirmationInput {
 
 export async function sendTicketConfirmation(input: SendTicketConfirmationInput) {
   const {
-    to, buyerName, eventName, eventDate, eventVenue, tickets, total, orderId,
+    to, buyerName, eventName, eventDate, eventVenue, eventBannerUrl, tickets, total, orderId,
     language = "hu", currency = "HUF",
   } = input;
 
@@ -60,6 +61,7 @@ export async function sendTicketConfirmation(input: SendTicketConfirmationInput)
         eventName,
         eventDate,
         eventVenue,
+        eventBannerUrl,
         orderId,
         tickets: [tk],
         language,

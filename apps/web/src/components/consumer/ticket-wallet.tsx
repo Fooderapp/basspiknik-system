@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback } from "react";
-import { CalendarDays, MapPin, QrCode, RotateCcw } from "lucide-react";
+import { useRef, useState, useCallback } from "react";
+import Link from "next/link";
+import { CalendarDays, MapPin, QrCode, RotateCcw, Ticket as TicketIcon, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { WalletButtons } from "@/components/consumer/wallet-buttons";
 
@@ -11,6 +12,7 @@ export interface WalletTicket {
   date: string | null;
   venue: string | null;
   cover: string | null;
+  banner: string | null;
   qrCode: string;
   ticketName: string;
   tier: string | null;
@@ -18,6 +20,9 @@ export interface WalletTicket {
   index: number;
   count: number;
 }
+
+/** Max ticket cards before the carousel ends with a "My Tickets" CTA card. */
+const MAX_CARDS = 8;
 
 const STATUS: Record<string, string> = {
   VALID: "#9FE870", USED: "#6b7280", CANCELLED: "#ef4444", REFUNDED: "#a1a1aa",
@@ -98,11 +103,11 @@ function TicketCard({
           }}
           className="relative overflow-hidden rounded-3xl border border-border bg-card text-left"
         >
-          {/* Cover + pocket notch */}
+          {/* Banner (4:1) / cover + pocket notch */}
           <div className="relative h-28 w-full overflow-hidden bg-secondary">
-            {tk.cover ? (
+            {tk.banner || tk.cover ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={tk.cover} alt="" className="h-full w-full object-cover" />
+              <img src={(tk.banner ?? tk.cover)!} alt="" className="h-full w-full object-cover" />
             ) : (
               <div className="h-full w-full bg-gradient-to-br from-gold/30 to-brand/20" />
             )}
@@ -147,10 +152,7 @@ function TicketCard({
                 />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {tk.tier && <Badge variant="secondary" className="text-[10px]">{tk.tier.replace("_", " ")}</Badge>}
-                  <Badge variant="success" className="text-[10px]">{validLabel}</Badge>
-                </div>
+                <Badge variant="success" className="text-[10px]">{validLabel}</Badge>
                 <p className="mt-1 truncate text-sm font-medium">{tk.ticketName}</p>
                 <p className="text-xs text-muted-foreground">{tk.index} / {tk.count}</p>
                 <p className="mt-2 flex items-center gap-1 text-[11px] text-muted-foreground">
@@ -176,11 +178,15 @@ function TicketCard({
           }}
           className="flex flex-col items-center justify-center overflow-hidden rounded-3xl border border-border bg-card p-8"
         >
+          {/* Banner over the QR (when set) */}
+          {tk.banner && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={tk.banner} alt="" className="mb-4 h-12 w-full max-w-[260px] rounded-lg object-cover" />
+          )}
           <p className="mb-5 text-[10px] font-semibold tracking-[3px] text-muted-foreground uppercase">
             Entry Pass
           </p>
-          <p className="mb-1 text-center text-lg font-bold tracking-tight line-clamp-2">{tk.eventName}</p>
-          {tk.tier && <p className="mb-5 text-xs text-muted-foreground">{tk.tier.replace("_", " ")}</p>}
+          <p className="mb-5 text-center text-lg font-bold tracking-tight line-clamp-2">{tk.eventName}</p>
 
           {/* Large QR */}
           <div
@@ -232,6 +238,11 @@ export function TicketWallet({
   const scroller = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
 
+  const shown = tickets.slice(0, MAX_CARDS);
+  const hasMore = tickets.length > MAX_CARDS;
+  // Total slides = shown cards + 1 CTA card (always present as the last item).
+  const slideCount = shown.length + 1;
+
   function onScroll() {
     const el = scroller.current;
     if (!el) return;
@@ -248,17 +259,35 @@ export function TicketWallet({
         className="-mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 pb-2 scrollbar-hide"
         style={{ scrollbarWidth: "none" }}
       >
-        {tickets.map((tk) => (
+        {shown.map((tk) => (
           <div key={tk.id} className="w-full shrink-0 snap-center">
             <TicketCard tk={tk} showLabel={showLabel} validLabel={validLabel} />
           </div>
         ))}
+
+        {/* Final CTA card → My Tickets */}
+        <div className="w-full shrink-0 snap-center">
+          <Link
+            href="/my-tickets"
+            className="group flex h-full min-h-[260px] flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-border bg-card/50 p-8 text-center transition-colors hover:border-gold/40 hover:bg-card"
+          >
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary">
+              <TicketIcon className="h-6 w-6 text-gold" />
+            </div>
+            <p className="font-semibold">
+              {hasMore ? `All ${tickets.length} tickets` : "My Tickets"}
+            </p>
+            <p className="flex items-center gap-1 text-sm text-muted-foreground">
+              View all <ChevronRight className="h-4 w-4" />
+            </p>
+          </Link>
+        </div>
       </div>
 
       {/* Dot nav */}
-      {tickets.length > 1 && (
+      {slideCount > 1 && (
         <div className="mt-3 flex justify-center gap-1.5">
-          {tickets.map((_, i) => (
+          {Array.from({ length: slideCount }).map((_, i) => (
             <span
               key={i}
               className={`h-1.5 rounded-full transition-all ${i === active ? "w-5 bg-gold" : "w-1.5 bg-muted-foreground/40"}`}

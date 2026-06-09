@@ -193,6 +193,7 @@ export async function POST(req: Request) {
           eventName: event.name,
           eventDate: event.start_date,
           eventVenue: event.venue || undefined,
+          eventBannerUrl: (event as any).banner_image_url ?? null,
           tickets: (emailTickets ?? []).map((t: any) => ({
             id: t.id, qrCode: t.qr_code, ticketName: t.ticket_name ?? "Ticket",
             tier: t.tier ?? "GENERAL", holderName: t.holder_name || undefined,

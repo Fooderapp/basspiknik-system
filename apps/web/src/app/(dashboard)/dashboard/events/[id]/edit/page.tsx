@@ -18,6 +18,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
     name: event.name,
     description: event.description ?? "",
     coverImageUrl: event.cover_image_url ?? "",
+    bannerImageUrl: (event as any).banner_image_url ?? "",
     startDate: event.start_date.slice(0, 16),       // "YYYY-MM-DDTHH:MM"
     endDate: event.end_date ? event.end_date.slice(0, 16) : "",
     venue: event.venue ?? "",
