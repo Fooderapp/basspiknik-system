@@ -353,16 +353,16 @@ export default function HomeScreen() {
             )}
 
             {/* Wallet button — one, for active ticket */}
-            {activeTicket && (
+            {activeTicket && !!process.env.EXPO_PUBLIC_APP_URL && (
               <View className="px-5 mt-4">
                 <PressableScale
                   pressedScale={0.97}
                   onPress={() => {
-                    const base = process.env.EXPO_PUBLIC_APP_URL ?? "";
+                    const base = process.env.EXPO_PUBLIC_APP_URL!;
                     const endpoint = Platform.OS === "ios"
                       ? `${base}/api/tickets/${activeTicket.id}/pass`
                       : `${base}/api/tickets/${activeTicket.id}/google-wallet`;
-                    Linking.openURL(endpoint);
+                    Linking.openURL(endpoint).catch(() => {});
                   }}
                   style={{
                     flexDirection: "row", alignItems: "center", justifyContent: "center",
