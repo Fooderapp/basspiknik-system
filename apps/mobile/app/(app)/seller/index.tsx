@@ -20,17 +20,16 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
 import type { TicketType, Event } from "@/lib/types";
+import { runtimeConfig } from "@/lib/runtime-config";
+import { BillingEditModal, type BillingData } from "@/components/BillingEditModal";
 
 interface CartItem { ticketType: TicketType; quantity: number }
-interface ResolvedProfile { id: string; name: string; email: string }
+interface ResolvedProfile { id: string; name: string; email: string; hasBilling: boolean }
 type PaymentMethod = "cash" | "tap";
 type TapState = "idle" | "discovering" | "connecting" | "ready" | "processing" | "success" | "error";
 type BuyerMode = "guest" | "registered";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
-// Set EXPO_PUBLIC_STRIPE_SIMULATED=true in .env to use simulated Tap to Pay
-// (works with Stripe test-mode keys — no real card needed).
-const SIMULATED = process.env.EXPO_PUBLIC_STRIPE_SIMULATED === "true";
 
 export default function SellerScreen() {
   const insets = useSafeAreaInsets();
@@ -57,6 +56,10 @@ export default function SellerScreen() {
   const [tapState, setTapState]   = useState<TapState>("idle");
   const [tapMessage, setTapMessage] = useState("");
   const [connectedReader, setConnectedReader] = useState<Reader | null>(null);
+  // Billing for guest buyers
+  const [billingOpen,    setBillingOpen]    = useState(false);
+  const [billingData,    setBillingData]    = useState<BillingData | null>(null);
+  const [billingUserId,  setBillingUserId]  = useState<string | null>(null); // registered user whose billing is being collected
   const tapStateRef = useRef<TapState>("idle");
   const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const locationIdRef = useRef<string>("");
@@ -203,7 +206,7 @@ export default function SellerScreen() {
     }
     const { error } = await discoverReaders({
       discoveryMethod: "tapToPay",
-      simulated: SIMULATED,
+      simulated: runtimeConfig.stripeSimulated,
     });
     if (error) {
       if (watchdogRef.current) clearTimeout(watchdogRef.current);
@@ -263,9 +266,16 @@ export default function SellerScreen() {
         Alert.alert("Not found", e.error ?? "User not found");
         return;
       }
-      const profile: ResolvedProfile = await res.json();
-      setRegisteredProfile(profile);
+      const resolved = await res.json();
+      // Check if buyer's billing info is complete (needed for Billingo invoice)
+      const hasBilling = !!(resolved.billing_address && resolved.billing_city && resolved.billing_postal_code);
+      setRegisteredProfile({ ...resolved, hasBilling });
       setScannerOpen(false);
+      // If billing is missing, open billing form so seller can fill it in
+      if (!hasBilling) {
+        setBillingUserId(resolved.id);
+        setBillingOpen(true);
+      }
     } catch (e: any) {
       Alert.alert("Error", e.message);
     } finally {
@@ -284,28 +294,59 @@ export default function SellerScreen() {
     setRegisteredProfile(null);
     setBuyerName("");
     setBuyerEmail("");
+    setBillingData(null);
+    setBillingUserId(null);
   }
 
   const effectiveName  = buyerMode === "registered" ? (registeredProfile?.name  ?? "") : buyerName;
   const effectiveEmail = buyerMode === "registered" ? (registeredProfile?.email ?? "") : buyerEmail;
   const effectiveUserId = buyerMode === "registered" ? (registeredProfile?.id ?? null) : null;
 
+  // ── Shared: create order + tickets via API (handles Billingo invoice) ──
+  async function createPosOrder(stripePaymentIntentId?: string) {
+    if (!selectedEvent) throw new Error("No event selected");
+    const { data: { session: authSession } } = await supabase.auth.getSession();
+    if (!authSession) throw new Error("Not authenticated");
+
+    const res = await fetch(`${API_URL}/api/seller/sessions`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${authSession.access_token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        eventId:    selectedEvent.id,
+        paymentMethod: paymentMethod === "tap" ? "TERMINAL" : "CASH",
+        items: cart.map(c => {
+          const p = c.ticketType.sale_enabled && c.ticketType.sale_price
+            ? c.ticketType.sale_price : c.ticketType.price;
+          return { ticketTypeId: c.ticketType.id, quantity: c.quantity, unitPrice: p };
+        }),
+        buyerName:  effectiveName  || null,
+        buyerEmail: effectiveEmail || null,
+        buyerUserId: effectiveUserId || null,
+        billingName:    billingData?.billingName    ?? null,
+        billingAddress: billingData?.billingAddress ?? null,
+        billingCity:    billingData?.billingCity    ?? null,
+        billingPostal:  billingData?.billingPostal  ?? null,
+        billingCountry: billingData?.billingCountry ?? null,
+        stripePaymentIntentId: stripePaymentIntentId ?? null,
+      }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error ?? "Sale failed");
+    return json as { orderId: string; totalAmount: number; totalQty: number };
+  }
+
   // ── Cash sale ──
   async function sellCash() {
     if (cart.length === 0 || !selectedEvent) return;
     setSelling(true);
     try {
-      const { data, error } = await supabase.rpc("sell_tickets_cash", {
-        p_event_id:       selectedEvent.id,
-        p_buyer_name:     effectiveName || null,
-        p_buyer_email:    effectiveEmail || null,
-        p_buyer_user_id:  effectiveUserId,
-        p_items: cart.map(c => ({ ticketTypeId: c.ticketType.id, quantity: c.quantity })),
-      });
-      if (error) throw new Error(error.message);
-      if (data?.error) throw new Error(data.error);
-      setSuccessInfo({ total: data.total, ticketCount: data.ticketCount });
-      setCart([]); setBuyerName(""); setBuyerEmail(""); setRegisteredProfile(null); setConfirmOpen(false);
+      const data = await createPosOrder();
+      setSuccessInfo({ total: data.totalAmount, ticketCount: data.totalQty });
+      setCart([]); setBuyerName(""); setBuyerEmail(""); setRegisteredProfile(null);
+      setBillingData(null); setConfirmOpen(false);
       if (data.orderId) sendConfirmation(data.orderId);
     } catch (e: any) {
       Alert.alert("Error", e.message);
@@ -365,21 +406,14 @@ export default function SellerScreen() {
       const { error: confirmError } = await confirmPaymentIntent({ paymentIntent: collected });
       if (confirmError) throw new Error(confirmError.message);
 
-      // 4. Issue tickets via RPC
-      const { data, error: rpcError } = await supabase.rpc("sell_tickets_cash", {
-        p_event_id:      selectedEvent.id,
-        p_buyer_name:    effectiveName || null,
-        p_buyer_email:   effectiveEmail || null,
-        p_buyer_user_id: effectiveUserId,
-        p_items: cart.map(c => ({ ticketTypeId: c.ticketType.id, quantity: c.quantity })),
-      });
-      if (rpcError) throw new Error(rpcError.message);
-      if (data?.error) throw new Error(data.error);
+      // 4. Issue tickets + Billingo invoice via API
+      const data = await createPosOrder(paymentIntent.id ?? undefined);
 
       setTapState("success");
       setTapMessage("Payment accepted!");
-      setSuccessInfo({ total: data.total, ticketCount: data.ticketCount });
-      setCart([]); setBuyerName(""); setBuyerEmail(""); setRegisteredProfile(null); setConfirmOpen(false);
+      setSuccessInfo({ total: data.totalAmount, ticketCount: data.totalQty });
+      setCart([]); setBuyerName(""); setBuyerEmail(""); setRegisteredProfile(null);
+      setBillingData(null); setConfirmOpen(false);
       if (data.orderId) sendConfirmation(data.orderId);
     } catch (e: any) {
       setTapState("ready");
@@ -611,19 +645,30 @@ export default function SellerScreen() {
             </View>
 
             {buyerMode === "guest" ? (
-              <View className="gap-3 mb-6">
+              <View className="gap-3 mb-4">
+                <Input placeholder="Buyer name (optional)" value={buyerName} onChangeText={setBuyerName} />
                 <Input
-                  placeholder="Buyer name (optional)"
-                  value={buyerName}
-                  onChangeText={setBuyerName}
-                />
-                <Input
-                  placeholder="Buyer email (optional)"
+                  placeholder="Buyer email (for invoice)"
                   keyboardType="email-address"
                   autoCapitalize="none"
                   value={buyerEmail}
                   onChangeText={setBuyerEmail}
                 />
+                {/* Billing address for Billingo invoice */}
+                <View className="flex-row items-center justify-between pt-1">
+                  <Text className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+                    Billing address {billingData ? "✓" : "(optional)"}
+                  </Text>
+                  <Button variant="ghost" size="sm" onPress={() => { setBillingUserId(null); setBillingOpen(true); }}>
+                    <Text className="text-muted-foreground text-xs">{billingData ? "Edit" : "Add"}</Text>
+                  </Button>
+                </View>
+                {billingData && (
+                  <View className="px-3 py-2 rounded-xl bg-card border border-border">
+                    <Text className="text-foreground text-sm">{billingData.billingName}</Text>
+                    <Text className="text-muted-foreground text-xs">{billingData.billingAddress}, {billingData.billingCity}</Text>
+                  </View>
+                )}
               </View>
             ) : (
               <View className="mb-6">
@@ -678,6 +723,15 @@ export default function SellerScreen() {
                   >
                     <Text>Scan Customer QR</Text>
                   </Button>
+                )}
+                {/* Billing warning for registered user with missing billing */}
+                {registeredProfile && !registeredProfile.hasBilling && !billingData && (
+                  <View className="flex-row items-center justify-between px-3 py-2 rounded-xl border border-amber-500/30 bg-amber-500/5 mt-2">
+                    <Text className="text-amber-400 text-xs flex-1">Billing address missing — invoice may be incomplete</Text>
+                    <Button variant="ghost" size="sm" onPress={() => { setBillingUserId(registeredProfile.id); setBillingOpen(true); }}>
+                      <Text className="text-amber-400 text-xs font-semibold">Add</Text>
+                    </Button>
+                  </View>
                 )}
               </View>
             )}
@@ -757,6 +811,25 @@ export default function SellerScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Billing edit modal */}
+      <BillingEditModal
+        visible={billingOpen}
+        onClose={() => { setBillingOpen(false); setBillingUserId(null); }}
+        profileId={billingUserId ?? undefined}
+        initialData={billingData ? {
+          billingName:    billingData.billingName,
+          billingAddress: billingData.billingAddress,
+          billingCity:    billingData.billingCity,
+          billingPostal:  billingData.billingPostal,
+          billingCountry: billingData.billingCountry,
+        } : undefined}
+        onSave={(data) => {
+          setBillingData(data);
+          if (registeredProfile) setRegisteredProfile({ ...registeredProfile, hasBilling: true });
+        }}
+        subtitle="Needed for the Billingo invoice. Saved to the customer's profile."
+      />
 
       {/* Success modal */}
       <Modal visible={!!successInfo} transparent animationType="fade">

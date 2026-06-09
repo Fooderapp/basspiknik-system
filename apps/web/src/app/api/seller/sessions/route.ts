@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { createClient as createSbClient } from "@supabase/supabase-js";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getSettings } from "@/lib/settings";
 import { createBillingoInvoice, type BillingoLineItem } from "@/lib/billingo";
@@ -21,7 +22,28 @@ const BILLINGO_PM: Record<string, string> = {
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-async function getProfile(): Promise<Profile | null> {
+/** Resolve seller profile from cookie (web) or Bearer token (mobile). */
+async function getSellerProfile(req: Request): Promise<Profile | null> {
+  const authHeader = req.headers.get("authorization");
+  const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+
+  if (bearerToken) {
+    // Mobile: Bearer token auth
+    const sb = createSbClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    );
+    const { data: { user }, error } = await sb.auth.getUser(bearerToken);
+    if (error || !user) return null;
+    const admin = createSbClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+    const { data } = await admin.from("profiles").select("*").eq("id", user.id).single();
+    return data as Profile | null;
+  }
+
+  // Web: cookie auth
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
@@ -39,11 +61,21 @@ const createSessionSchema = z.object({
   })).min(1),
   buyerName: z.string().optional(),
   buyerEmail: z.string().email().optional().or(z.literal("")),
+  /** Buyer billing address for invoice (optional — falls back to HU defaults). */
+  billingName: z.string().optional(),
+  billingAddress: z.string().optional(),
+  billingCity: z.string().optional(),
+  billingPostal: z.string().optional(),
+  billingCountry: z.string().optional(),
+  /** Buyer's registered user id (when scanned at POS) — links profile billing. */
+  buyerUserId: z.string().uuid().optional().nullable(),
+  /** Stripe PaymentIntent id for terminal payments (for idempotency + records). */
+  stripePaymentIntentId: z.string().optional().nullable(),
   notes: z.string().optional(),
 });
 
 export async function POST(req: Request) {
-  const profile = await getProfile();
+  const profile = await getSellerProfile(req);
   if (!profile || !["ADMIN", "EDITOR", "SELLER"].includes(profile.role)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
@@ -52,22 +84,38 @@ export async function POST(req: Request) {
   const parsed = createSessionSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const { eventId, paymentMethod, items, buyerName, buyerEmail, notes } = parsed.data;
+  const {
+    eventId, paymentMethod, items, buyerName, buyerEmail, notes,
+    billingName, billingAddress, billingCity, billingPostal, billingCountry,
+    buyerUserId, stripePaymentIntentId,
+  } = parsed.data;
+
   const supabase = await createAdminClient() as any;
   const settings = await getSettings();
 
   const totalAmount = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
   const totalQty = items.reduce((sum, i) => sum + i.quantity, 0);
 
+  // If buyer is a registered user, pull their billing profile for the invoice.
+  let registeredBilling: any = null;
+  if (buyerUserId) {
+    const { data } = await supabase
+      .from("profiles")
+      .select("billing_name, billing_address, billing_city, billing_postal_code, billing_country, name, email")
+      .eq("id", buyerUserId)
+      .single();
+    registeredBilling = data;
+  }
+
   // Create order record
   const { data: order, error: orderErr } = await supabase
     .from("orders")
     .insert({
       event_id: eventId,
-      user_id: profile.id,
+      user_id: buyerUserId || profile.id,
       status: "PAID",
       payment_method: ORDER_PM[paymentMethod] ?? "CASH",
-      stripe_payment_intent_id: `SELLER_${Date.now()}`,
+      stripe_payment_intent_id: stripePaymentIntentId || `SELLER_${Date.now()}`,
       subtotal: totalAmount,
       tax_amount: 0,
       discount_amount: 0,
@@ -112,7 +160,6 @@ export async function POST(req: Request) {
 
     if (itemErr) continue;
 
-    // Bundles multiply the physical ticket count; sold count tracks bundle units
     const ticketsToCreate = item.quantity * (tt?.is_bundle && tt?.bundle_size ? tt.bundle_size : 1);
     const isDoor = !!tt?.is_door_ticket;
 
@@ -132,7 +179,6 @@ export async function POST(req: Request) {
         used_at: isDoor ? new Date().toISOString() : null,
       }).select("id").single();
 
-      // Door ticket → immediate check-in record
       if (isDoor && ticket?.id) {
         await supabase.from("check_ins").insert({
           ticket_id: ticket.id,
@@ -142,7 +188,6 @@ export async function POST(req: Request) {
       }
     }
 
-    // sold tracks bundle units purchased, not individual tickets
     await supabase.rpc("increment_ticket_sold", {
       p_ticket_type_id: item.ticketTypeId,
       p_amount: item.quantity,
@@ -159,8 +204,7 @@ export async function POST(req: Request) {
     notes: notes ?? null,
   });
 
-  // ── Invoice — POS card-terminal always; cash only when the toggle is on.
-  // RULE: only invoice paid orders (total > 0). Free comps get no invoice.
+  // ── Invoice ──────────────────────────────────────────────────────────────────
   let invoiceNumber: string | null = null;
   const { data: invSetting } = await supabase
     .from("app_settings").select("invoice_pos_cash").eq("id", "global").single();
@@ -168,13 +212,30 @@ export async function POST(req: Request) {
   const skipCash = paymentMethod === "CASH" && !cashInvoicingOn;
 
   if (totalAmount > 0 && invoiceItems.length > 0 && !skipCash) {
+    // Resolve billing details: explicit fields > registered profile > defaults
+    const effectiveBillingName =
+      billingName || registeredBilling?.billing_name || buyerName || "Vásárló";
+    const effectiveBillingEmail =
+      buyerEmail || registeredBilling?.email || null;
+    const effectiveCountry =
+      billingCountry || registeredBilling?.billing_country || "HU";
+    const effectiveAddress =
+      billingAddress || registeredBilling?.billing_address || null;
+    const effectiveCity =
+      billingCity || registeredBilling?.billing_city || null;
+    const effectivePostal =
+      billingPostal || registeredBilling?.billing_postal_code || null;
+
     let billingoResult = null;
     try {
       billingoResult = await createBillingoInvoice({
         buyer: {
-          name: buyerName || "Vásárló",
-          email: buyerEmail || null,
-          countryCode: "HU",
+          name: effectiveBillingName,
+          email: effectiveBillingEmail,
+          countryCode: effectiveCountry,
+          address: effectiveAddress,
+          city: effectiveCity,
+          postCode: effectivePostal,
         },
         items: invoiceItems,
         currency: settings.currency,
@@ -196,7 +257,7 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
-  const profile = await getProfile();
+  const profile = await getSellerProfile(req);
   if (!profile || !["ADMIN", "EDITOR", "SELLER"].includes(profile.role)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
@@ -212,7 +273,6 @@ export async function GET(req: Request) {
     .limit(100);
 
   if (eventId) query = query.eq("event_id", eventId);
-  // Non-admin sellers see only their own sessions
   if (profile.role === "SELLER") query = query.eq("seller_id", profile.id);
 
   const { data, error } = await query;

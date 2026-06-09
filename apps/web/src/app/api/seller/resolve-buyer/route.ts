@@ -34,7 +34,7 @@ export async function POST(req: Request) {
 
   const { data: profile, error } = await supabaseAdmin
     .from("profiles")
-    .select("id, name, email")
+    .select("id, name, email, billing_name, billing_address, billing_city, billing_postal_code, billing_country")
     .eq("wallet_token", walletToken)
     .single() as any;
 
@@ -42,5 +42,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  return NextResponse.json({ id: profile.id, name: profile.name, email: profile.email });
+  return NextResponse.json({
+    id: profile.id,
+    name: profile.name,
+    email: profile.email,
+    billing_name: profile.billing_name,
+    billing_address: profile.billing_address,
+    billing_city: profile.billing_city,
+    billing_postal_code: profile.billing_postal_code,
+    billing_country: profile.billing_country,
+  });
 }

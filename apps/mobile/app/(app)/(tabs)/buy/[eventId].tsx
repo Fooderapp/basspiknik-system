@@ -20,9 +20,9 @@ import type { Event, TicketType } from "@/lib/types";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
 
-function billingComplete(p: { billing_address?: string | null; billing_city?: string | null; billing_postal_code?: string | null; onboarded_at?: string | null } | null): boolean {
+function billingComplete(p: { billing_name?: string | null; billing_address?: string | null; billing_city?: string | null; billing_postal_code?: string | null; onboarded_at?: string | null } | null): boolean {
   if (!p) return false;
-  return !!(p.onboarded_at && p.billing_address && p.billing_city && p.billing_postal_code);
+  return !!(p.onboarded_at && p.billing_name && p.billing_address && p.billing_city && p.billing_postal_code);
 }
 
 export default function BuyEventScreen() {

@@ -12,10 +12,11 @@ import { getConfig } from "@/lib/config";
  * The SECRET key and webhook secret are NEVER served here.
  */
 export async function GET() {
-  const [stripePublishableKey, appUrl, stripeTerminalLocationId] = await Promise.all([
+  const [stripePublishableKey, appUrl, stripeTerminalLocationId, stripeSimulated] = await Promise.all([
     getConfig("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"),
     getConfig("NEXT_PUBLIC_APP_URL"),
     getConfig("STRIPE_TERMINAL_LOCATION_ID"),
+    getConfig("STRIPE_SIMULATED"),
   ]);
 
   return NextResponse.json(
@@ -23,6 +24,7 @@ export async function GET() {
       stripePublishableKey: stripePublishableKey ?? null,
       appUrl: appUrl ?? null,
       stripeTerminalLocationId: stripeTerminalLocationId ?? null,
+      stripeSimulated: stripeSimulated === "true",
     },
     {
       headers: {

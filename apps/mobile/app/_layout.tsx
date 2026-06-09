@@ -8,20 +8,19 @@ import { StripeTerminalProvider } from "@stripe/stripe-terminal-react-native";
 import { StripeProvider } from "@stripe/stripe-react-native";
 import { AuthProvider } from "@/context/auth";
 import { fetchConnectionToken } from "@/lib/stripe-terminal";
+import { applyPublicConfig, runtimeConfig } from "@/lib/runtime-config";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
-// Build-time fallback; the real key is fetched from /api/public-config at startup
-// so the publishable key can be managed from the admin dashboard (no rebuild).
-const ENV_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
 
 export default function RootLayout() {
-  const [publishableKey, setPublishableKey] = useState(ENV_PUBLISHABLE_KEY);
+  const [publishableKey, setPublishableKey] = useState(runtimeConfig.stripePublishableKey);
 
   useEffect(() => {
     if (!API_URL) return;
     fetch(`${API_URL}/api/public-config`)
       .then((r) => r.json())
       .then((d) => {
+        applyPublicConfig(d);
         if (d?.stripePublishableKey) setPublishableKey(d.stripePublishableKey);
       })
       .catch(() => {/* keep build-time key */});
