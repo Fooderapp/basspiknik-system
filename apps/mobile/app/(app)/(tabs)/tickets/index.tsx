@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Linking, Platform, RefreshControl, ScrollView, View } from "react-native";
+import { ActivityIndicator, RefreshControl, ScrollView, View } from "react-native";
 import { router } from "expo-router";
-import { Apple, Wallet, Ticket as TicketIcon, ChevronRight } from "lucide-react-native";
+import { Ticket as TicketIcon, ChevronRight } from "lucide-react-native";
 import { Screen } from "@/components/ui/Screen";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/badge";
@@ -12,8 +12,6 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth";
 import type { Ticket } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
 
 const STATUS_VARIANT: Record<string, "success" | "muted" | "destructive" | "secondary"> = {
   VALID:     "success",
@@ -30,28 +28,6 @@ export default function TicketsScreen() {
   const [tickets, setTickets]       = useState<Ticket[]>([]);
   const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [addingWallet, setAddingWallet]             = useState(false);
-  const [addingGoogleWallet, setAddingGoogleWallet] = useState(false);
-
-  async function addToAppleWallet() {
-    setAddingWallet(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Not authenticated");
-      await Linking.openURL(`${API_URL}/api/wallet?token=${encodeURIComponent(session.access_token)}`);
-    } catch (e: any) { Alert.alert("Error", e.message); }
-    finally { setAddingWallet(false); }
-  }
-
-  async function addToGoogleWallet() {
-    setAddingGoogleWallet(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Not authenticated");
-      await Linking.openURL(`${API_URL}/api/google-wallet?token=${encodeURIComponent(session.access_token)}`);
-    } catch (e: any) { Alert.alert("Error", e.message); }
-    finally { setAddingGoogleWallet(false); }
-  }
 
   async function load() {
     if (!session) return;
@@ -73,8 +49,6 @@ export default function TicketsScreen() {
     await load();
     setRefreshing(false);
   }
-
-  const hasValid = tickets.some(t => t.status === "VALID");
 
   if (loading) {
     return (
@@ -98,20 +72,6 @@ export default function TicketsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fafafa" />}
         showsVerticalScrollIndicator={false}
       >
-        {/* Wallet buttons */}
-        {hasValid && (
-          <View className="gap-2 mb-5">
-            {Platform.OS === "ios" && (
-              <Button variant="secondary" className="w-full" onPress={addToAppleWallet} loading={addingWallet} disabled={addingWallet} icon={<Apple size={18} color="#fafafa" strokeWidth={1.75} />}>
-                <Text className="font-semibold">Add to Apple Wallet</Text>
-              </Button>
-            )}
-            <Button variant="secondary" className="w-full" onPress={addToGoogleWallet} loading={addingGoogleWallet} disabled={addingGoogleWallet} icon={<Wallet size={18} color="#fafafa" strokeWidth={1.75} />}>
-              <Text className="font-semibold">Add to Google Wallet</Text>
-            </Button>
-          </View>
-        )}
-
         {tickets.length === 0 ? (
           <View className="items-center py-20">
             <View className="w-14 h-14 rounded-2xl items-center justify-center mb-4 border border-border bg-muted">

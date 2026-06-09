@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { Text } from "@/components/ui/text";
 import { QRImage } from "@/components/ui/QRImage";
+import { AppleLogo, GoogleLogo } from "@/components/ui/BrandLogos";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth";
@@ -306,7 +307,7 @@ export default function HomeScreen() {
               {/* Final CTA card → My Tickets */}
               <PressableScale
                 pressedScale={0.98}
-                onPress={() => router.push("/(app)/tickets" as never)}
+                onPress={() => router.push("/(app)/(tabs)/tickets" as never)}
                 style={{ width: CARD_W }}
               >
                 <View
@@ -338,17 +339,35 @@ export default function HomeScreen() {
               ))}
             </View>
 
-            {/* Wallet button — iOS only (profile-level Apple Wallet pass) */}
-            {Platform.OS === "ios" && !!process.env.EXPO_PUBLIC_APP_URL && (
-              <View className="px-5 mt-4">
+            {/* Wallet buttons — profile-level wallet pass (Apple on iOS, Google everywhere) */}
+            {!!process.env.EXPO_PUBLIC_APP_URL && (
+              <View className="px-5 mt-4 gap-2">
+                {Platform.OS === "ios" && (
+                  <PressableScale
+                    pressedScale={0.97}
+                    onPress={() => {
+                      const base = process.env.EXPO_PUBLIC_APP_URL!;
+                      const tok = session?.access_token ?? "";
+                      Linking.openURL(`${base}/api/wallet?token=${encodeURIComponent(tok)}`).catch(() => {});
+                    }}
+                    style={{
+                      flexDirection: "row", alignItems: "center", justifyContent: "center",
+                      gap: 8, borderWidth: 1, borderColor: "rgba(255,255,255,0.1)",
+                      borderRadius: 14, paddingVertical: 12, backgroundColor: "rgba(255,255,255,0.04)",
+                    }}
+                  >
+                    <AppleLogo size={18} color="#f5f5f5" />
+                    <Text style={{ fontSize: 13, fontWeight: "600", color: "#f5f5f5" }}>
+                      Add to Apple Wallet
+                    </Text>
+                  </PressableScale>
+                )}
                 <PressableScale
                   pressedScale={0.97}
                   onPress={() => {
                     const base = process.env.EXPO_PUBLIC_APP_URL!;
                     const tok = session?.access_token ?? "";
-                    // /api/wallet = existing working Apple Wallet pass endpoint
-                    const endpoint = `${base}/api/wallet?token=${encodeURIComponent(tok)}`;
-                    Linking.openURL(endpoint).catch(() => {});
+                    Linking.openURL(`${base}/api/google-wallet?token=${encodeURIComponent(tok)}`).catch(() => {});
                   }}
                   style={{
                     flexDirection: "row", alignItems: "center", justifyContent: "center",
@@ -356,8 +375,9 @@ export default function HomeScreen() {
                     borderRadius: 14, paddingVertical: 12, backgroundColor: "rgba(255,255,255,0.04)",
                   }}
                 >
+                  <GoogleLogo size={18} />
                   <Text style={{ fontSize: 13, fontWeight: "600", color: "#f5f5f5" }}>
-                    Add to Apple Wallet
+                    Add to Google Wallet
                   </Text>
                 </PressableScale>
               </View>

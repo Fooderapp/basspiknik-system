@@ -5,7 +5,6 @@ import { formatDate } from "@/lib/utils";
 import { Ticket as TicketIcon, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { WalletButtons } from "@/components/consumer/wallet-buttons";
 import { getSettings } from "@/lib/settings";
 import { getDictionary, t } from "@/lib/i18n";
 import type { Dictionary } from "@/lib/i18n";
@@ -65,7 +64,6 @@ export default async function MyTicketsPage() {
     .filter((tk: any) => (seen.has(tk.id) ? false : (seen.add(tk.id), true)))
     .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-  const hasValid = tickets.some((tk: any) => tk.status === "VALID");
   const count = tickets.length;
 
   return (
@@ -77,14 +75,6 @@ export default async function MyTicketsPage() {
           {count} {count === 1 ? t(dict, "mytickets.count_one") : t(dict, "mytickets.count_other")}
         </p>
       </div>
-
-      {/* Wallet buttons */}
-      {hasValid && (
-        <WalletButtons
-          appleLabel={t(dict, "mytickets.apple_wallet")}
-          googleLabel={t(dict, "mytickets.google_wallet")}
-        />
-      )}
 
       {count === 0 ? (
         <div className="flex flex-col items-center py-20 text-center">
