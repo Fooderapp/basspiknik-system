@@ -13,7 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Tag, Plus, Trash2, Copy, CheckCircle2, Clock } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tag, Plus, Trash2, Copy, CheckCircle2, Clock, QrCode, Download } from "lucide-react";
 import type { PromoCode } from "@/lib/supabase/types";
 
 const schema = z.object({
@@ -28,6 +29,7 @@ type FormData = z.infer<typeof schema>;
 interface Props {
   eventId: string;
   eventName: string;
+  eventSlug: string;
   initialPromos: PromoCode[];
 }
 
@@ -36,11 +38,19 @@ function generateCode() {
   return Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
 }
 
-export function PromoManager({ eventId, eventName, initialPromos }: Props) {
+export function PromoManager({ eventId, eventName, eventSlug, initialPromos }: Props) {
   const [promos, setPromos] = useState<PromoCode[]>(initialPromos);
   const [showForm, setShowForm] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<PromoCode | null>(null);
+  const [qrTarget, setQrTarget] = useState<PromoCode | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+
+  // QR encodes a deep link to the event carrying the promo id (uuid) — NOT the
+  // marketing code — so scanning lands on the event and (Step 2) applies the
+  // discount without ever revealing the code text.
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const qrPayload = (p: PromoCode) => `${origin}/events/${eventSlug}?promo=${p.id}`;
+  const qrSrc = (p: PromoCode) => `/api/tickets/qr?code=${encodeURIComponent(qrPayload(p))}`;
 
   const { register, handleSubmit, setValue, watch, reset, formState: { errors, isSubmitting } } =
     useForm<FormData>({ resolver: zodResolver(schema), defaultValues: { discountType: "percent", discountValue: 10 } });
@@ -242,6 +252,15 @@ export function PromoManager({ eventId, eventName, initialPromos }: Props) {
 
                 <Button
                   variant="ghost" size="icon"
+                  className="shrink-0"
+                  onClick={() => setQrTarget(p)}
+                  title="Show QR code"
+                >
+                  <QrCode className="h-4 w-4" />
+                </Button>
+
+                <Button
+                  variant="ghost" size="icon"
                   className="text-destructive hover:text-destructive shrink-0"
                   onClick={() => setDeleteTarget(p)}
                 >
@@ -267,6 +286,49 @@ export function PromoManager({ eventId, eventName, initialPromos }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* QR code maker — scannable, hides the marketing code */}
+      <Dialog open={!!qrTarget} onOpenChange={(o) => !o && setQrTarget(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <QrCode className="h-5 w-5" /> Promo QR code
+            </DialogTitle>
+            <DialogDescription>
+              Print or share this QR. Scanning applies the discount automatically — the
+              code itself stays hidden.
+            </DialogDescription>
+          </DialogHeader>
+
+          {qrTarget && (
+            <div className="flex flex-col items-center gap-4 py-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={qrSrc(qrTarget)}
+                alt="Promo QR"
+                width={240}
+                height={240}
+                className="rounded-xl border bg-white p-3"
+              />
+              <div className="text-center">
+                <Badge variant="secondary" className="text-xs">
+                  {qrTarget.discount_type === "percent"
+                    ? `${qrTarget.discount_value}% off`
+                    : `${formatCurrency(qrTarget.discount_value)} off`}
+                </Badge>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {eventName}
+                </p>
+              </div>
+              <Button asChild variant="outline" className="w-full gap-2">
+                <a href={qrSrc(qrTarget)} download={`promo-${qrTarget.code}.png`}>
+                  <Download className="h-4 w-4" /> Download PNG
+                </a>
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

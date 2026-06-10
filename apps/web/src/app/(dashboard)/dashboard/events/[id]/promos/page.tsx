@@ -29,6 +29,7 @@ export default async function PromosPage({ params }: { params: Promise<{ id: str
       <PromoManager
         eventId={id}
         eventName={(eventData as Event).name}
+        eventSlug={(eventData as Event).slug}
         initialPromos={(promoData ?? []) as PromoCode[]}
       />
     </div>
