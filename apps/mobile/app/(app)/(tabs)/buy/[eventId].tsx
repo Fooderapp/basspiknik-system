@@ -3,7 +3,7 @@ import { ActivityIndicator, Alert, Pressable, ScrollView, View } from "react-nat
 import { useLocalSearchParams, router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStripe, initStripe } from "@stripe/stripe-react-native";
-import { ChevronLeft, Minus, Plus, Tag, CalendarDays, MapPin, Sparkles, Star } from "lucide-react-native";
+import { ChevronLeft, Minus, Plus, Tag, CalendarDays, MapPin, Sparkles, Star, Wallet } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth";
 import { Button } from "@/components/ui/Button";
@@ -48,6 +48,11 @@ export default function BuyEventScreen() {
   const [spinResult, setSpinResult] = useState<{ win: boolean; token?: string; balance?: number } | null>(null);
   const [freeToken, setFreeToken]   = useState<string | null>(null);
   const [spinEligible, setSpinEligible] = useState(false);
+
+  // Credit redemption (apply credits as a checkout discount)
+  const [redeemMax, setRedeemMax]       = useState(0);
+  const [redeemValue, setRedeemValue]   = useState(0);
+  const [redeemCredits, setRedeemCredits] = useState(0);
 
   // Fetch credit balance + settings — called on mount and every time screen focuses
   const fetchCredits = useCallback(async () => {
@@ -109,6 +114,39 @@ export default function BuyEventScreen() {
   const subtotal = ticketTypes.reduce((s, t) => s + (quantities[t.id] ?? 0) * priceOf(t), 0);
   const hasItems = Object.values(quantities).some((q) => q > 0);
 
+  // Promo and credits are mutually exclusive.
+  const promoActive = !!promoCode.trim();
+  const redeemDiscount = redeemCredits * redeemValue;
+  const displayTotal = Math.max(0, subtotal - redeemDiscount);
+
+  // Fetch the credit-redemption quote when the cart total changes (no promo).
+  useEffect(() => {
+    if (!session || promoActive || subtotal <= 0) {
+      setRedeemMax(0); setRedeemValue(0); setRedeemCredits(0);
+      return;
+    }
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/credits/redeem-quote`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+          body: JSON.stringify({ orderTotal: subtotal }),
+        });
+        const data = await res.json();
+        if (cancelled) return;
+        if (data?.enabled && (data.maxCredits ?? 0) > 0) {
+          setRedeemMax(data.maxCredits);
+          setRedeemValue(data.value ?? 0);
+          setRedeemCredits((c) => Math.min(c, data.maxCredits));
+        } else {
+          setRedeemMax(0); setRedeemValue(0); setRedeemCredits(0);
+        }
+      } catch { if (!cancelled) { setRedeemMax(0); setRedeemValue(0); } }
+    }, 250);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [subtotal, promoActive, session]);
+
   function updateQty(t: TicketType, delta: number) {
     const max = Math.min(t.quantity - t.sold, t.max_per_order);
     setQuantities((prev) => {
@@ -158,7 +196,7 @@ export default function BuyEventScreen() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Free checkout failed");
       Alert.alert("🎉 Free tickets claimed!", "Your tickets are confirmed. Check My Tickets.");
-      router.replace("/(app)/tickets" as never);
+      router.replace("/(app)/(tabs)/tickets" as never);
     } catch (e: any) {
       Alert.alert("Error", e.message);
     } finally {
@@ -191,7 +229,11 @@ export default function BuyEventScreen() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ eventId, items, promoCode: promoCode || undefined }),
+        body: JSON.stringify({
+          eventId, items,
+          promoCode: promoCode || undefined,
+          creditsToApply: redeemCredits > 0 ? redeemCredits : undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok || !data.paymentIntent) throw new Error(data.error ?? "Checkout failed");
@@ -237,7 +279,7 @@ export default function BuyEventScreen() {
         "🎉 Payment successful!",
         `Your tickets are on the way.\n\n⭐ You earned ${creditsEarned} credits!`,
       );
-      router.replace("/(app)/tickets" as never);
+      router.replace("/(app)/(tabs)/tickets" as never);
     } catch (e: any) {
       Alert.alert("Error", e.message ?? "Checkout failed");
     } finally {
@@ -332,14 +374,15 @@ export default function BuyEventScreen() {
           })}
         </View>
 
-        {/* Promo code */}
+        {/* Promo code — disabled while redeeming credits (either-or) */}
         <View className="mt-4">
           <Input
             label="Promo code"
             value={promoCode}
             onChangeText={(v) => setPromoCode(v.toUpperCase())}
             autoCapitalize="characters"
-            placeholder="Optional"
+            placeholder={redeemCredits > 0 ? "Using credits" : "Optional"}
+            editable={redeemCredits === 0}
           />
         </View>
       </ScrollView>
@@ -350,10 +393,49 @@ export default function BuyEventScreen() {
           {/* Subtotal */}
           <View className="flex-row items-center justify-between mb-3">
             <Text className="text-muted-foreground">Subtotal</Text>
-            <Text className={`font-bold text-lg ${freeToken ? "line-through text-muted-foreground" : "text-foreground"}`}>
+            <Text className={`font-bold text-lg ${freeToken || redeemCredits > 0 ? "line-through text-muted-foreground" : "text-foreground"}`}>
               {fmt(subtotal)}
             </Text>
           </View>
+
+          {/* Credit redemption — stepper, no promo, redemption enabled */}
+          {!freeToken && !promoActive && redeemMax > 0 && (
+            <View
+              className="rounded-xl border px-3 py-2.5 mb-3"
+              style={{ borderColor: "rgba(235,224,90,0.4)", backgroundColor: "rgba(235,224,90,0.06)" }}
+            >
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center gap-2">
+                  <Wallet size={16} color="#EBE05A" strokeWidth={2} />
+                  <Text className="font-semibold text-sm text-foreground">Use credits</Text>
+                </View>
+                <Text className="text-xs text-muted-foreground">max {redeemMax}</Text>
+              </View>
+              <View className="flex-row items-center justify-between mt-2.5">
+                <View className="flex-row items-center gap-3">
+                  <Button variant="outline" size="icon" className="h-8 w-8"
+                    onPress={() => setRedeemCredits((c) => Math.max(0, c - 1))}
+                    disabled={redeemCredits === 0}>
+                    <Minus size={14} color="#fafafa" strokeWidth={2} />
+                  </Button>
+                  <Text className="w-10 text-center font-semibold text-foreground">{redeemCredits}</Text>
+                  <Button variant="outline" size="icon" className="h-8 w-8"
+                    onPress={() => setRedeemCredits((c) => Math.min(redeemMax, c + 1))}
+                    disabled={redeemCredits >= redeemMax}>
+                    <Plus size={14} color="#fafafa" strokeWidth={2} />
+                  </Button>
+                  <Pressable onPress={() => setRedeemCredits(redeemMax)} hitSlop={8}>
+                    <Text className="text-xs font-semibold" style={{ color: "#EBE05A" }}>Max</Text>
+                  </Pressable>
+                </View>
+                {redeemDiscount > 0 && (
+                  <Text className="font-semibold text-sm" style={{ color: "#EBE05A" }}>
+                    −{fmt(redeemDiscount)}
+                  </Text>
+                )}
+              </View>
+            </View>
+          )}
 
           {/* Free spin banner — only when cart meets spin conditions + enough credits */}
           {spinEligible && !freeToken && (
@@ -388,7 +470,7 @@ export default function BuyEventScreen() {
             />
           ) : (
             <SlideToConfirm
-              label={`Slide to checkout · ${fmt(subtotal)}`}
+              label={`Slide to checkout · ${fmt(displayTotal)}`}
               color="#EBE05A"
               onColor="#323000"
               lockOnConfirm={false}
