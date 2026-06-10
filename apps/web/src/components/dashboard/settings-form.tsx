@@ -9,7 +9,9 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Globe, DollarSign, Save, Coins, Receipt, Wallet } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { SystemConfigForm } from "@/components/dashboard/system-config-form";
+import { Globe, DollarSign, Save, Coins, Receipt, Wallet, KeyRound } from "lucide-react";
 import type { AppSettings, Currency, Language } from "@/lib/settings";
 
 const CURRENCIES: { value: Currency; label: string; symbol: string; note?: string }[] = [
@@ -44,6 +46,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
   const [creditMinRedeem, setCreditMinRedeem] = useState(0);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [activeTab, setActiveTab] = useState("general");
 
   // Credit fields aren't part of getSettings() — pull them from the admin API
   useEffect(() => {
@@ -102,7 +105,16 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
   const selectedLanguage = LANGUAGES.find((l) => l.value === language);
 
   return (
-    <div className="space-y-6">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <TabsList className="flex h-auto flex-wrap justify-start gap-1">
+        <TabsTrigger value="general" className="gap-1.5"><Globe className="h-4 w-4" /> General</TabsTrigger>
+        <TabsTrigger value="credits" className="gap-1.5"><Coins className="h-4 w-4" /> Credits</TabsTrigger>
+        <TabsTrigger value="invoicing" className="gap-1.5"><Receipt className="h-4 w-4" /> Invoicing</TabsTrigger>
+        <TabsTrigger value="integrations" className="gap-1.5"><KeyRound className="h-4 w-4" /> Integrations</TabsTrigger>
+      </TabsList>
+
+      {/* ── General: language + currency ── */}
+      <TabsContent value="general" className="space-y-6">
 
       {/* Language */}
       <Card>
@@ -186,6 +198,10 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
 
         </CardContent>
       </Card>
+      </TabsContent>
+
+      {/* ── Credits: earning, spin + redemption ── */}
+      <TabsContent value="credits" className="space-y-6">
 
       {/* Credits & Spin */}
       <Card>
@@ -283,6 +299,10 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
           </p>
         </CardContent>
       </Card>
+      </TabsContent>
+
+      {/* ── Invoicing ── */}
+      <TabsContent value="invoicing" className="space-y-6">
 
       {/* Invoicing */}
       <Card>
@@ -311,18 +331,28 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
           </div>
         </CardContent>
       </Card>
+      </TabsContent>
 
-      <Separator />
+      {/* ── Integrations & keys (own save button) ── */}
+      <TabsContent value="integrations">
+        <SystemConfigForm />
+      </TabsContent>
 
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Changes take effect immediately for new purchases.
-        </p>
-        <Button onClick={handleSave} disabled={saving || !dirty} className="gap-2">
-          <Save className="h-4 w-4" />
-          {saving ? "Saving…" : "Save settings"}
-        </Button>
-      </div>
-    </div>
+      {/* Shared save bar for the app-settings tabs (integrations saves itself) */}
+      {activeTab !== "integrations" && (
+        <>
+          <Separator />
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Changes take effect immediately for new purchases.
+            </p>
+            <Button onClick={handleSave} disabled={saving || !dirty} className="gap-2">
+              <Save className="h-4 w-4" />
+              {saving ? "Saving…" : "Save settings"}
+            </Button>
+          </div>
+        </>
+      )}
+    </Tabs>
   );
 }
