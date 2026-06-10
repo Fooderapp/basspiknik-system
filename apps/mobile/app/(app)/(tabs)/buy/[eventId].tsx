@@ -4,6 +4,7 @@ import { useLocalSearchParams, router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStripe, initStripe } from "@stripe/stripe-react-native";
 import { ChevronLeft, Minus, Plus, Tag, CalendarDays, MapPin, Sparkles, Star, Wallet } from "lucide-react-native";
+import { Slider } from "@/components/ui/Slider";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth";
 import { Button } from "@/components/ui/Button";
@@ -398,41 +399,25 @@ export default function BuyEventScreen() {
             </Text>
           </View>
 
-          {/* Credit redemption — stepper, no promo, redemption enabled */}
+          {/* Credit redemption — slider (matches web), no promo, redemption enabled */}
           {!freeToken && !promoActive && redeemMax > 0 && (
             <View
-              className="rounded-xl border px-3 py-2.5 mb-3"
+              className="rounded-xl border px-3 py-3 mb-3"
               style={{ borderColor: "rgba(235,224,90,0.4)", backgroundColor: "rgba(235,224,90,0.06)" }}
             >
-              <View className="flex-row items-center justify-between">
-                <View className="flex-row items-center gap-2">
-                  <Wallet size={16} color="#EBE05A" strokeWidth={2} />
-                  <Text className="font-semibold text-sm text-foreground">Use credits</Text>
-                </View>
-                <Text className="text-xs text-muted-foreground">max {redeemMax}</Text>
+              <View className="flex-row items-center gap-2">
+                <Wallet size={16} color="#EBE05A" strokeWidth={2} />
+                <Text className="font-semibold text-sm text-foreground">Use credits</Text>
+                <Text className="ml-auto text-xs text-muted-foreground">Balance: {redeemMax}</Text>
               </View>
-              <View className="flex-row items-center justify-between mt-2.5">
-                <View className="flex-row items-center gap-3">
-                  <Button variant="outline" size="icon" className="h-8 w-8"
-                    onPress={() => setRedeemCredits((c) => Math.max(0, c - 1))}
-                    disabled={redeemCredits === 0}>
-                    <Minus size={14} color="#fafafa" strokeWidth={2} />
-                  </Button>
-                  <Text className="w-10 text-center font-semibold text-foreground">{redeemCredits}</Text>
-                  <Button variant="outline" size="icon" className="h-8 w-8"
-                    onPress={() => setRedeemCredits((c) => Math.min(redeemMax, c + 1))}
-                    disabled={redeemCredits >= redeemMax}>
-                    <Plus size={14} color="#fafafa" strokeWidth={2} />
-                  </Button>
-                  <Pressable onPress={() => setRedeemCredits(redeemMax)} hitSlop={8}>
-                    <Text className="text-xs font-semibold" style={{ color: "#EBE05A" }}>Max</Text>
-                  </Pressable>
-                </View>
-                {redeemDiscount > 0 && (
-                  <Text className="font-semibold text-sm" style={{ color: "#EBE05A" }}>
-                    −{fmt(redeemDiscount)}
-                  </Text>
-                )}
+              <View className="mt-3">
+                <Slider value={redeemCredits} min={0} max={redeemMax} step={1} onChange={setRedeemCredits} />
+              </View>
+              <View className="flex-row items-center justify-between mt-2">
+                <Text className="text-xs text-muted-foreground">{redeemCredits} credits</Text>
+                <Text className="text-xs font-semibold" style={{ color: "#EBE05A" }}>
+                  −{fmt(redeemDiscount)} off
+                </Text>
               </View>
             </View>
           )}
