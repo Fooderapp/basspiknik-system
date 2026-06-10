@@ -5,6 +5,7 @@ import { formatDate, formatCurrency } from "@/lib/utils";
 import { Ticket as TicketIcon, Star, ShoppingBag, Wine, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TicketWallet, type WalletTicket } from "@/components/consumer/ticket-wallet";
+import { TaskList } from "@/components/consumer/task-list";
 import { getSettings } from "@/lib/settings";
 import { getDictionary, t } from "@/lib/i18n";
 
@@ -182,6 +183,9 @@ export default async function HomePage() {
           validLabel={t(dict, "mytickets.status_valid")}
         />
       )}
+
+      {/* Earn-credits tasks */}
+      <TaskList dict={dict} />
 
       {/* Recent activity */}
       {recent.length > 0 && (

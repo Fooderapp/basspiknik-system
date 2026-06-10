@@ -450,6 +450,14 @@ const en = {
   "credits.redeem_off":     "off",
   "credits.redeem_either":  "Use a promo code or credits — not both.",
   "ticket.promo_applied":   "Promo applied",
+  "tasks.title":            "Earn credits",
+  "tasks.subtitle":         "Complete tasks, collect credits.",
+  "tasks.done":             "Done",
+  "tasks.pending":          "In review",
+  "tasks.cooldown":         "Later",
+  "tasks.i_did_it":         "I did it",
+  "tasks.submitted":        "Submitted for review",
+  "tasks.empty":            "No tasks right now — check back soon.",
 };
 
 const hu: typeof en = {
@@ -900,6 +908,14 @@ const hu: typeof en = {
   "credits.redeem_off":     "kedvezmény",
   "credits.redeem_either":  "Promó kód vagy kreditek — egyszerre csak az egyik.",
   "ticket.promo_applied":   "Promó alkalmazva",
+  "tasks.title":            "Szerezz krediteket",
+  "tasks.subtitle":         "Teljesíts feladatokat, gyűjts krediteket.",
+  "tasks.done":             "Kész",
+  "tasks.pending":          "Ellenőrzés alatt",
+  "tasks.cooldown":         "Később",
+  "tasks.i_did_it":         "Megcsináltam",
+  "tasks.submitted":        "Beküldve ellenőrzésre",
+  "tasks.empty":            "Most nincs feladat — nézz vissza később.",
 };
 
 // ─── Public API ───────────────────────────────────────────────────────────────

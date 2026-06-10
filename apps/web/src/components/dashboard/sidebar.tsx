@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, CalendarDays, Users, BarChart3,
-  Ticket, Wine, ScanLine, UserCheck,
+  Ticket, Wine, ScanLine, UserCheck, Gift,
   LogOut, ChevronLeft, Menu, User, Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -31,6 +31,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Seller", href: "/seller", icon: Ticket, roles: ["ADMIN", "EDITOR", "SELLER"] },
   { label: "Check-In", href: "/checkin", icon: UserCheck, roles: ["ADMIN", "EDITOR", "STAFF"] },
   { label: "Bar",      href: "/bar",                icon: ScanLine,  roles: ["ADMIN", "EDITOR", "STAFF", "BARTENDER"] },
+  { label: "Tasks",    href: "/dashboard/tasks",    icon: Gift,      roles: ["ADMIN"] },
   { label: "Settings", href: "/dashboard/settings", icon: Settings,  roles: ["ADMIN"] },
 ];
 
