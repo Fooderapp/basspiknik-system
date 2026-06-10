@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Globe, DollarSign, Save, Coins, Receipt } from "lucide-react";
+import { Globe, DollarSign, Save, Coins, Receipt, Wallet } from "lucide-react";
 import type { AppSettings, Currency, Language } from "@/lib/settings";
 
 const CURRENCIES: { value: Currency; label: string; symbol: string; note?: string }[] = [
@@ -36,6 +36,12 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
   const [spinCost, setSpinCost] = useState(4);
   const [spinWinRate, setSpinWinRate] = useState(20);
   const [invoicePosCash, setInvoicePosCash] = useState(true);
+  // Credit redemption (apply credits at checkout)
+  const [creditRedeemEnabled, setCreditRedeemEnabled] = useState(false);
+  const [creditValueHuf, setCreditValueHuf] = useState(0);
+  const [creditMaxApply, setCreditMaxApply] = useState(0);
+  const [creditMaxPct, setCreditMaxPct] = useState(50);
+  const [creditMinRedeem, setCreditMinRedeem] = useState(0);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
 
@@ -50,6 +56,11 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
         if (d.spin_cost != null) setSpinCost(d.spin_cost);
         if (d.spin_win_rate != null) setSpinWinRate(d.spin_win_rate);
         if (d.invoice_pos_cash !== undefined) setInvoicePosCash(!!d.invoice_pos_cash);
+        if (d.credit_redeem_enabled !== undefined) setCreditRedeemEnabled(!!d.credit_redeem_enabled);
+        if (d.credit_value_huf != null) setCreditValueHuf(Number(d.credit_value_huf));
+        if (d.credit_max_apply != null) setCreditMaxApply(d.credit_max_apply);
+        if (d.credit_max_pct != null) setCreditMaxPct(d.credit_max_pct);
+        if (d.credit_min_redeem != null) setCreditMinRedeem(d.credit_min_redeem);
       })
       .catch(() => {});
   }, []);
@@ -58,6 +69,9 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
   const handleLanguage = (val: string) => { setLanguage(val as Language); setDirty(true); };
   const num = (set: (n: number) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
     set(Math.max(0, parseInt(e.target.value || "0", 10))); setDirty(true);
+  };
+  const dec = (set: (n: number) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    set(Math.max(0, parseFloat(e.target.value || "0"))); setDirty(true);
   };
 
   const handleSave = async () => {
@@ -69,6 +83,8 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
         body: JSON.stringify({
           currency, language, creditsEnabled, creditsPerTicket,
           creditsPerDrink, spinCost, spinWinRate, invoicePosCash,
+          creditRedeemEnabled, creditValueHuf, creditMaxApply,
+          creditMaxPct, creditMinRedeem,
         }),
       });
       const data = await res.json();
@@ -214,6 +230,56 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
           </div>
           <p className="text-xs text-muted-foreground">
             Win chance ≈ {spinWinRate > 0 ? (100 / spinWinRate).toFixed(1) : "0"}% per spin.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Credit redemption at checkout */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Wallet className="h-4 w-4" />
+            Credit redemption (checkout discount)
+          </CardTitle>
+          <CardDescription>
+            Let buyers slide earned credits onto a checkout for a discount, instead of a promo code.
+            The discount is capped by the limits below and never exceeds the order total.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Enable credit redemption</Label>
+              <p className="text-xs text-muted-foreground">Master switch for applying credits at checkout.</p>
+            </div>
+            <Switch
+              checked={creditRedeemEnabled}
+              onCheckedChange={(v) => { setCreditRedeemEnabled(v); setDirty(true); }}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>1 credit = ? Ft</Label>
+              <Input type="number" min={0} step="0.01" value={creditValueHuf} onChange={dec(setCreditValueHuf)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Max credits per order (0 = no limit)</Label>
+              <Input type="number" min={0} value={creditMaxApply} onChange={num(setCreditMaxApply)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Max discount (% of order)</Label>
+              <Input type="number" min={0} max={100} value={creditMaxPct} onChange={num(setCreditMaxPct)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Min credits to redeem</Label>
+              <Input type="number" min={0} value={creditMinRedeem} onChange={num(setCreditMinRedeem)} />
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {creditValueHuf > 0
+              ? `Each credit is worth ${creditValueHuf} Ft. A buyer can cover up to ${creditMaxPct}% of an order` +
+                (creditMaxApply > 0 ? `, max ${creditMaxApply} credits.` : `.`)
+              : "Set a forint value above 0 to activate redemption."}
           </p>
         </CardContent>
       </Card>

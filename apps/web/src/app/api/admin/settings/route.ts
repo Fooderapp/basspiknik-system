@@ -14,6 +14,11 @@ const schema = z.object({
   spinCost: z.coerce.number().int().min(1).max(1000).optional(),
   spinWinRate: z.coerce.number().int().min(1).max(100000).optional(),
   invoicePosCash: z.boolean().optional(),
+  creditRedeemEnabled: z.boolean().optional(),
+  creditValueHuf: z.coerce.number().min(0).max(100000).optional(),
+  creditMaxApply: z.coerce.number().int().min(0).max(1000000).optional(),
+  creditMaxPct: z.coerce.number().int().min(0).max(100).optional(),
+  creditMinRedeem: z.coerce.number().int().min(0).max(1000000).optional(),
 });
 
 export async function GET() {
@@ -24,7 +29,7 @@ export async function GET() {
   const supabase = await createAdminClient() as any;
   const { data, error } = await supabase
     .from("app_settings")
-    .select("currency, language, credits_enabled, credits_per_ticket, credits_per_drink, spin_cost, spin_win_rate, invoice_pos_cash, updated_at")
+    .select("currency, language, credits_enabled, credits_per_ticket, credits_per_drink, spin_cost, spin_win_rate, invoice_pos_cash, credit_redeem_enabled, credit_value_huf, credit_max_apply, credit_max_pct, credit_min_redeem, updated_at")
     .eq("id", "global")
     .single();
 
@@ -57,6 +62,11 @@ export async function POST(req: Request) {
   if (d.spinCost         !== undefined) update.spin_cost          = d.spinCost;
   if (d.spinWinRate      !== undefined) update.spin_win_rate      = d.spinWinRate;
   if (d.invoicePosCash   !== undefined) update.invoice_pos_cash   = d.invoicePosCash;
+  if (d.creditRedeemEnabled !== undefined) update.credit_redeem_enabled = d.creditRedeemEnabled;
+  if (d.creditValueHuf   !== undefined) update.credit_value_huf   = d.creditValueHuf;
+  if (d.creditMaxApply   !== undefined) update.credit_max_apply   = d.creditMaxApply;
+  if (d.creditMaxPct     !== undefined) update.credit_max_pct     = d.creditMaxPct;
+  if (d.creditMinRedeem  !== undefined) update.credit_min_redeem  = d.creditMinRedeem;
 
   const supabase = await createAdminClient() as any;
   const { error } = await supabase
