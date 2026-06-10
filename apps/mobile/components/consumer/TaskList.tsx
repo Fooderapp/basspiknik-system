@@ -85,8 +85,8 @@ export function TaskList() {
                 <Icon size={18} color="#f5f5f5" strokeWidth={1.75} />
               </View>
               <View className="flex-1">
-                <Text className="text-foreground text-sm font-semibold" numberOfLines={1}>{t.title}</Text>
-                {t.description && <Text className="text-muted-foreground text-xs" numberOfLines={1}>{t.description}</Text>}
+                <Text className="text-foreground text-sm font-semibold" numberOfLines={2}>{t.title}</Text>
+                {t.description && <Text className="text-muted-foreground text-xs" numberOfLines={2}>{t.description}</Text>}
               </View>
               <Badge label={`+${t.reward}`} variant="secondary" />
 

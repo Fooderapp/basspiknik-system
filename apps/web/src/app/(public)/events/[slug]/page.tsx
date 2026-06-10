@@ -26,8 +26,17 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   if (!event) notFound();
 
   const dict = getDictionary(settings.language);
-  // Door tickets are POS-only — never shown in the public purchase flow
-  const tts = event.ticket_types.filter((tt) => !tt.is_door_ticket);
+  // Public purchase flow: hide door tickets (POS-only), hidden types, and any
+  // outside their scheduled visibility window.
+  const nowMs = Date.now();
+  const tts = event.ticket_types.filter((tt) => {
+    const t = tt as typeof tt & { is_visible?: boolean; visible_from?: string | null; visible_until?: string | null };
+    if (t.is_door_ticket) return false;
+    if (t.is_visible === false) return false;
+    if (t.visible_from && new Date(t.visible_from).getTime() > nowMs) return false;
+    if (t.visible_until && new Date(t.visible_until).getTime() < nowMs) return false;
+    return true;
+  });
 
   return (
     <div className="mx-auto w-full max-w-2xl px-5 py-4">

@@ -78,8 +78,16 @@ export default function BuyEventScreen() {
       ]);
       if (ev) {
         setEvent(ev as Event);
-        // Door tickets are POS-only — never sold in-app.
-        setTicketTypes(((ev.ticket_types as TicketType[]) ?? []).filter((t) => !(t as any).is_door_ticket));
+        // Hide door tickets (POS-only), hidden types, and any outside their window.
+        const now = Date.now();
+        setTicketTypes(((ev.ticket_types as TicketType[]) ?? []).filter((t) => {
+          const tt = t as any;
+          if (tt.is_door_ticket) return false;
+          if (tt.is_visible === false) return false;
+          if (tt.visible_from && new Date(tt.visible_from).getTime() > now) return false;
+          if (tt.visible_until && new Date(tt.visible_until).getTime() < now) return false;
+          return true;
+        }));
       }
       if (settings?.currency) setCurrency(settings.currency);
       await fetchCredits();

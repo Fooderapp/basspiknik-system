@@ -21,6 +21,9 @@ const ticketTypeSchema = z.object({
   isDoorTicket: z.boolean().default(false),
   saleEnabled: z.boolean().default(false),
   salePrice: z.number().min(0).optional().nullable(),
+  isVisible: z.boolean().default(true),
+  visibleFrom: z.string().optional().nullable(),
+  visibleUntil: z.string().optional().nullable(),
 });
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -66,6 +69,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     is_door_ticket: d.isDoorTicket,
     sale_enabled: d.saleEnabled,
     sale_price: d.saleEnabled ? (d.salePrice ?? null) : null,
+    is_visible: d.isVisible,
+    visible_from: d.visibleFrom || null,
+    visible_until: d.visibleUntil || null,
   }).select().single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

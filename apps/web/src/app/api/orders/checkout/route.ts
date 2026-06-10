@@ -71,6 +71,12 @@ export async function POST(req: Request) {
   for (const item of items) {
     const ticketType = event.ticket_types.find((t) => t.id === item.ticketTypeId);
     if (!ticketType) return NextResponse.json({ error: "Ticket type not found" }, { status: 400 });
+    const vt = ticketType as any;
+    if (vt.is_door_ticket || vt.is_visible === false
+      || (vt.visible_from && new Date(vt.visible_from) > new Date())
+      || (vt.visible_until && new Date(vt.visible_until) < new Date())) {
+      return NextResponse.json({ error: `${ticketType.name} is not available` }, { status: 400 });
+    }
     const available = ticketType.quantity - ticketType.sold;
     if (available < item.quantity) return NextResponse.json({ error: `Not enough ${ticketType.name} tickets` }, { status: 400 });
     const unitPrice = ticketType.sale_enabled && ticketType.sale_price != null ? ticketType.sale_price : ticketType.price;

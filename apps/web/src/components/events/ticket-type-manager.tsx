@@ -18,7 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 import { BannerImageUploader } from "@/components/events/banner-image-uploader";
-import { Plus, Pencil, Trash2, Ticket, Users, Tag, PackageOpen, RefreshCcw, DoorOpen, type LucideIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, Ticket, Users, Tag, PackageOpen, RefreshCcw, DoorOpen, Eye, EyeOff, type LucideIcon } from "lucide-react";
 import type { TicketType } from "@/lib/supabase/types";
 
 const TIERS = ["EARLY_BIRD", "GENERAL", "LATE", "DOOR", "VIP", "FREE"] as const;
@@ -53,7 +53,20 @@ const schema = z.object({
   // Sale price
   saleEnabled: z.boolean().default(false),
   salePrice: z.coerce.number().min(0).optional(),
+  // Visibility on the public event page
+  isVisible: z.boolean().default(true),
+  visibleFrom: z.string().optional(),
+  visibleUntil: z.string().optional(),
 });
+
+/** ISO timestamp → value for <input type="datetime-local"> (local, minute precision). */
+function toLocalInput(iso?: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 
 type FormData = z.infer<typeof schema>;
 
@@ -99,11 +112,12 @@ export function TicketTypeManager({ eventId, initialTicketTypes }: Props) {
   const isBundle = watch("isBundle");
   const saleEnabled = watch("saleEnabled");
   const isDoorTicket = watch("isDoorTicket");
+  const isVisible = watch("isVisible");
   const entriesPerTicket = watch("entriesPerTicket") ?? 1;
 
   const openAdd = () => {
     setEditing(null);
-    reset({ tier: "GENERAL", maxPerOrder: 10, entriesPerTicket: 1, isBundle: false, isDoorTicket: false, saleEnabled: false, price: 0, quantity: 100 });
+    reset({ tier: "GENERAL", maxPerOrder: 10, entriesPerTicket: 1, isBundle: false, isDoorTicket: false, saleEnabled: false, price: 0, quantity: 100, isVisible: true, visibleFrom: "", visibleUntil: "" });
     setDialogOpen(true);
   };
 
@@ -123,6 +137,9 @@ export function TicketTypeManager({ eventId, initialTicketTypes }: Props) {
       isDoorTicket: tt.is_door_ticket ?? false,
       saleEnabled: tt.sale_enabled ?? false,
       salePrice: tt.sale_price ?? undefined,
+      isVisible: (tt as any).is_visible ?? true,
+      visibleFrom: toLocalInput((tt as any).visible_from),
+      visibleUntil: toLocalInput((tt as any).visible_until),
     });
     setDialogOpen(true);
   };
@@ -150,6 +167,9 @@ export function TicketTypeManager({ eventId, initialTicketTypes }: Props) {
           isDoorTicket: data.isDoorTicket,
           saleEnabled: data.saleEnabled,
           salePrice: data.saleEnabled ? data.salePrice : null,
+          isVisible: data.isVisible,
+          visibleFrom: data.visibleFrom || null,
+          visibleUntil: data.visibleUntil || null,
         }),
       });
 
@@ -236,6 +256,11 @@ export function TicketTypeManager({ eventId, initialTicketTypes }: Props) {
                     )}
                     {tt.sale_enabled && tt.sale_price != null && (
                       <Badge className="text-[11px] bg-foreground text-background border-0">Sale</Badge>
+                    )}
+                    {(tt as any).is_visible === false && (
+                      <Badge variant="outline" className="text-[11px]">
+                        <EyeOff className="h-2.5 w-2.5 mr-1" />Hidden
+                      </Badge>
                     )}
                   </div>
                   <CardTitle className="text-base mt-1">{tt.name}</CardTitle>
@@ -392,10 +417,32 @@ export function TicketTypeManager({ eventId, initialTicketTypes }: Props) {
                 id="doorTicket"
                 icon={DoorOpen}
                 label="Door ticket"
-                description="Sold at the entrance — ticket is automatically admitted on creation"
+                description="POS-only — hidden from the public event page, auto-admitted on creation"
                 checked={isDoorTicket}
                 onCheckedChange={(v) => setValue("isDoorTicket", v)}
               />
+
+              {/* Visibility on the public event page */}
+              <ToggleRow
+                id="visibility"
+                icon={isVisible ? Eye : EyeOff}
+                label="Visible on event page"
+                description="Off hides this ticket from buyers. Set a window to show it only between two dates."
+                checked={isVisible}
+                onCheckedChange={(v) => setValue("isVisible", v)}
+              >
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Visible from</Label>
+                    <Input type="datetime-local" {...register("visibleFrom")} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Visible until</Label>
+                    <Input type="datetime-local" {...register("visibleUntil")} />
+                  </div>
+                  <p className="col-span-2 text-xs text-muted-foreground">Leave blank for no limit. Times are your local time.</p>
+                </div>
+              </ToggleRow>
 
               {/* Sale price */}
               <ToggleRow

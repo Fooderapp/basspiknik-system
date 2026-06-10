@@ -29,6 +29,9 @@ const updateSchema = z.object({
   isDoorTicket: z.boolean().optional(),
   saleEnabled: z.boolean().optional(),
   salePrice: z.number().min(0).optional().nullable(),
+  isVisible: z.boolean().optional(),
+  visibleFrom: z.string().optional().nullable(),
+  visibleUntil: z.string().optional().nullable(),
 });
 
 export async function PATCH(
@@ -46,7 +49,8 @@ export async function PATCH(
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
   const { name, description, imageUrl, price, quantity, tier, maxPerOrder, entriesPerTicket,
-          saleStartsAt, saleEndsAt, isBundle, bundleSize, isDoorTicket, saleEnabled, salePrice } = parsed.data;
+          saleStartsAt, saleEndsAt, isBundle, bundleSize, isDoorTicket, saleEnabled, salePrice,
+          isVisible, visibleFrom, visibleUntil } = parsed.data;
 
   const supabase = await createAdminClient() as any;
   const { data, error } = await supabase
@@ -67,6 +71,9 @@ export async function PATCH(
       ...(isDoorTicket !== undefined && { is_door_ticket: isDoorTicket }),
       ...(saleEnabled !== undefined && { sale_enabled: saleEnabled }),
       ...(salePrice !== undefined && { sale_price: salePrice }),
+      ...(isVisible !== undefined && { is_visible: isVisible }),
+      ...(visibleFrom !== undefined && { visible_from: visibleFrom || null }),
+      ...(visibleUntil !== undefined && { visible_until: visibleUntil || null }),
     })
     .eq("id", ticketTypeId)
     .select()

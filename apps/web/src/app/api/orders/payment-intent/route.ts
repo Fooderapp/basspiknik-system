@@ -53,6 +53,12 @@ export async function POST(req: Request) {
     const tt = event.ticket_types.find((t) => t.id === item.ticketTypeId);
     if (!tt) return NextResponse.json({ error: "Ticket type not found" }, { status: 400 });
     if ((tt as any).is_door_ticket) return NextResponse.json({ error: "Door tickets are POS-only" }, { status: 400 });
+    const vt = tt as any;
+    if (vt.is_visible === false
+      || (vt.visible_from && new Date(vt.visible_from) > new Date())
+      || (vt.visible_until && new Date(vt.visible_until) < new Date())) {
+      return NextResponse.json({ error: `${tt.name} is not available` }, { status: 400 });
+    }
     const available = tt.quantity - tt.sold;
     if (available < item.quantity) return NextResponse.json({ error: `Not enough ${tt.name} tickets` }, { status: 400 });
     const unitPrice = tt.sale_enabled && tt.sale_price != null ? tt.sale_price : tt.price;

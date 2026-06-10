@@ -94,8 +94,8 @@ export function TaskList({ dict }: { dict: Dictionary }) {
                 <Icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">{t.title}</p>
-                {t.description && <p className="truncate text-xs text-muted-foreground">{t.description}</p>}
+                <p className="text-sm font-semibold leading-snug line-clamp-2">{t.title}</p>
+                {t.description && <p className="line-clamp-2 text-xs text-muted-foreground">{t.description}</p>}
               </div>
               <Badge variant="secondary" className="shrink-0 text-[11px]">+{t.reward} ⭐</Badge>
 
