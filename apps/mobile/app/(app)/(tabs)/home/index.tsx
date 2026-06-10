@@ -18,6 +18,7 @@ import { PressableScale } from "@/components/ui/PressableScale";
 import { Text } from "@/components/ui/text";
 import { QRImage } from "@/components/ui/QRImage";
 import { AppleLogo, GoogleLogo } from "@/components/ui/BrandLogos";
+import { TaskList } from "@/components/consumer/TaskList";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth";
@@ -384,6 +385,9 @@ export default function HomeScreen() {
             )}
           </>
         )}
+
+        {/* Earn-credits tasks */}
+        <TaskList />
 
         {/* Recent activity */}
         {acts.length > 0 && (
