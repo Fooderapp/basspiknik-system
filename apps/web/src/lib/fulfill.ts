@@ -15,6 +15,8 @@ export interface FulfillInput {
   currency: Currency;
   discountAmount: number;
   taxAmount: number;
+  /** Credits the buyer redeemed on this order — debited from the ledger on success. */
+  creditsApplied?: number;
   /** Final charged total (display units, not Stripe cents). */
   total: number;
   /** Buyer email when not a guest (e.g. from Stripe customer_details). */
@@ -207,6 +209,15 @@ export async function fulfillTicketOrder(input: FulfillInput): Promise<FulfillRe
       p_reason: "TICKET_PURCHASE",
       p_order_id: order.id,
       p_drink_order_id: null,
+    });
+  }
+
+  // Debit redeemed credits (idempotent per order via the REDEEM unique index)
+  if (input.userId && (input.creditsApplied ?? 0) > 0) {
+    await supabase.rpc("finalize_credit_redemption", {
+      p_order_id: order.id,
+      p_user_id: input.userId,
+      p_credits: input.creditsApplied,
     });
   }
 

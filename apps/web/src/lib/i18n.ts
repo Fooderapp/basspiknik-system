@@ -442,6 +442,14 @@ const en = {
   "credits.need":           "Need",
   "credits.skip_pay":       "Skip — pay normally",
   "credits.info_hint":      "Tap Roll to throw the dice. Land double six to win a completely free checkout — no payment needed.",
+  "credits.redeem_title":   "Use credits",
+  "credits.redeem_hint":    "Slide to apply your credits as a discount.",
+  "credits.redeem_balance": "Balance",
+  "credits.redeem_apply":   "Apply",
+  "credits.redeem_credits": "credits",
+  "credits.redeem_off":     "off",
+  "credits.redeem_either":  "Use a promo code or credits — not both.",
+  "ticket.promo_applied":   "Promo applied",
 };
 
 const hu: typeof en = {
@@ -884,6 +892,14 @@ const hu: typeof en = {
   "credits.need":           "Kell",
   "credits.skip_pay":       "Kihagyom — fizetek normál módon",
   "credits.info_hint":      "Koppints a Dobásra a kockákhoz. Dobj dupla hatost az ingyenes vásárlásért — fizetés nélkül.",
+  "credits.redeem_title":   "Kreditek felhasználása",
+  "credits.redeem_hint":    "Húzd el a kreditek kedvezményként való beváltásához.",
+  "credits.redeem_balance": "Egyenleg",
+  "credits.redeem_apply":   "Beváltás",
+  "credits.redeem_credits": "kredit",
+  "credits.redeem_off":     "kedvezmény",
+  "credits.redeem_either":  "Promó kód vagy kreditek — egyszerre csak az egyik.",
+  "ticket.promo_applied":   "Promó alkalmazva",
 };
 
 // ─── Public API ───────────────────────────────────────────────────────────────

@@ -5,6 +5,7 @@ import { getStripe } from "@/lib/stripe";
 import { getSettings, toStripeAmount, fromStripeAmount } from "@/lib/settings";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { sendTicketConfirmation } from "@/lib/email";
+import { computeRedemption } from "@/lib/credits";
 import type { Event, TicketType, PromoCode, Profile } from "@/lib/supabase/types";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -13,6 +14,8 @@ const checkoutSchema = z.object({
   eventId: z.string(),
   items: z.array(z.object({ ticketTypeId: z.string(), quantity: z.number().min(1) })),
   promoCode: z.string().optional(),
+  promoId: z.string().optional(),          // hidden apply (QR scan) — resolves the code server-side
+  creditsToApply: z.number().int().min(0).optional(),
   guestEmail: z.string().email().optional(),
   guestName: z.string().optional(),
   freeSpinToken: z.string().optional(),
@@ -52,7 +55,7 @@ export async function POST(req: Request) {
   const parsed = checkoutSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const { eventId, items, promoCode, guestEmail, guestName, freeSpinToken } = parsed.data;
+  const { eventId, items, promoCode, promoId, creditsToApply, guestEmail, guestName, freeSpinToken } = parsed.data;
 
   // Load app settings to get active currency
   const settings = await getSettings();
@@ -82,17 +85,37 @@ export async function POST(req: Request) {
     });
   }
 
+  // Promo + credits are mutually exclusive (either-or).
+  if (creditsToApply && creditsToApply > 0 && (promoCode || promoId)) {
+    return NextResponse.json({ error: "Use either a promo code or credits, not both" }, { status: 400 });
+  }
+
   let discountAmount = 0;
   let promoCodeId = "";
-  if (promoCode) {
-    const { data: pc } = await supabase.from("promo_codes").select("*").eq("code", promoCode).maybeSingle();
+  if (promoCode || promoId) {
+    // promoId path (QR scan) resolves the code server-side so it's never exposed.
+    const { data: pc } = promoId
+      ? await supabase.from("promo_codes").select("*").eq("id", promoId).maybeSingle()
+      : await supabase.from("promo_codes").select("*").eq("code", promoCode!).maybeSingle();
     const promo = pc as PromoCode | null;
     if (promo) {
+      if (promo.event_id && promo.event_id !== eventId) return NextResponse.json({ error: "Promo code not valid for this event" }, { status: 400 });
       if (promo.usage_limit && promo.used_count >= promo.usage_limit) return NextResponse.json({ error: "Promo code usage limit reached" }, { status: 400 });
       if (promo.expires_at && new Date(promo.expires_at) < new Date()) return NextResponse.json({ error: "Promo code expired" }, { status: 400 });
       discountAmount = promo.discount_type === "percent" ? subtotal * (promo.discount_value / 100) : promo.discount_value;
       promoCodeId = promo.id;
     }
+  }
+
+  // ── Credit redemption (real discount via a one-time Stripe coupon) ──
+  let creditsApplied = 0;
+  let creditDiscount = 0;
+  if (creditsToApply && creditsToApply > 0) {
+    if (!user) return NextResponse.json({ error: "Sign in to use credits" }, { status: 401 });
+    const adminCredit = await createAdminClient() as any;
+    const r = await computeRedemption(adminCredit, user.id, subtotal, creditsToApply);
+    creditsApplied = r.credits;
+    creditDiscount = r.discount;
   }
 
   let profileEmail = guestEmail;
@@ -211,18 +234,41 @@ export async function POST(req: Request) {
   }
 
   const stripe = await getStripe();
+
+  // Apply the discount (promo OR credits — they're either-or) as a one-time
+  // amount-off coupon so the Checkout total actually drops. Checkout Sessions
+  // can't take a raw negative line item, and previously the promo discount was
+  // only stored in metadata and never charged — this makes it real.
+  const couponDiscount = creditDiscount > 0 ? creditDiscount : discountAmount;
+  const discounts: { coupon: string }[] = [];
+  if (couponDiscount > 0) {
+    const couponAmount = Math.min(toStripeAmount(couponDiscount, currency), toStripeAmount(subtotal, currency));
+    if (couponAmount > 0) {
+      const coupon = await stripe.coupons.create({
+        amount_off: couponAmount,
+        currency: currency.toLowerCase(),
+        duration: "once",
+        name: creditDiscount > 0 ? `Credits ×${creditsApplied}` : "Promo",
+        max_redemptions: 1,
+      });
+      discounts.push({ coupon: coupon.id });
+    }
+  }
+
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     line_items: lineItems as any,
     mode: "payment",
     billing_address_collection: "required",
+    ...(discounts.length ? { discounts } : {}),
     success_url: `${getBaseUrl(req)}/events/${event.slug}/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${getBaseUrl(req)}/events/${event.slug}`,
     customer_email: profileEmail,
     metadata: {
       eventId, userId: user?.id ?? "", guestEmail: guestEmail ?? "", guestName: guestName ?? "",
       items: JSON.stringify(items), promoCodeId, currency,
-      discountAmount: discountAmount.toString(), taxAmount: taxAmount.toString(),
+      discountAmount: (discountAmount + creditDiscount).toString(), taxAmount: taxAmount.toString(),
+      creditsApplied: String(creditsApplied),
     },
   });
 

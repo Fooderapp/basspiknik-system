@@ -5,6 +5,7 @@ import { getStripe } from "@/lib/stripe";
 import { getConfig } from "@/lib/config";
 import { getSettings, toStripeAmount } from "@/lib/settings";
 import { createAdminClient } from "@/lib/supabase/server";
+import { computeRedemption } from "@/lib/credits";
 import type { Event, TicketType, PromoCode, Profile } from "@/lib/supabase/types";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -13,6 +14,8 @@ const schema = z.object({
   eventId: z.string(),
   items: z.array(z.object({ ticketTypeId: z.string(), quantity: z.number().min(1) })),
   promoCode: z.string().optional(),
+  promoId: z.string().optional(),
+  creditsToApply: z.number().int().min(0).optional(),
 });
 
 /** Mobile-only: build a Stripe PaymentIntent + ephemeral key + customer for the
@@ -33,7 +36,7 @@ export async function POST(req: Request) {
 
   const parsed = schema.safeParse(await req.json());
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-  const { eventId, items, promoCode } = parsed.data;
+  const { eventId, items, promoCode, promoId, creditsToApply } = parsed.data;
 
   const settings = await getSettings();
   const currency = settings.currency;
@@ -56,17 +59,34 @@ export async function POST(req: Request) {
     subtotal += unitPrice * item.quantity;
   }
 
+  // Promo + credits are mutually exclusive (either-or).
+  if (creditsToApply && creditsToApply > 0 && (promoCode || promoId)) {
+    return NextResponse.json({ error: "Use either a promo code or credits, not both" }, { status: 400 });
+  }
+
   let discountAmount = 0;
   let promoCodeId = "";
-  if (promoCode) {
-    const { data: pc } = await admin.from("promo_codes").select("*").eq("code", promoCode).maybeSingle();
+  if (promoCode || promoId) {
+    const { data: pc } = promoId
+      ? await admin.from("promo_codes").select("*").eq("id", promoId).maybeSingle()
+      : await admin.from("promo_codes").select("*").eq("code", promoCode!).maybeSingle();
     const promo = pc as PromoCode | null;
     if (promo) {
+      if (promo.event_id && promo.event_id !== eventId) return NextResponse.json({ error: "Promo code not valid for this event" }, { status: 400 });
       if (promo.usage_limit && promo.used_count >= promo.usage_limit) return NextResponse.json({ error: "Promo code usage limit reached" }, { status: 400 });
       if (promo.expires_at && new Date(promo.expires_at) < new Date()) return NextResponse.json({ error: "Promo code expired" }, { status: 400 });
       discountAmount = promo.discount_type === "percent" ? subtotal * (promo.discount_value / 100) : promo.discount_value;
       promoCodeId = promo.id;
     }
+  }
+
+  // ── Credit redemption (reduces the charged amount directly) ──
+  let creditsApplied = 0;
+  let creditDiscount = 0;
+  if (creditsToApply && creditsToApply > 0) {
+    const r = await computeRedemption(admin, user.id, subtotal, creditsToApply);
+    creditsApplied = r.credits;
+    creditDiscount = r.discount;
   }
 
   const { data: profileData } = await admin.from("profiles").select("*").eq("id", user.id).single();
@@ -76,8 +96,8 @@ export async function POST(req: Request) {
   const loyaltyDiscount = (profile?.loyalty_discount && !promoCode) ? subtotal * 0.1 : 0;
 
   // Ticket prices in Hungary are tax-inclusive; taxAmount is metadata only.
-  // Charged total = subtotal minus promo code discount only (loyalty tracked separately).
-  const total = Math.max(0, subtotal - discountAmount);
+  // Charged total = subtotal minus promo discount OR credit discount (either-or).
+  const total = Math.max(0, subtotal - discountAmount - creditDiscount);
   const buyerEmail = profile?.email ?? user.email ?? null;
   const buyerName = profile?.billing_name ?? profile?.name ?? null;
 
@@ -124,8 +144,9 @@ export async function POST(req: Request) {
       items: JSON.stringify(items),
       promoCodeId,
       currency,
-      discountAmount: (discountAmount + loyaltyDiscount).toString(),
+      discountAmount: (discountAmount + creditDiscount + loyaltyDiscount).toString(),
       taxAmount: String(Math.round(subtotal * ((event.tax_rate ?? 0) / 100))),
+      creditsApplied: String(creditsApplied),
     },
   });
 
