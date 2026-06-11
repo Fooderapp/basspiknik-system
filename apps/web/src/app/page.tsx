@@ -18,9 +18,9 @@ export default async function HomePage() {
   const dict = getDictionary(settings.language);
 
   const features = [
-    { icon: Ticket,  title: t(dict, "home.feature_tickets_title"), desc: t(dict, "home.feature_tickets_desc") },
-    { icon: ScanLine, title: t(dict, "home.feature_checkin_title"), desc: t(dict, "home.feature_checkin_desc") },
-    { icon: Wine,    title: t(dict, "home.feature_bar_title"),     desc: t(dict, "home.feature_bar_desc") },
+    { icon: Ticket,  tone: "is-green", title: t(dict, "home.feature_tickets_title"), desc: t(dict, "home.feature_tickets_desc") },
+    { icon: ScanLine, tone: "is-sky",  title: t(dict, "home.feature_checkin_title"), desc: t(dict, "home.feature_checkin_desc") },
+    { icon: Wine,    tone: "is-gold",  title: t(dict, "home.feature_bar_title"),     desc: t(dict, "home.feature_bar_desc") },
   ];
 
   return (
@@ -40,26 +40,27 @@ export default async function HomePage() {
         </div>
       </nav>
 
-      <main className="container py-24 text-center space-y-6">
-        <h1 className="text-5xl font-bold tracking-tight">
-          {t(dict, "home.headline")}
-          <br />
-          <span className="text-primary">{t(dict, "home.headline_accent")}</span>
+      <main className="container py-24 text-center space-y-7">
+        <h1 className="headline-xl mx-auto max-w-3xl">
+          {t(dict, "home.headline")}{" "}
+          <span style={{ color: "#163300" }}>{t(dict, "home.headline_accent")}</span>
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           {t(dict, "home.subline")}
         </p>
-        <div className="flex justify-center gap-4">
-          <Button size="lg" asChild><Link href="/events">{t(dict, "home.browse_events")}</Link></Button>
-          <Button size="lg" variant="outline" asChild><Link href="/dashboard">{t(dict, "nav.dashboard")}</Link></Button>
+        <div className="flex justify-center gap-3">
+          <Button size="lg" className="rounded-full px-7" asChild><Link href="/events">{t(dict, "home.browse_events")}</Link></Button>
+          <Button size="lg" variant="outline" className="rounded-full px-7" asChild><Link href="/dashboard">{t(dict, "nav.dashboard")}</Link></Button>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto pt-12 text-left">
-          {features.map(({ icon: Icon, title, desc }) => (
-            <div key={title} className="rounded-lg border bg-card p-5">
-              <Icon className="h-8 w-8 text-primary mb-3" />
-              <h3 className="font-semibold mb-2">{title}</h3>
-              <p className="text-sm text-muted-foreground">{desc}</p>
+        <div className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto pt-12 text-left">
+          {features.map(({ icon: Icon, tone, title, desc }) => (
+            <div key={title} className={`pastel-card ${tone}`}>
+              <span className="icon-circle mb-4">
+                <Icon className="h-5 w-5" />
+              </span>
+              <h3 className="font-bold text-lg mb-1 tracking-tight">{title}</h3>
+              <p className="text-sm opacity-70">{desc}</p>
             </div>
           ))}
         </div>
