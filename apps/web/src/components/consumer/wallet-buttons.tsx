@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 
 /** Real Apple logo mark (monochrome — inherits currentColor). */
@@ -45,25 +44,25 @@ export function WalletButtons({ appleLabel, googleLabel }: { appleLabel: string;
   }
 
   return (
-    <div className="flex flex-col gap-2 mb-5">
-      <Button
-        variant="secondary"
-        className="w-full gap-2"
+    <div className="mb-5 mt-4 flex flex-col gap-2">
+      <button
         onClick={() => open("apple")}
         disabled={busy !== null}
+        className="flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white disabled:opacity-50"
+        style={{ background: "#16170F" }}
       >
         <AppleLogo className="h-[18px] w-[18px]" />
         {appleLabel}
-      </Button>
-      <Button
-        variant="secondary"
-        className="w-full gap-2"
+      </button>
+      <button
         onClick={() => open("google")}
         disabled={busy !== null}
+        className="flex w-full items-center justify-center gap-2 rounded-2xl border py-3.5 text-sm font-bold disabled:opacity-50"
+        style={{ background: "#fff", borderColor: "#E2E0D4" }}
       >
         <GoogleLogo className="h-[18px] w-[18px]" />
         {googleLabel}
-      </Button>
+      </button>
     </div>
   );
 }

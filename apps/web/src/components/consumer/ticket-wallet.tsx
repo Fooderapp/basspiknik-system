@@ -101,7 +101,7 @@ function TicketCard({
             backfaceVisibility: "hidden",
             WebkitBackfaceVisibility: "hidden",
           }}
-          className="relative overflow-hidden rounded-3xl border border-border bg-card text-left"
+          className="relative overflow-hidden rounded-3xl bg-card text-left shadow-sm"
         >
           {/* Banner (4:1) / cover + pocket notch — 4:1 box so a 480×120 image fills exactly */}
           <div className="relative aspect-[4/1] w-full overflow-hidden bg-secondary">
@@ -242,10 +242,11 @@ export function TicketWallet({
         <div className="w-full shrink-0 snap-center">
           <Link
             href="/my-tickets"
-            className="group flex h-full min-h-[260px] flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-border bg-card/50 p-8 text-center transition-colors hover:border-gold/40 hover:bg-card"
+            className="group flex h-full min-h-[260px] flex-col items-center justify-center gap-3 rounded-3xl bg-card p-8 text-center transition-transform hover:-translate-y-0.5"
+            style={{ border: "1.5px dashed #D8D6C8" }}
           >
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary">
-              <TicketIcon className="h-6 w-6 text-gold" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-full" style={{ background: "var(--pastel-sky)", color: "var(--pastel-sky-ink)" }}>
+              <TicketIcon className="h-6 w-6" />
             </div>
             <p className="font-semibold">
               {hasMore ? `All ${tickets.length} tickets` : "My Tickets"}
@@ -263,7 +264,8 @@ export function TicketWallet({
           {Array.from({ length: slideCount }).map((_, i) => (
             <span
               key={i}
-              className={`h-1.5 rounded-full transition-all ${i === active ? "w-5 bg-gold" : "w-1.5 bg-muted-foreground/40"}`}
+              className={`h-1.5 rounded-full transition-all ${i === active ? "w-5" : "w-1.5"}`}
+              style={{ background: i === active ? "#163300" : "rgba(20,22,15,0.18)" }}
             />
           ))}
         </div>

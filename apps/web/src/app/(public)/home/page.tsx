@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { formatDate, formatCurrency } from "@/lib/utils";
-import { Ticket as TicketIcon, Star, ShoppingBag, Wine, Sparkles } from "lucide-react";
+import { Star, ShoppingBag, Wine, Sparkles, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TicketWallet, type WalletTicket } from "@/components/consumer/ticket-wallet";
 import { TaskList } from "@/components/consumer/task-list";
@@ -155,26 +155,34 @@ export default async function HomePage() {
 
   return (
     <div className="mx-auto w-full max-w-2xl px-5 py-6 md:py-10">
-      {/* Greeting + credit chip */}
-      <div className="mb-6 flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm text-muted-foreground">{t(dict, "dash.greeting")}</p>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{firstName}</h1>
+      {/* Greeting + credit chip + bell — mirrors mobile home */}
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-muted-foreground">{t(dict, "dash.greeting")}</p>
+          <h1 className="mt-0.5 truncate text-[32px] font-extrabold leading-tight tracking-tight" style={{ letterSpacing: "-0.8px" }}>
+            Hi {firstName} 👋
+          </h1>
         </div>
-        <Link href="/events" className="flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/10 px-3 py-1.5">
-          <Star className="h-3.5 w-3.5 fill-gold text-gold" strokeWidth={2} />
-          <span className="text-sm font-semibold text-gold">{balanceNum}</span>
-          <span className="text-xs text-gold/70">{t(dict, "profile.credits")}</span>
-        </Link>
+        <div className="mt-1 flex items-center gap-2">
+          <Link href="/events" className="flex h-10 items-center gap-1.5 rounded-full bg-card px-3.5 shadow-sm">
+            <Star className="h-3.5 w-3.5" strokeWidth={2.5} style={{ color: "#163300", fill: "#9FE870" }} />
+            <span className="text-sm font-extrabold">{balanceNum}</span>
+          </Link>
+          <Link href="/profile" className="flex h-10 w-10 items-center justify-center rounded-full bg-card shadow-sm">
+            <Bell className="h-[18px] w-[18px]" strokeWidth={2} />
+          </Link>
+        </div>
       </div>
 
       {/* Ticket wallet */}
       {walletTickets.length === 0 ? (
-        <div className="flex flex-col items-center rounded-2xl border border-dashed border-border py-12 text-center">
-          <TicketIcon className="mb-3 h-9 w-9 text-muted-foreground/40" />
-          <p className="font-semibold">{t(dict, "mytickets.empty")}</p>
+        <div className="flex flex-col items-center rounded-3xl bg-card py-12 text-center shadow-sm">
+          <span className="mb-3 flex h-14 w-14 items-center justify-center rounded-full" style={{ background: "var(--pastel-green)", color: "var(--pastel-green-ink)" }}>
+            <ShoppingBag className="h-6 w-6" strokeWidth={1.75} />
+          </span>
+          <p className="font-bold">{t(dict, "mytickets.empty")}</p>
           <p className="mt-1 text-sm text-muted-foreground">{t(dict, "dash.no_next_sub")}</p>
-          <Button asChild className="mt-5"><Link href="/events">{t(dict, "dash.browse")}</Link></Button>
+          <Button asChild className="mt-5 rounded-full px-6"><Link href="/events">{t(dict, "dash.browse")}</Link></Button>
         </div>
       ) : (
         <TicketWallet
@@ -190,21 +198,21 @@ export default async function HomePage() {
       {/* Recent activity */}
       {recent.length > 0 && (
         <div className="mt-10">
-          <h2 className="mb-3 text-lg font-bold tracking-tight">{t(dict, "dash.activity")}</h2>
-          <div className="overflow-hidden rounded-xl border border-border bg-card">
+          <h2 className="mb-3 text-lg font-extrabold tracking-tight">{t(dict, "dash.activity")}</h2>
+          <div className="overflow-hidden rounded-3xl bg-card shadow-sm">
             {recent.map((a, i) => {
               const Icon = actIcon(a.kind);
               return (
-                <div key={a.id} className={`flex items-center gap-3 p-3.5 ${i > 0 ? "border-t border-border" : ""}`}>
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary">
+                <div key={a.id} className="flex items-center gap-3 p-3.5" style={i > 0 ? { borderTop: "1px solid #F0EEE3" } : undefined}>
+                  <div className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full" style={{ background: "#ECEADD" }}>
                     <Icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{a.label}</p>
+                    <p className="truncate text-sm font-semibold">{a.label}</p>
                     {a.sub && <p className="truncate text-xs text-muted-foreground">{a.sub}</p>}
                   </div>
                   {a.amount && (
-                    <span className={`shrink-0 text-sm font-semibold tabular-nums ${a.positive ? "text-brand" : ""}`}>
+                    <span className="shrink-0 text-sm font-bold tabular-nums" style={{ color: a.positive ? "#3E7B12" : "#14160F" }}>
                       {a.amount}
                     </span>
                   )}

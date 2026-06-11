@@ -53,11 +53,12 @@ export function ConsumerShell({
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors",
                   active
-                    ? "bg-secondary text-gold"
+                    ? "text-[#163300]"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
+                style={active ? { background: "var(--pastel-green)" } : undefined}
               >
                 <Icon className="h-[18px] w-[18px]" strokeWidth={active ? 2.25 : 1.75} />
                 {t(dict, item.key)}
@@ -78,10 +79,8 @@ export function ConsumerShell({
         <div
           className={cn(
             "pointer-events-auto mx-auto mb-[max(env(safe-area-inset-bottom),0.75rem)] w-[calc(100%-1.5rem)] max-w-md",
-            "rounded-[26px] border border-white/10 bg-white/[0.06]",
-            "backdrop-blur-2xl backdrop-saturate-150",
-            "shadow-[0_8px_32px_rgba(0,0,0,0.55)]",
-            "[box-shadow:inset_0_1px_0_0_rgba(255,255,255,0.12),0_8px_32px_rgba(0,0,0,0.55)]",
+            "rounded-[26px] bg-white",
+            "shadow-[0_8px_28px_rgba(20,22,15,0.12)]",
           )}
         >
           <div className="grid grid-cols-4 h-[60px]">
@@ -93,16 +92,14 @@ export function ConsumerShell({
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "group relative flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
-                    active ? "text-gold" : "text-muted-foreground",
+                    "group relative flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold transition-colors",
                   )}
+                  style={{ color: active ? "#163300" : "#9CA093" }}
                 >
-                  {/* active glass highlight */}
+                  {/* active highlight */}
                   <span
-                    className={cn(
-                      "absolute inset-x-2 inset-y-1.5 rounded-2xl transition-opacity",
-                      active ? "opacity-100 bg-gold/15 border border-gold/30" : "opacity-0",
-                    )}
+                    className="absolute inset-x-2 inset-y-1.5 rounded-2xl transition-opacity"
+                    style={{ background: "var(--pastel-green)", opacity: active ? 1 : 0 }}
                   />
                   <Icon className="relative h-[21px] w-[21px]" strokeWidth={active ? 2.25 : 1.75} />
                   <span className="relative">{t(dict, item.key)}</span>
