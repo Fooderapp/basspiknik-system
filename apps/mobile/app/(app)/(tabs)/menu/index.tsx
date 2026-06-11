@@ -116,34 +116,26 @@ export default function MenuScreen() {
         <Text className="text-muted-foreground text-sm">{drinks.length} items available</Text>
       </View>
 
-      {/* Category tabs */}
+      {/* Category tabs — plain, uniform (no per-category colour or emoji) */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={{ height: 44, marginBottom: 8 }}
-        contentContainerStyle={{ gap: 8, paddingHorizontal: 20, alignItems: "center" }}
+        style={{ marginBottom: 8 }}
+        contentContainerStyle={{ gap: 8, paddingHorizontal: 20, paddingVertical: 4 }}
       >
-        <Pressable
-          onPress={() => setActiveCat("ALL")}
-          style={activeCat === "ALL" ? { backgroundColor: "#EBE05A" } : undefined}
-          className={`px-3 py-1.5 rounded-full flex-row items-center ${activeCat === "ALL" ? "" : "bg-card border border-border"}`}
-        >
-          <Text style={activeCat === "ALL" ? { color: "#323000", fontWeight: "600", fontSize: 13 } : { fontSize: 13 }}
-            className={activeCat === "ALL" ? "" : "text-muted-foreground"}>
-            All
-          </Text>
-        </Pressable>
-        {categoryTabs.map(c => {
+        {[{ id: "ALL", name: "All" }, ...categoryTabs].map((c) => {
           const active = activeCat === c.id;
           return (
             <Pressable
               key={c.id}
               onPress={() => setActiveCat(c.id)}
-              style={active ? { backgroundColor: "#EBE05A" } : { borderColor: c.color + "55" }}
-              className={`px-3 py-1.5 rounded-full flex-row items-center gap-1.5 ${active ? "" : "bg-card border"}`}
+              style={active ? { backgroundColor: "#EBE05A" } : undefined}
+              className={`px-3 py-1.5 rounded-full ${active ? "" : "bg-card border border-border"}`}
             >
-              {c.emoji ? <Text style={{ fontSize: 13 }}>{c.emoji}</Text> : null}
-              <Text style={active ? { color: "#323000", fontWeight: "600", fontSize: 13 } : { color: c.color, fontWeight: "500", fontSize: 13 }}>
+              <Text
+                style={active ? { color: "#323000", fontWeight: "600", fontSize: 13 } : { fontSize: 13 }}
+                className={active ? "" : "text-muted-foreground"}
+              >
                 {c.name}
               </Text>
             </Pressable>
@@ -261,12 +253,12 @@ export default function MenuScreen() {
 
           <View className="py-4">
             <Separator className="mb-4" />
-            <View className="flex-row justify-between mb-4">
-              <Text className="text-foreground font-bold text-lg">Total</Text>
-              <Text className="text-foreground font-bold text-lg">{formatCurrency(cartTotal)}</Text>
-            </View>
+            {/* Checkout CTA — same as web: label left, count · total right */}
             <Button className="w-full" onPress={placeOrder} loading={placing} disabled={placing}>
-              <Text>Place Order</Text>
+              <View className="w-full flex-row items-center justify-between">
+                <Text>Place Order</Text>
+                <Text className="font-bold">{cartCount} · {formatCurrency(cartTotal)}</Text>
+              </View>
             </Button>
           </View>
         </View>

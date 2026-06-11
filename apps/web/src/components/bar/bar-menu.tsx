@@ -330,33 +330,20 @@ export function BarMenu({ drinks, categories, dict, currency }: Props) {
         <p className="text-sm text-muted-foreground">{drinks.length} {t("menu.items_available")}</p>
       </div>
 
-      {/* Category pills — emoji + category colour, like mobile */}
+      {/* Category pills — plain, uniform (no per-category colour or emoji) */}
       <div className="mx-auto w-full max-w-4xl px-5 mb-2 flex gap-2 overflow-x-auto scrollbar-hide py-1">
-        <button
-          onClick={() => setActiveCategory("ALL")}
-          className={`shrink-0 px-3 py-1.5 rounded-full text-[13px] whitespace-nowrap border transition-colors ${
-            activeCategory === "ALL"
-              ? "bg-gold text-gold-foreground border-transparent font-semibold"
-              : "bg-card border-border text-muted-foreground font-medium"
-          }`}
-        >
-          {t("menu.all")}
-        </button>
-        {categoryTabs.map((tab) => {
+        {[{ key: "ALL", label: t("menu.all") }, ...categoryTabs].map((tab) => {
           const active = activeCategory === tab.key;
-          const color = tab.color ?? "#888888";
           return (
             <button
               key={tab.key}
               onClick={() => setActiveCategory(tab.key)}
-              className="shrink-0 px-3 py-1.5 rounded-full text-[13px] whitespace-nowrap flex items-center gap-1.5 border transition-colors"
-              style={
+              className={`shrink-0 px-3 py-1.5 rounded-full text-[13px] whitespace-nowrap border transition-colors ${
                 active
-                  ? { backgroundColor: "#EBE05A", borderColor: "transparent", color: "#323000", fontWeight: 600 }
-                  : { backgroundColor: "#1f1f1f", borderColor: color + "55", color, fontWeight: 500 }
-              }
+                  ? "bg-gold text-gold-foreground border-transparent font-semibold"
+                  : "bg-card border-border text-muted-foreground font-medium"
+              }`}
             >
-              {tab.emoji && <span>{tab.emoji}</span>}
               {tab.label}
             </button>
           );
@@ -517,11 +504,6 @@ export function BarMenu({ drinks, categories, dict, currency }: Props) {
               </div>
 
               <SheetFooter className="flex-col gap-2 pt-2">
-                <div className="flex justify-between font-bold text-base w-full">
-                  <span>{t("menu.total")}</span>
-                  <span className={freeSpinToken ? "line-through text-muted-foreground" : ""}>{fmt(cartTotal)}</span>
-                </div>
-
                 {!freeSpinToken && (
                   <SpinButton context="DRINK" dict={dict} onWin={setFreeSpinToken} />
                 )}
@@ -535,8 +517,16 @@ export function BarMenu({ drinks, categories, dict, currency }: Props) {
                     {placing ? t("menu.placing") : t("credits.claim_free_drink")}
                   </Button>
                 ) : (
-                  <Button className="w-full" size="lg" onClick={placeOrder} disabled={placing}>
-                    {placing ? t("menu.placing") : t("menu.place_order")}
+                  <Button
+                    className="w-full flex items-center justify-between text-base"
+                    size="lg" onClick={placeOrder} disabled={placing}
+                  >
+                    <span>{placing ? t("menu.placing") : t("menu.place_order")}</span>
+                    {!placing && (
+                      <span className="font-bold tabular-nums">
+                        {cartCount} · {fmt(cartTotal)}
+                      </span>
+                    )}
                   </Button>
                 )}
               </SheetFooter>
