@@ -9,7 +9,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
-  CalendarDays, MapPin, Star, ShoppingBag, Wine, Sparkles, QrCode, Bell, User,
+  CalendarDays, MapPin, Star, ShoppingBag, Wine, Sparkles, QrCode, Bell,
   Ticket as TicketIcon, ChevronRight, type LucideIcon,
 } from "lucide-react-native";
 import { Card } from "@/components/ui/Card";
@@ -20,7 +20,6 @@ import { QRImage } from "@/components/ui/QRImage";
 import { AppleLogo, GoogleLogo } from "@/components/ui/BrandLogos";
 import { TaskList } from "@/components/consumer/TaskList";
 import { TiltCard } from "@/components/ui/TiltCard";
-import { ActionCard } from "@/components/ui/ActionCard";
 import { IconButton } from "@/components/ui/IconButton";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth";
@@ -66,7 +65,7 @@ function FlipCard({
     top: 0, left: 0, right: 0, bottom: 0,
     backfaceVisibility: "hidden",
     borderRadius: 20,
-    backgroundColor: "#1a1a1a",
+    backgroundColor: "#FFFFFF",
     transform: [
       { perspective: 1400 },
       { rotateY: `${interpolate(flip.value, [0, 1], [-180, 0])}deg` },
@@ -84,7 +83,7 @@ function FlipCard({
       pan={false}
       maxTilt={5}
       holo
-      surface="#1f1f1f"
+      surface="#FFFFFF"
       radius={20}
       style={{ width: CARD_W, marginRight: isLast ? 0 : GAP }}
     >
@@ -262,7 +261,7 @@ export default function HomeScreen() {
         <View className="px-5 pt-2 mb-5 flex-row items-start justify-between">
           <View className="flex-1 pr-3">
             <Text style={{ color: "#6B6F63", fontSize: 14, fontWeight: "600" }}>Welcome back</Text>
-            <Text style={{ color: "#14160F", fontSize: 34, fontWeight: "800", letterSpacing: -1, marginTop: 2 }} numberOfLines={1}>
+            <Text style={{ color: "#14160F", fontSize: 32, fontWeight: "800", letterSpacing: -0.8, marginTop: 2 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
               Hi {firstName} 👋
             </Text>
           </View>
@@ -274,18 +273,6 @@ export default function HomeScreen() {
               </View>
             </PressableScale>
             <IconButton icon={Bell} variant="white" size={40} onPress={() => router.push("/(app)/(tabs)/profile" as never)} />
-          </View>
-        </View>
-
-        {/* Quick actions — 2×2 pastel grid (matches the mock) */}
-        <View className="px-5 mb-7">
-          <View className="flex-row gap-3 mb-3">
-            <ActionCard style={{ flex: 1 }} tone="gold" icon={ShoppingBag} title="Buy tickets" subtitle="Upcoming events" onPress={() => router.push("/(app)/buy" as never)} />
-            <ActionCard style={{ flex: 1 }} tone="green" icon={Wine} title="Order at bar" subtitle="Drinks & menu" onPress={() => router.push("/(app)/(tabs)/menu" as never)} />
-          </View>
-          <View className="flex-row gap-3">
-            <ActionCard style={{ flex: 1 }} tone="sky" icon={TicketIcon} title="My tickets" subtitle="Wallet & passes" onPress={() => router.push("/(app)/(tabs)/tickets" as never)} />
-            <ActionCard style={{ flex: 1 }} tone="lavender" icon={User} title="Profile" subtitle="Account & perks" onPress={() => router.push("/(app)/(tabs)/profile" as never)} />
           </View>
         </View>
 
@@ -334,8 +321,8 @@ export default function HomeScreen() {
                 style={{ width: CARD_W }}
               >
                 <View
-                  style={{ minHeight: 260, borderRadius: 20, borderWidth: 1, borderColor: "#303030", borderStyle: "dashed" }}
-                  className="items-center justify-center gap-3 bg-card/50 p-8"
+                  style={{ minHeight: 260, borderRadius: 20, borderWidth: 1.5, borderColor: "#D8D6C8", borderStyle: "dashed", backgroundColor: "#FFFFFF" }}
+                  className="items-center justify-center gap-3 p-8"
                 >
                   <View className="w-14 h-14 rounded-full items-center justify-center bg-secondary">
                     <TicketIcon size={24} color="#EBE05A" strokeWidth={1.75} />
