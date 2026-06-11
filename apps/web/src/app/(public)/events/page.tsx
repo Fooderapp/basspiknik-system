@@ -39,15 +39,15 @@ export default async function EventsPage() {
   return (
     <div className="mx-auto w-full max-w-5xl px-5 py-6 md:py-10">
       {/* Header — matches mobile Screen title/subtitle */}
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{t(dict, "events.title")}</h1>
-        <p className="text-muted-foreground text-sm mt-1">{t(dict, "events.subtitle")}</p>
+      <div className="mb-7">
+        <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight leading-[1.05]" style={{ letterSpacing: "-0.03em" }}>{t(dict, "events.title")}</h1>
+        <p className="text-muted-foreground text-base mt-2">{t(dict, "events.subtitle")}</p>
       </div>
 
       {events.length === 0 ? (
         <div className="flex flex-col items-center py-20 text-center">
-          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-muted">
-            <ShoppingBag className="h-6 w-6 text-muted-foreground" strokeWidth={1.75} />
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "var(--pastel-green)", color: "var(--pastel-green-ink)" }}>
+            <ShoppingBag className="h-7 w-7" strokeWidth={1.75} />
           </div>
           <p className="text-lg font-semibold tracking-tight">{t(dict, "events.none")}</p>
           <p className="text-sm text-muted-foreground mt-1">{t(dict, "events.none_sub")}</p>
@@ -64,8 +64,8 @@ export default async function EventsPage() {
 
             const card = (
               <div
-                className={`overflow-hidden rounded-xl border border-border bg-card transition-colors ${
-                  soldOut ? "opacity-60" : "hover:border-foreground/30"
+                className={`overflow-hidden rounded-3xl bg-card transition-transform shadow-sm ${
+                  soldOut ? "opacity-60" : "hover:-translate-y-0.5"
                 }`}
               >
                 {/* Cover */}

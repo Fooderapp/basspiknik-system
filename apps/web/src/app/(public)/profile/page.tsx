@@ -47,24 +47,23 @@ export default async function ProfilePage() {
       {/* Title + credit chip */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t(dict, "profile.title")}</h1>
-          <p className="text-sm text-muted-foreground mt-1">{t(dict, "profile.subtitle")}</p>
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight" style={{ letterSpacing: "-0.03em" }}>{t(dict, "profile.title")}</h1>
+          <p className="text-base text-muted-foreground mt-1.5">{t(dict, "profile.subtitle")}</p>
         </div>
         <Link
           href="/events"
-          className="flex items-center gap-1.5 rounded-full border px-3 py-1.5"
-          style={{ borderColor: "#3a2c10", backgroundColor: "rgba(245,158,11,0.1)" }}
+          className="flex items-center gap-1.5 rounded-full bg-card px-3.5 py-2 shadow-sm"
         >
-          <Star size={13} color="#fbbf24" strokeWidth={2} fill="#fbbf24" />
-          <span className="font-semibold text-sm" style={{ color: "#fbbf24" }}>{credits}</span>
-          <span className="text-xs" style={{ color: "rgba(251,191,36,0.6)" }}>{t(dict, "profile.credits")}</span>
+          <Star size={13} color="#163300" strokeWidth={2.5} fill="#9FE870" />
+          <span className="font-semibold text-sm">{credits}</span>
+          <span className="text-xs text-muted-foreground">{t(dict, "profile.credits")}</span>
         </Link>
       </div>
 
       {/* Entry pass */}
       {walletToken && (
         <div className="mb-6">
-          <div className="rounded-[28px] border border-[#26263a] bg-[#0d0d12] p-6">
+          <div className="rounded-[28px] border border-border bg-card p-6 shadow-sm">
             <p className="text-[11px] font-semibold tracking-[2px] text-muted-foreground mb-5">
               {t(dict, "profile.entry_pass")}
             </p>

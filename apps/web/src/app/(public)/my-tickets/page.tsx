@@ -69,17 +69,17 @@ export default async function MyTicketsPage() {
   return (
     <div className="mx-auto w-full max-w-2xl px-5 py-6 md:py-10">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{t(dict, "mytickets.title")}</h1>
-        <p className="text-muted-foreground text-sm mt-1">
+      <div className="mb-7">
+        <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight leading-[1.05]" style={{ letterSpacing: "-0.03em" }}>{t(dict, "mytickets.title")}</h1>
+        <p className="text-muted-foreground text-base mt-2">
           {count} {count === 1 ? t(dict, "mytickets.count_one") : t(dict, "mytickets.count_other")}
         </p>
       </div>
 
       {count === 0 ? (
         <div className="flex flex-col items-center py-20 text-center">
-          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-muted">
-            <TicketIcon className="h-6 w-6 text-muted-foreground" strokeWidth={1.75} />
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "var(--pastel-sky)", color: "var(--pastel-sky-ink)" }}>
+            <TicketIcon className="h-7 w-7" strokeWidth={1.75} />
           </div>
           <p className="text-lg font-semibold tracking-tight">{t(dict, "mytickets.empty")}</p>
           <p className="text-sm text-muted-foreground mt-1 mb-5">{t(dict, "mytickets.empty_sub2")}</p>
@@ -93,7 +93,7 @@ export default async function MyTicketsPage() {
             <Link
               key={tk.id}
               href={`/tickets/${tk.id}`}
-              className="relative flex items-center gap-4 overflow-hidden rounded-xl border border-border bg-card p-4 transition-colors hover:border-foreground/30"
+              className="relative flex items-center gap-4 overflow-hidden rounded-2xl bg-card p-4 shadow-sm transition-transform hover:-translate-y-0.5"
             >
               {/* status stripe */}
               <span
