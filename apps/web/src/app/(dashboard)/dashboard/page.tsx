@@ -41,21 +41,21 @@ export default async function DashboardPage() {
   const events = (eventsRaw as EventWithTickets[] | null) ?? [];
 
   const statCards = [
-    { title: t(dict, "dash.total_events"),  value: String(eventCount ?? 0),  icon: CalendarDays, color: "text-muted-foreground" },
-    { title: t(dict, "dash.revenue"),       value: fmt(totalRevenue),         icon: TrendingUp,   color: "text-muted-foreground" },
-    { title: t(dict, "dash.tickets_sold"),  value: String(ticketCount ?? 0),  icon: Ticket,       color: "text-muted-foreground" },
-    { title: t(dict, "dash.guests"),        value: String(guestCount ?? 0),   icon: Users,        color: "text-muted-foreground" },
+    { title: t(dict, "dash.total_events"),  value: String(eventCount ?? 0),  icon: CalendarDays, bg: "var(--pastel-green)",    fg: "var(--pastel-green-ink)" },
+    { title: t(dict, "dash.revenue"),       value: fmt(totalRevenue),         icon: TrendingUp,   bg: "var(--pastel-gold)",     fg: "var(--pastel-gold-ink)" },
+    { title: t(dict, "dash.tickets_sold"),  value: String(ticketCount ?? 0),  icon: Ticket,       bg: "var(--pastel-sky)",      fg: "var(--pastel-sky-ink)" },
+    { title: t(dict, "dash.guests"),        value: String(guestCount ?? 0),   icon: Users,        bg: "var(--pastel-lavender)", fg: "var(--pastel-lavender-ink)" },
   ];
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">{t(dict, "dash.title")}</h1>
-          <p className="text-muted-foreground">{t(dict, "dash.welcome")}, {profile?.name ?? "—"}</p>
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight" style={{ letterSpacing: "-0.03em" }}>{t(dict, "dash.title")}</h1>
+          <p className="text-muted-foreground mt-1">{t(dict, "dash.welcome")}, {profile?.name ?? "—"}</p>
         </div>
         {["ADMIN", "EDITOR"].includes(role) && (
-          <Button asChild><Link href="/dashboard/events/new">{t(dict, "dash.new_event")}</Link></Button>
+          <Button className="rounded-full px-6" asChild><Link href="/dashboard/events/new">{t(dict, "dash.new_event")}</Link></Button>
         )}
       </div>
 
@@ -63,12 +63,14 @@ export default async function DashboardPage() {
         {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
-            <Card key={stat.title}>
+            <Card key={stat.title} className="rounded-3xl shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
-                <Icon className={`h-4 w-4 ${stat.color}`} />
+                <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ background: stat.bg, color: stat.fg }}>
+                  <Icon className="h-[18px] w-[18px]" />
+                </span>
               </CardHeader>
-              <CardContent><div className="text-2xl font-bold">{stat.value}</div></CardContent>
+              <CardContent><div className="text-3xl font-extrabold tracking-tight">{stat.value}</div></CardContent>
             </Card>
           );
         })}
