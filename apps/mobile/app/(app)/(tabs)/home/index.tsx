@@ -164,6 +164,7 @@ function FlipCard({
 // ─── Main screen ──────────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const { session, profile } = useAuth();
+  const insets = useSafeAreaInsets();
   const [tickets, setTickets] = useState<WTicket[]>([]);
   const [counts, setCounts] = useState<Record<string, { total: number }>>({});
   const [acts, setActs] = useState<Act[]>([]);
