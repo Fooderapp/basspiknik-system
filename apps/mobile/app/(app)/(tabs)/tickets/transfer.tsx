@@ -92,7 +92,7 @@ export default function TransferScreen() {
           <Card className="mb-6">
             <View className="flex-row items-center gap-3 mb-4">
               <View className="w-10 h-10 rounded-full bg-muted items-center justify-center">
-                <UserCheck size={18} color="#fafafa" strokeWidth={1.75} />
+                <UserCheck size={18} color="#14160F" strokeWidth={1.75} />
               </View>
               <View className="flex-1">
                 <Text className="text-foreground font-bold">{recipient.name}</Text>
@@ -108,7 +108,7 @@ export default function TransferScreen() {
               onPress={confirmTransfer}
               loading={transferring}
               disabled={transferring}
-              icon={<ArrowRight size={16} color="#fafafa" strokeWidth={1.75} />}
+              icon={<ArrowRight size={16} color="#14160F" strokeWidth={1.75} />}
             >
               <Text>Confirm Transfer</Text>
             </Button>
@@ -128,7 +128,7 @@ export default function TransferScreen() {
               variant="outline"
               className="w-full h-16"
               onPress={() => { scanCooldown.current = false; setMethod("scan"); }}
-              icon={<QrCode size={20} color="#fafafa" strokeWidth={1.75} />}
+              icon={<QrCode size={20} color="#14160F" strokeWidth={1.75} />}
             >
               <Text className="text-base">Scan their Wallet / Profile QR</Text>
             </Button>
@@ -136,7 +136,7 @@ export default function TransferScreen() {
               variant="outline"
               className="w-full h-16"
               onPress={() => setMethod("type")}
-              icon={<KeyboardIcon size={20} color="#fafafa" strokeWidth={1.75} />}
+              icon={<KeyboardIcon size={20} color="#14160F" strokeWidth={1.75} />}
             >
               <Text className="text-base">Type Bass-ID</Text>
             </Button>

@@ -228,7 +228,7 @@ export default function CompassScreen() {
   if (loadingEvents) {
     return (
       <View className="flex-1 bg-background items-center justify-center">
-        <ActivityIndicator size="large" color="#fafafa" />
+        <ActivityIndicator size="large" color="#14160F" />
       </View>
     );
   }
@@ -294,7 +294,7 @@ export default function CompassScreen() {
           onPress={() => setSharing(s => !s)}
           className={`flex-row items-center gap-2 px-4 py-2 rounded-xl border active:opacity-70 ${sharing ? "bg-primary border-primary" : "bg-card border-border"}`}
         >
-          <Radio size={14} color={sharing ? "#000000" : "#fafafa"} strokeWidth={2} />
+          <Radio size={14} color={sharing ? "#000000" : "#14160F"} strokeWidth={2} />
           <Text className={`text-sm font-semibold ${sharing ? "text-primary-foreground" : "text-foreground"}`}>
             {sharing ? "Sharing" : "Share"}
           </Text>
@@ -313,8 +313,8 @@ export default function CompassScreen() {
             >
               {/* Static compass rose — needle rotates on top */}
               <View style={{ alignItems: "center" }}>
-                <View style={{ width: 4, height: 52, backgroundColor: "#fafafa", borderRadius: 2, marginBottom: 2 }} />
-                <View style={{ width: 0, height: 0, borderLeftWidth: 8, borderRightWidth: 8, borderTopWidth: 16, borderLeftColor: "transparent", borderRightColor: "transparent", borderTopColor: "#fafafa" }} />
+                <View style={{ width: 4, height: 52, backgroundColor: "#14160F", borderRadius: 2, marginBottom: 2 }} />
+                <View style={{ width: 0, height: 0, borderLeftWidth: 8, borderRightWidth: 8, borderTopWidth: 16, borderLeftColor: "transparent", borderRightColor: "transparent", borderTopColor: "#14160F" }} />
               </View>
             </Animated.View>
           ) : (
@@ -346,7 +346,7 @@ export default function CompassScreen() {
             Group · {friends.length} {friends.length === 1 ? "friend" : "friends"}
           </Text>
           {sharing && (
-            <Button size="sm" variant="outline" onPress={() => { scanCooldown.current = false; setScannerOpen(true); }} icon={<UserPlus size={13} color="#fafafa" strokeWidth={1.75} />}>
+            <Button size="sm" variant="outline" onPress={() => { scanCooldown.current = false; setScannerOpen(true); }} icon={<UserPlus size={13} color="#14160F" strokeWidth={1.75} />}>
               <Text className="text-sm">Add friend</Text>
             </Button>
           )}

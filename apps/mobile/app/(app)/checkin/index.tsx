@@ -115,7 +115,7 @@ export default function CheckInScreen() {
 
         {loadingEvents ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color="#fafafa" />
+            <ActivityIndicator size="large" color="#14160F" />
           </View>
         ) : (
           <FlatList
@@ -155,7 +155,7 @@ export default function CheckInScreen() {
     return (
       <View className="flex-1 bg-background items-center justify-center px-6" style={{ paddingTop: insets.top }}>
         <View className="w-16 h-16 rounded-2xl items-center justify-center mb-4 border border-border bg-muted">
-          <Camera size={28} color="#fafafa" strokeWidth={1.75} />
+          <Camera size={28} color="#14160F" strokeWidth={1.75} />
         </View>
         <Text className="text-foreground text-xl font-bold mb-2 tracking-tight">Camera Access</Text>
         <Text className="text-muted-foreground text-sm text-center mb-6">

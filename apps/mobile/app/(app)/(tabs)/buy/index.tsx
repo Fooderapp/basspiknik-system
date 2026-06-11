@@ -70,7 +70,7 @@ export default function BuyTicketsScreen() {
     return (
       <Screen title="Buy Tickets">
         <View className="flex-1 items-center justify-center py-20">
-          <ActivityIndicator size="large" color="#fafafa" />
+          <ActivityIndicator size="large" color="#163300" />
         </View>
       </Screen>
     );
@@ -83,7 +83,7 @@ export default function BuyTicketsScreen() {
         keyExtractor={(e) => e.id}
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32, paddingTop: 8 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fafafa" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#163300" />
         }
         ListEmptyComponent={
           <View className="items-center py-20">

@@ -56,10 +56,10 @@ export default function ProfileScreen() {
           <Text className="text-muted-foreground text-sm mt-1">Account & entry pass</Text>
         </View>
         <PressableScale onPress={() => router.push("/(app)/buy" as never)} pressedScale={0.94}>
-          <View className="flex-row items-center gap-1.5 rounded-full border px-3 py-1.5" style={{ borderColor: "#3a2c10", backgroundColor: "rgba(245,158,11,0.1)" }}>
-            <Star size={13} color="#fbbf24" strokeWidth={2} fill="#fbbf24" />
-            <Text className="font-semibold text-sm" style={{ color: "#fbbf24" }}>{credits ?? "—"}</Text>
-            <Text className="text-amber-200/60 text-xs">credits</Text>
+          <View className="flex-row items-center gap-1.5 rounded-full px-3.5 py-2" style={{ backgroundColor: "#fff", shadowColor: "#14160F", shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } }}>
+            <Star size={13} color="#163300" strokeWidth={2.5} fill="#9FE870" />
+            <Text className="font-semibold text-sm" style={{ color: "#14160F" }}>{credits ?? "—"}</Text>
+            <Text className="text-xs" style={{ color: "#6B6F63" }}>credits</Text>
           </View>
         </PressableScale>
       </View>
@@ -67,8 +67,8 @@ export default function ProfileScreen() {
       {/* Entry pass */}
       {walletToken && (
         <View className="mb-6">
-          <TiltCard maxTilt={10} radius={28} surface="#0d0d12" holo="shimmer">
-            <View style={{ borderRadius: 28, padding: 22, borderWidth: 1, borderColor: "#26263a" }}>
+          <TiltCard maxTilt={10} radius={28} surface="#FFFFFF" holo="shimmer">
+            <View style={{ borderRadius: 28, padding: 22, borderWidth: 1, borderColor: "#E6E4D8" }}>
               <View className="mb-5">
                 <Text className="text-muted-foreground text-[11px] font-semibold tracking-[2px]">ENTRY PASS</Text>
               </View>
@@ -105,7 +105,7 @@ export default function ProfileScreen() {
                 <PressableScale key={tool.route} onPress={() => router.push(tool.route as never)} pressedScale={0.97}>
                   <Card className="flex-row items-center gap-3 p-4">
                     <View className="w-10 h-10 rounded-xl items-center justify-center border border-border bg-muted">
-                      <Icon size={18} color="#fafafa" strokeWidth={1.75} />
+                      <Icon size={18} color="#14160F" strokeWidth={1.75} />
                     </View>
                     <View className="flex-1">
                       <Text className="text-foreground font-semibold text-base tracking-tight">{tool.label}</Text>

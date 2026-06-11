@@ -434,7 +434,7 @@ export default function SellerScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-background items-center justify-center">
-        <ActivityIndicator size="large" color="#fafafa" />
+        <ActivityIndicator size="large" color="#14160F" />
       </View>
     );
   }
@@ -491,7 +491,7 @@ export default function SellerScreen() {
       {/* Header */}
       <View className="flex-row items-center justify-between px-5 pt-4 pb-3">
         <View className="flex-1 mr-3">
-          <Button variant="ghost" size="sm" className="self-start px-0" onPress={() => setSelectedEvent(null)} icon={<ChevronLeft size={15} color="#fafafa" strokeWidth={1.75} />}>
+          <Button variant="ghost" size="sm" className="self-start px-0" onPress={() => setSelectedEvent(null)} icon={<ChevronLeft size={15} color="#14160F" strokeWidth={1.75} />}>
             <Text className="text-foreground text-sm">Events</Text>
           </Button>
           <Text className="text-foreground font-bold text-lg tracking-tight" numberOfLines={1}>
@@ -509,10 +509,10 @@ export default function SellerScreen() {
       {tapState !== "idle" && (
         <View className="mx-5 mb-2 px-4 py-2.5 rounded-xl flex-row items-center gap-2 bg-card border border-border">
           {(tapState === "discovering" || tapState === "connecting" || tapState === "processing") && (
-            <ActivityIndicator size="small" color="#fafafa" />
+            <ActivityIndicator size="small" color="#14160F" />
           )}
           {(tapState === "ready" || tapState === "success") && (
-            <Check size={14} color="#fafafa" strokeWidth={2} />
+            <Check size={14} color="#14160F" strokeWidth={2} />
           )}
           <Text className={`text-sm ${tapState === "error" ? "text-foreground font-medium" : "text-muted-foreground"}`}>
             {tapMessage}
@@ -574,7 +574,7 @@ export default function SellerScreen() {
                 ) : (
                   <View className="flex-row items-center gap-4 bg-secondary border border-border rounded-xl px-4 py-2.5">
                     <Button variant="ghost" size="icon" onPress={() => adjustQty(tt.id, -1)}>
-                      <Minus size={18} color="#fafafa" strokeWidth={2} />
+                      <Minus size={18} color="#14160F" strokeWidth={2} />
                     </Button>
                     <Text className="text-foreground font-bold text-base w-5 text-center">{qty}</Text>
                     <Button
@@ -583,7 +583,7 @@ export default function SellerScreen() {
                       disabled={qty >= tt.max_per_order}
                       onPress={() => adjustQty(tt.id, 1)}
                     >
-                      <Plus size={18} color={qty >= tt.max_per_order ? "#6b6b6b" : "#fafafa"} strokeWidth={2} />
+                      <Plus size={18} color={qty >= tt.max_per_order ? "#6b6b6b" : "#14160F"} strokeWidth={2} />
                     </Button>
                   </View>
                 )}
@@ -632,7 +632,7 @@ export default function SellerScreen() {
                   buyerMode === "guest" ? "bg-primary border-primary" : "bg-card border-border"
                 }`}
               >
-                <User size={15} color={buyerMode === "guest" ? "#000000" : "#fafafa"} strokeWidth={1.75} />
+                <User size={15} color={buyerMode === "guest" ? "#000000" : "#14160F"} strokeWidth={1.75} />
                 <Text className={`font-semibold text-sm ${buyerMode === "guest" ? "text-primary-foreground" : "text-foreground"}`}>
                   Guest
                 </Text>
@@ -643,7 +643,7 @@ export default function SellerScreen() {
                   buyerMode === "registered" ? "bg-primary border-primary" : "bg-card border-border"
                 }`}
               >
-                <QrCode size={15} color={buyerMode === "registered" ? "#000000" : "#fafafa"} strokeWidth={1.75} />
+                <QrCode size={15} color={buyerMode === "registered" ? "#000000" : "#14160F"} strokeWidth={1.75} />
                 <Text className={`font-semibold text-sm ${buyerMode === "registered" ? "text-primary-foreground" : "text-foreground"}`}>
                   Registered
                 </Text>
@@ -681,7 +681,7 @@ export default function SellerScreen() {
                 {registeredProfile ? (
                   <View className="flex-row items-center gap-3 px-4 py-3 rounded-xl bg-card border border-border">
                     <View className="w-10 h-10 rounded-full bg-muted items-center justify-center">
-                      <UserCheck size={18} color="#fafafa" strokeWidth={1.75} />
+                      <UserCheck size={18} color="#14160F" strokeWidth={1.75} />
                     </View>
                     <View className="flex-1">
                       <Text className="text-foreground font-semibold">{registeredProfile.name}</Text>
@@ -725,7 +725,7 @@ export default function SellerScreen() {
                     className="w-full"
                     onPress={openScanner}
                     loading={resolving}
-                    icon={<QrCode size={16} color="#fafafa" strokeWidth={1.75} />}
+                    icon={<QrCode size={16} color="#14160F" strokeWidth={1.75} />}
                   >
                     <Text>Scan Customer QR</Text>
                   </Button>
@@ -755,7 +755,7 @@ export default function SellerScreen() {
                     : "bg-card border-border"
                 }`}
               >
-                <Banknote size={16} color={paymentMethod === "cash" ? "#000000" : "#fafafa"} strokeWidth={1.75} />
+                <Banknote size={16} color={paymentMethod === "cash" ? "#000000" : "#14160F"} strokeWidth={1.75} />
                 <Text className={`font-semibold ${paymentMethod === "cash" ? "text-primary-foreground" : "text-foreground"}`}>
                   Cash
                 </Text>
@@ -771,7 +771,7 @@ export default function SellerScreen() {
                     : "bg-card border-border"
                 }`}
               >
-                <Smartphone size={16} color={paymentMethod === "tap" ? "#000000" : "#fafafa"} strokeWidth={1.75} />
+                <Smartphone size={16} color={paymentMethod === "tap" ? "#000000" : "#14160F"} strokeWidth={1.75} />
                 <Text className={`font-semibold ${paymentMethod === "tap" ? "text-primary-foreground" : "text-foreground"}`}>
                   Tap to Pay
                 </Text>
@@ -783,9 +783,9 @@ export default function SellerScreen() {
               <View className="px-4 py-3 rounded-xl mb-4 bg-card border border-border">
                 <View className="flex-row items-center gap-2">
                   {(tapState === "discovering" || tapState === "connecting") && (
-                    <ActivityIndicator size="small" color="#fafafa" />
+                    <ActivityIndicator size="small" color="#14160F" />
                   )}
-                  {tapState === "ready" && <Check size={14} color="#fafafa" strokeWidth={2} />}
+                  {tapState === "ready" && <Check size={14} color="#14160F" strokeWidth={2} />}
                   <Text className={`text-sm ${tapState === "error" ? "text-foreground font-medium" : "text-muted-foreground"}`}>
                     {tapMessage}
                   </Text>
@@ -842,7 +842,7 @@ export default function SellerScreen() {
         <View className="flex-1 bg-black/70 items-center justify-center px-6">
           <Card className="w-full items-center p-8">
             <View className="w-20 h-20 rounded-3xl items-center justify-center mb-5 border border-border bg-muted">
-              <PartyPopper size={36} color="#fafafa" strokeWidth={1.5} />
+              <PartyPopper size={36} color="#14160F" strokeWidth={1.5} />
             </View>
             <Text className="text-foreground text-2xl font-bold mb-1 tracking-tight">Sold!</Text>
             <Text className="text-muted-foreground text-sm mb-6">

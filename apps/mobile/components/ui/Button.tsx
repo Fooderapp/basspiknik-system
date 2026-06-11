@@ -67,8 +67,8 @@ const Button = React.forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>
     // White-bg variants need a dark spinner; dark variants need a light one.
     const spinnerColor =
       variant === "outline" || variant === "secondary" || variant === "ghost"
-        ? "#fafafa"
-        : "#000000";
+        ? "#14160F"
+        : "#0a1305";
 
     // Press-scale micro-interaction
     const scale = useSharedValue(1);

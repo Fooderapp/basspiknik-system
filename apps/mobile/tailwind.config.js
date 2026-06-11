@@ -21,34 +21,34 @@ module.exports = {
           DEFAULT: "#EBE05A", // CTA / pills / slider thumb
           foreground: "#323000",
         },
-        // Primary = gold CTA
+        // Primary = brand green CTA
         primary: {
-          DEFAULT: "#EBE05A",
-          foreground: "#323000",
+          DEFAULT: "#9FE870",
+          foreground: "#0a1305",
         },
-        // ── Surfaces (deep dark grey) ─────────────────────────────────────────
-        background: "#141414",
-        foreground: "#f5f5f5",
+        // ── Surfaces (warm cream / white — pastel light system) ───────────────
+        background: "#F6F5EE",
+        foreground: "#14160F",
         card: {
-          DEFAULT: "#1f1f1f",
-          foreground: "#f5f5f5",
+          DEFAULT: "#FFFFFF",
+          foreground: "#14160F",
         },
         // ── Muted ────────────────────────────────────────────────────────────
         muted: {
-          DEFAULT: "#262626",
-          foreground: "#9a9a9a",
+          DEFAULT: "#ECEADD",
+          foreground: "#6B6F63",
         },
         // ── Semantic ───────────────────────────────────────────────────────
-        border: "#303030",
-        input: "#303030",
-        ring: "#EBE05A",
+        border: "#E6E4D8",
+        input: "#E6E4D8",
+        ring: "#9FE870",
         secondary: {
-          DEFAULT: "#2b2b2b",
-          foreground: "#f5f5f5",
+          DEFAULT: "#ECEADD",
+          foreground: "#14160F",
         },
         accent: {
-          DEFAULT: "#303030",
-          foreground: "#f5f5f5",
+          DEFAULT: "#ECEADD",
+          foreground: "#14160F",
         },
         destructive: {
           DEFAULT: "#d23f3f",

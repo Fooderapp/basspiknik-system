@@ -80,14 +80,14 @@ export default function OrderStatusScreen() {
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       <View className="flex-row items-center px-5 py-4">
         <Pressable onPress={() => router.replace("/(app)/menu" as never)} className="active:opacity-60 flex-row items-center gap-0.5">
-          <ChevronLeft size={18} color="#fafafa" strokeWidth={1.75} />
+          <ChevronLeft size={18} color="#14160F" strokeWidth={1.75} />
           <Text className="text-foreground text-base">Menu</Text>
         </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={{ alignItems: "center", paddingHorizontal: 24, paddingBottom: 40, paddingTop: 16 }}>
         <View className="w-20 h-20 rounded-3xl items-center justify-center mb-5 border border-border bg-muted">
-          <StatusIcon size={36} color="#fafafa" strokeWidth={1.5} />
+          <StatusIcon size={36} color="#14160F" strokeWidth={1.5} />
         </View>
 
         <Text className="text-foreground text-2xl font-bold mb-3 text-center tracking-tight">{STATUS_LABEL[status]}</Text>

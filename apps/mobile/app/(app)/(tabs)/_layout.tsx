@@ -5,7 +5,7 @@ import { NativeTabs } from "expo-router/unstable-native-tabs";
 // Compass route still exists but is hidden from the tab bar.
 export default function TabsLayout() {
   return (
-    <NativeTabs tintColor="#EBE05A">
+    <NativeTabs tintColor="#163300">
       <NativeTabs.Trigger name="home">
         <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={{ default: "house", selected: "house.fill" }} drawable="ic_menu_home" />

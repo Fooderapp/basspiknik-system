@@ -103,7 +103,7 @@ export default function MenuScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-background items-center justify-center">
-        <ActivityIndicator size="large" color="#EBE05A" />
+        <ActivityIndicator size="large" color="#163300" />
       </View>
     );
   }
@@ -129,11 +129,11 @@ export default function MenuScreen() {
             <Pressable
               key={c.id}
               onPress={() => setActiveCat(c.id)}
-              style={active ? { backgroundColor: "#EBE05A" } : undefined}
+              style={active ? { backgroundColor: "#9FE870" } : undefined}
               className={`px-3 py-1.5 rounded-full ${active ? "" : "bg-card border border-border"}`}
             >
               <Text
-                style={active ? { color: "#323000", fontWeight: "600", fontSize: 13 } : { fontSize: 13 }}
+                style={active ? { color: "#0a1305", fontWeight: "700", fontSize: 13 } : { fontSize: 13 }}
                 className={active ? "" : "text-muted-foreground"}
               >
                 {c.name}
@@ -148,7 +148,7 @@ export default function MenuScreen() {
         data={filtered}
         keyExtractor={d => d.id}
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: cartCount > 0 ? 120 : 32 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fafafa" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#14160F" />}
         renderItem={({ item: drink }) => {
           const price = drink.sale_enabled && drink.sale_price ? drink.sale_price : drink.price;
           const qty   = getQty(drink.id);
@@ -166,7 +166,7 @@ export default function MenuScreen() {
                   )}
                   {drink.is_popular && (
                     <View className="flex-row items-center gap-1 mt-0.5">
-                      <Star size={12} color="#fafafa" strokeWidth={1.75} fill="#fafafa" />
+                      <Star size={12} color="#14160F" strokeWidth={1.75} fill="#14160F" />
                       <Text className="text-xs text-foreground">Popular</Text>
                     </View>
                   )}
@@ -190,11 +190,11 @@ export default function MenuScreen() {
                 ) : (
                   <View className="flex-row items-center gap-4 bg-secondary border border-border rounded-xl px-4 py-2">
                     <PressableScale pressedScale={0.85} onPress={() => adjustQty(drink.id, -1)} hitSlop={8}>
-                      <Minus size={18} color="#fafafa" strokeWidth={2} />
+                      <Minus size={18} color="#14160F" strokeWidth={2} />
                     </PressableScale>
                     <Text className="text-foreground font-bold w-6 text-center">{qty}</Text>
                     <PressableScale pressedScale={0.85} onPress={() => adjustQty(drink.id, 1)} hitSlop={8}>
-                      <Plus size={18} color="#fafafa" strokeWidth={2} />
+                      <Plus size={18} color="#14160F" strokeWidth={2} />
                     </PressableScale>
                   </View>
                 )}
@@ -233,11 +233,11 @@ export default function MenuScreen() {
                   </View>
                   <View className="flex-row items-center gap-2">
                     <PressableScale pressedScale={0.85} onPress={() => adjustQty(item.drink.id, -1)} className="w-8 h-8 bg-secondary border border-border rounded-lg items-center justify-center">
-                      <Minus size={15} color="#fafafa" strokeWidth={2} />
+                      <Minus size={15} color="#14160F" strokeWidth={2} />
                     </PressableScale>
                     <Text className="text-foreground font-bold w-5 text-center">{item.quantity}</Text>
                     <PressableScale pressedScale={0.85} onPress={() => adjustQty(item.drink.id, 1)} className="w-8 h-8 bg-secondary border border-border rounded-lg items-center justify-center">
-                      <Plus size={15} color="#fafafa" strokeWidth={2} />
+                      <Plus size={15} color="#14160F" strokeWidth={2} />
                     </PressableScale>
                     <Text className="text-foreground font-semibold w-16 text-right">{formatCurrency(p * item.quantity)}</Text>
                   </View>

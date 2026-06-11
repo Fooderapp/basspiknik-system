@@ -151,7 +151,7 @@ export function OnboardingModal({ visible, onClose, onComplete }: Props) {
                 <Button onPress={save} loading={saving} icon={<Check size={18} color="#000" strokeWidth={2} />}>
                   <Text className="font-semibold">Save & continue</Text>
                 </Button>
-                <Button variant="ghost" onPress={() => setStep(1)} disabled={saving} icon={<ChevronLeft size={16} color="#fafafa" strokeWidth={1.75} />}>
+                <Button variant="ghost" onPress={() => setStep(1)} disabled={saving} icon={<ChevronLeft size={16} color="#14160F" strokeWidth={1.75} />}>
                   <Text>Back</Text>
                 </Button>
               </>

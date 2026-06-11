@@ -39,7 +39,7 @@ export default function TicketDetailScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-background items-center justify-center">
-        <ActivityIndicator size="large" color="#fafafa" />
+        <ActivityIndicator size="large" color="#14160F" />
       </View>
     );
   }
@@ -49,7 +49,7 @@ export default function TicketDetailScreen() {
       <View className="flex-1 bg-background items-center justify-center px-6 gap-4">
         <Text className="text-foreground text-lg">Ticket not found</Text>
         <Pressable onPress={() => router.back()} className="active:opacity-60 flex-row items-center gap-1">
-          <ChevronLeft size={16} color="#fafafa" strokeWidth={1.75} />
+          <ChevronLeft size={16} color="#14160F" strokeWidth={1.75} />
           <Text className="text-foreground">Go back</Text>
         </Pressable>
       </View>
@@ -63,7 +63,7 @@ export default function TicketDetailScreen() {
       {/* Header */}
       <View className="flex-row items-center px-5 py-4 gap-3">
         <Pressable onPress={() => router.back()} className="active:opacity-60 flex-row items-center gap-0.5">
-          <ChevronLeft size={18} color="#fafafa" strokeWidth={1.75} />
+          <ChevronLeft size={18} color="#14160F" strokeWidth={1.75} />
           <Text className="text-foreground text-base">Back</Text>
         </Pressable>
         <Text className="text-foreground font-bold text-lg flex-1 tracking-tight" numberOfLines={1}>
@@ -74,9 +74,9 @@ export default function TicketDetailScreen() {
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 32, gap: 18 }}>
         {/* Entry pass — whole card tilts with gyro/pan + holo sheen */}
-        <TiltCard maxTilt={10} radius={28} surface="#0d0d12" holo="shimmer">
+        <TiltCard maxTilt={10} radius={28} surface="#FFFFFF" holo="shimmer">
           <View
-            style={{ borderRadius: 28, padding: 22, borderWidth: 1, borderColor: "#26263a" }}
+            style={{ borderRadius: 28, padding: 22, borderWidth: 1, borderColor: "#E6E4D8" }}
           >
             <View className="flex-row items-center justify-between mb-5">
               <Text className="text-muted-foreground text-[11px] font-semibold tracking-[2px]">
@@ -130,7 +130,7 @@ export default function TicketDetailScreen() {
             variant="outline"
             className="w-full"
             onPress={() => router.push(`/(app)/tickets/transfer?ticketId=${ticket.id}` as never)}
-            icon={<ArrowRightLeft size={16} color="#fafafa" strokeWidth={1.75} />}
+            icon={<ArrowRightLeft size={16} color="#14160F" strokeWidth={1.75} />}
           >
             <Text>Transfer Ticket</Text>
           </Button>

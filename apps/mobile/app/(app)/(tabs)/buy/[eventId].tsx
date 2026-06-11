@@ -299,7 +299,7 @@ export default function BuyEventScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-background items-center justify-center" style={{ paddingTop: insets.top }}>
-        <ActivityIndicator size="large" color="#fafafa" />
+        <ActivityIndicator size="large" color="#14160F" />
       </View>
     );
   }
@@ -309,7 +309,7 @@ export default function BuyEventScreen() {
       <View className="flex-1 bg-background items-center justify-center px-6 gap-4" style={{ paddingTop: insets.top }}>
         <Text className="text-foreground text-lg">Event not found</Text>
         <Pressable onPress={() => router.back()} className="active:opacity-60 flex-row items-center gap-1">
-          <ChevronLeft size={16} color="#fafafa" strokeWidth={1.75} />
+          <ChevronLeft size={16} color="#14160F" strokeWidth={1.75} />
           <Text className="text-foreground">Go back</Text>
         </Pressable>
       </View>
@@ -321,7 +321,7 @@ export default function BuyEventScreen() {
       {/* Header */}
       <View className="flex-row items-center px-5 py-4 gap-3">
         <Pressable onPress={() => router.back()} className="active:opacity-60 flex-row items-center gap-0.5">
-          <ChevronLeft size={18} color="#fafafa" strokeWidth={1.75} />
+          <ChevronLeft size={18} color="#14160F" strokeWidth={1.75} />
           <Text className="text-foreground text-base">Back</Text>
         </Pressable>
         <Text className="text-foreground font-bold text-lg flex-1 tracking-tight" numberOfLines={1}>
@@ -369,11 +369,11 @@ export default function BuyEventScreen() {
                   {!soldOut && (
                     <View className="flex-row items-center gap-2">
                       <Button variant="outline" size="icon" onPress={() => updateQty(t, -1)} disabled={qty === 0}>
-                        <Minus size={14} color="#fafafa" strokeWidth={2} />
+                        <Minus size={14} color="#14160F" strokeWidth={2} />
                       </Button>
                       <Text className="text-foreground w-5 text-center font-medium">{qty}</Text>
                       <Button variant="outline" size="icon" onPress={() => updateQty(t, 1)} disabled={qty >= max}>
-                        <Plus size={14} color="#fafafa" strokeWidth={2} />
+                        <Plus size={14} color="#14160F" strokeWidth={2} />
                       </Button>
                     </View>
                   )}

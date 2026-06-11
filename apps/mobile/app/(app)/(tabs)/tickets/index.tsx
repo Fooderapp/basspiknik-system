@@ -54,7 +54,7 @@ export default function TicketsScreen() {
     return (
       <Screen title="My Tickets">
         <View className="flex-1 items-center justify-center py-20">
-          <ActivityIndicator size="large" color="#fafafa" />
+          <ActivityIndicator size="large" color="#163300" />
         </View>
       </Screen>
     );
@@ -69,7 +69,7 @@ export default function TicketsScreen() {
     >
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40, paddingTop: 8 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fafafa" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#163300" />}
         showsVerticalScrollIndicator={false}
       >
         {tickets.length === 0 ? (
@@ -95,7 +95,7 @@ export default function TicketsScreen() {
                   {/* status stripe */}
                   <View className="absolute left-0 top-0 bottom-0 w-1.5" style={{ backgroundColor: STRIPE[item.status] ?? "#6b7280" }} />
                   <View className="w-11 h-11 rounded-2xl items-center justify-center border border-border bg-muted ml-1">
-                    <TicketIcon size={19} color="#fafafa" strokeWidth={1.75} />
+                    <TicketIcon size={19} color="#163300" strokeWidth={1.75} />
                   </View>
                   <View className="flex-1">
                     <Text className="text-foreground font-semibold text-base tracking-tight" numberOfLines={1}>
