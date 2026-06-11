@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Modal, Pressable, Vibration, View } from "react-native";
-import Animated, { ZoomIn } from "react-native-reanimated";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -49,11 +48,11 @@ export default function CheckInScreen() {
   }
 
   // Icon: RefreshCw for multi-entry, Ticket for "has more tickets", CheckCircle2 otherwise
-  function ResultIcon() {
-    if (!result?.success) return <XCircle size={52} color="#fff" strokeWidth={1.75} />;
-    if (result.isMultiEntry) return <RefreshCw size={52} color="#fff" strokeWidth={1.75} />;
-    if (result.remaining != null && result.remaining > 0) return <Ticket size={52} color="#fff" strokeWidth={1.75} />;
-    return <CheckCircle2 size={52} color="#fff" strokeWidth={1.75} />;
+  function ResultIcon({ size = 52 }: { size?: number }) {
+    if (!result?.success) return <XCircle size={size} color="#fff" strokeWidth={2} />;
+    if (result.isMultiEntry) return <RefreshCw size={size} color="#fff" strokeWidth={2} />;
+    if (result.remaining != null && result.remaining > 0) return <Ticket size={size} color="#fff" strokeWidth={2} />;
+    return <CheckCircle2 size={size} color="#fff" strokeWidth={2} />;
   }
 
   function headline(): string {
@@ -203,54 +202,62 @@ export default function CheckInScreen() {
         <Text className="text-white/70 text-sm mt-4">Scan Wallet pass or ticket QR</Text>
       </View>
 
-      {/* Result modal */}
+      {/* Result bottom sheet — matches the web check-in styling */}
       <Modal visible={!!result} transparent animationType="slide" onRequestClose={dismiss}>
         <Pressable className="flex-1 justify-end" onPress={dismiss}>
-          <Animated.View
-            entering={ZoomIn.springify().damping(14).stiffness(160)}
-            style={{ backgroundColor: accent }}
-            className="mx-4 mb-8 rounded-3xl p-6"
-          >
-
-            <Animated.View entering={ZoomIn.delay(80).springify().damping(10)} className="items-center mb-3">
-              <ResultIcon />
-            </Animated.View>
-
-            <Text className="text-white text-xl font-bold text-center mb-1 tracking-tight">
-              {headline()}
-            </Text>
-
-            {result?.success && (
-              <View className="mt-4 gap-2">
-                {result.holderName  && <Row label="Name"   value={result.holderName} />}
-                {result.ticketName  && <Row label="Ticket" value={result.ticketName} />}
-                {result.tier        && <Row label="Tier"   value={result.tier} />}
-                {result.usedAt      && <Row label="Time"   value={formatDate(result.usedAt)} />}
-
-                {/* Wallet pass: user has more tickets at this event */}
-                {!result.isMultiEntry && result.remaining != null && result.remaining > 0 && (
-                  <Row label="More tickets" value={`${result.remaining} remaining`} />
-                )}
-
-                {/* Multi-entry: show entry slot usage */}
-                {result.isMultiEntry && result.entriesLeft != null && (
-                  <Row label="Entries left" value={String(result.entriesLeft)} />
-                )}
-              </View>
-            )}
-
-            {!result?.success && result?.message && (
-              <Text className="text-white/80 text-sm text-center mt-2">{result.message}</Text>
-            )}
-
-            <Pressable
-              onPress={dismiss}
-              className="mt-5 rounded-xl py-3 items-center active:opacity-60"
-              style={{ backgroundColor: "rgba(0,0,0,0.2)" }}
+          {/* Inner press stops backdrop dismiss when tapping the sheet itself */}
+          <Pressable onPress={() => {}}>
+            <View
+              className="rounded-t-3xl px-5 pt-3"
+              style={{ backgroundColor: "#171717", borderTopWidth: 1, borderColor: "rgba(255,255,255,0.1)", paddingBottom: insets.bottom + 20 }}
             >
-              <Text className="text-white font-semibold">Scan Next</Text>
-            </Pressable>
-          </Animated.View>
+              {/* grab handle */}
+              <View className="self-center mb-4 h-1.5 w-10 rounded-full" style={{ backgroundColor: accent }} />
+
+              <View className="flex-row items-center gap-3">
+                <View className="w-12 h-12 rounded-full items-center justify-center" style={{ backgroundColor: accent }}>
+                  <ResultIcon size={26} />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-lg font-black tracking-wide" style={{ color: accent }}>{headline()}</Text>
+                  {result?.success ? (
+                    <Text className="text-white text-sm" numberOfLines={1}>
+                      <Text className="text-white font-semibold">{result.holderName ?? "Guest"}</Text>
+                      {result.ticketName ? <Text className="text-white/50"> · {result.ticketName}</Text> : null}
+                    </Text>
+                  ) : result?.message ? (
+                    <Text className="text-white/60 text-sm" numberOfLines={2}>{result.message}</Text>
+                  ) : null}
+                </View>
+                {result?.tier ? (
+                  <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: "rgba(255,255,255,0.1)" }}>
+                    <Text className="text-white/70 text-[10px] uppercase tracking-wide">{result.tier.replace("_", " ")}</Text>
+                  </View>
+                ) : null}
+              </View>
+
+              {/* Meta rows */}
+              {result?.success && (
+                <View className="mt-4 gap-1.5">
+                  {result.usedAt && <Row label="Time" value={formatDate(result.usedAt)} />}
+                  {!result.isMultiEntry && result.remaining != null && result.remaining > 0 && (
+                    <Row label="More tickets" value={`${result.remaining} remaining`} />
+                  )}
+                  {result.isMultiEntry && result.entriesLeft != null && (
+                    <Row label="Entries left" value={String(result.entriesLeft)} />
+                  )}
+                </View>
+              )}
+
+              <Pressable
+                onPress={dismiss}
+                className="mt-5 rounded-xl py-3.5 items-center active:opacity-80"
+                style={{ backgroundColor: accent }}
+              >
+                <Text className="font-bold" style={{ color: "#0A0A0A" }}>Scan Next</Text>
+              </Pressable>
+            </View>
+          </Pressable>
         </Pressable>
       </Modal>
     </View>
