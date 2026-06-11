@@ -3,7 +3,10 @@ import { updateSession } from "@/lib/supabase/middleware";
 import { createServerClient } from "@supabase/ssr";
 import type { Database } from "@/lib/supabase/types";
 
-const PUBLIC_PATHS = ["/", "/events", "/menu", "/sign-in", "/sign-up", "/auth", "/api/webhooks", "/api/wallet", "/api/google-wallet", "/api/terminal", "/api/seller", "/api/orders", "/api/credits", "/widget"];
+// NOTE: /api/* entries here do their OWN auth (cookie on web, Bearer on mobile).
+// They must be public so the middleware doesn't redirect Bearer-authed mobile
+// requests (which carry no cookie session) to /sign-in.
+const PUBLIC_PATHS = ["/", "/events", "/menu", "/sign-in", "/sign-up", "/auth", "/api/webhooks", "/api/wallet", "/api/google-wallet", "/api/terminal", "/api/seller", "/api/orders", "/api/credits", "/api/tasks", "/api/promos", "/widget"];
 
 const ROLE_PATHS: Record<string, string[]> = {
   "/dashboard": ["ADMIN", "EDITOR", "STAFF", "SELLER", "BARTENDER"],
