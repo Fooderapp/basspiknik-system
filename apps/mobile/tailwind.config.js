@@ -62,6 +62,32 @@ module.exports = {
           DEFAULT: "#f59e0b",
           foreground: "#000000",
         },
+
+        // ─────────────────────────────────────────────────────────────────────
+        // LIGHT PASTEL SYSTEM (additive — screens migrate onto this, then the
+        // base surfaces above flip to it). Brand-tinted: warm cream + ink, soft
+        // pastel quadrant cards derived from the green/gold brand + complements.
+        // ─────────────────────────────────────────────────────────────────────
+        cream: {
+          DEFAULT: "#F6F5EE", // warm off-white app background
+          deep: "#ECEADD",    // slightly darker cream for chips / secondary
+        },
+        ink: {
+          DEFAULT: "#14160F", // near-black warm headline ink
+          soft: "#6B6F63",    // muted body / labels
+          faint: "#9CA093",   // hint text
+        },
+        surface: "#FFFFFF",   // white cards / circular icon buttons
+        pill: "#16170F",      // dark pill nav / focal buttons
+        // Pastel quadrant fills + their on-color (icon/text ink)
+        pastel: {
+          green:    "#DDF2C6", "green-ink":    "#2C3A18",
+          gold:     "#F7EFC0", "gold-ink":     "#3A3608",
+          sky:      "#D6E7F5", "sky-ink":      "#15324A",
+          peach:    "#F8DEC2", "peach-ink":    "#4A2E12",
+          lavender: "#E7DFF6", "lavender-ink": "#2E2350",
+          rose:     "#F6D9DE", "rose-ink":     "#4A1820",
+        },
       },
     },
   },

@@ -4,9 +4,7 @@ import { useFocusEffect } from "expo-router";
 import {
   Gift, Instagram, Facebook, Youtube, Check, Clock, Hourglass, ExternalLink, type LucideIcon,
 } from "lucide-react-native";
-import { Card } from "@/components/ui/Card";
 import { Text } from "@/components/ui/text";
-import { Badge } from "@/components/ui/badge";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { useAuth } from "@/context/auth";
 
@@ -69,54 +67,60 @@ export function TaskList() {
   return (
     <View className="px-5 mt-10">
       <View className="flex-row items-center gap-2 mb-3">
-        <Gift size={18} color="#EBE05A" strokeWidth={2} />
-        <Text className="text-foreground text-lg font-bold tracking-tight">Earn credits</Text>
+        <Gift size={18} color="#163300" strokeWidth={2.25} />
+        <Text style={{ color: "#14160F", fontSize: 18, fontWeight: "800", letterSpacing: -0.4 }}>Earn credits</Text>
       </View>
 
-      <View className="gap-2">
+      <View className="gap-2.5">
         {tasks.map((t) => {
           const Icon = ICON[t.platform] ?? Gift;
           const done = t.state === "done";
           const pending = t.state === "pending";
           const cooldown = t.state === "cooldown";
           return (
-            <Card key={t.id} className="flex-row items-center gap-3 p-3.5">
-              <View className="w-10 h-10 rounded-full items-center justify-center bg-secondary">
-                <Icon size={18} color="#f5f5f5" strokeWidth={1.75} />
+            <View
+              key={t.id}
+              className="flex-row items-center gap-3 p-3.5"
+              style={{ backgroundColor: "#fff", borderRadius: 22, shadowColor: "#14160F", shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } }}
+            >
+              <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: "#DDF2C6" }}>
+                <Icon size={18} color="#2C3A18" strokeWidth={1.75} />
               </View>
               <View className="flex-1">
-                <Text className="text-foreground text-sm font-semibold" numberOfLines={2}>{t.title}</Text>
-                {t.description && <Text className="text-muted-foreground text-xs" numberOfLines={2}>{t.description}</Text>}
+                <Text style={{ color: "#14160F", fontSize: 14, fontWeight: "700" }} numberOfLines={2}>{t.title}</Text>
+                {t.description && <Text style={{ color: "#6B6F63", fontSize: 12 }} numberOfLines={2}>{t.description}</Text>}
               </View>
-              <Badge label={`+${t.reward}`} variant="secondary" />
+              <View style={{ backgroundColor: "#ECEADD", borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 }}>
+                <Text style={{ color: "#3A3608", fontSize: 12, fontWeight: "800" }}>+{t.reward}</Text>
+              </View>
 
               {done ? (
                 <View className="flex-row items-center gap-1">
-                  <Check size={16} color="#9FE870" strokeWidth={2} />
-                  <Text className="text-xs font-medium" style={{ color: "#9FE870" }}>Done</Text>
+                  <Check size={16} color="#3E7B12" strokeWidth={2.5} />
+                  <Text style={{ color: "#3E7B12", fontSize: 12, fontWeight: "600" }}>Done</Text>
                 </View>
               ) : pending ? (
                 <View className="flex-row items-center gap-1">
-                  <Hourglass size={14} color="#9a9a9a" strokeWidth={2} />
-                  <Text className="text-muted-foreground text-xs">In review</Text>
+                  <Hourglass size={14} color="#9CA093" strokeWidth={2} />
+                  <Text style={{ color: "#6B6F63", fontSize: 12 }}>In review</Text>
                 </View>
               ) : cooldown ? (
                 <View className="flex-row items-center gap-1">
-                  <Clock size={14} color="#9a9a9a" strokeWidth={2} />
-                  <Text className="text-muted-foreground text-xs">Later</Text>
+                  <Clock size={14} color="#9CA093" strokeWidth={2} />
+                  <Text style={{ color: "#6B6F63", fontSize: 12 }}>Later</Text>
                 </View>
               ) : (
                 <PressableScale pressedScale={0.96} onPress={() => onCta(t)} disabled={busy === t.id}>
                   <View
-                    className="flex-row items-center gap-1.5 rounded-lg px-3 py-2"
-                    style={{ backgroundColor: "#EBE05A" }}
+                    className="flex-row items-center gap-1.5 rounded-full px-3.5 py-2"
+                    style={{ backgroundColor: "#16170F" }}
                   >
                     {busy === t.id ? (
-                      <ActivityIndicator size="small" color="#323000" />
+                      <ActivityIndicator size="small" color="#fff" />
                     ) : (
                       <>
-                        {t.url && !armed[t.id] && <ExternalLink size={13} color="#323000" strokeWidth={2} />}
-                        <Text className="text-xs font-semibold" style={{ color: "#323000" }}>
+                        {t.url && !armed[t.id] && <ExternalLink size={13} color="#fff" strokeWidth={2} />}
+                        <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>
                           {armed[t.id] ? "I did it" : t.ctaLabel}
                         </Text>
                       </>
@@ -124,7 +128,7 @@ export function TaskList() {
                   </View>
                 </PressableScale>
               )}
-            </Card>
+            </View>
           );
         })}
       </View>

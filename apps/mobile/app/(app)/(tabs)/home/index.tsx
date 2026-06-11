@@ -7,11 +7,11 @@ import { router, useFocusEffect } from "expo-router";
 import Animated, {
   Easing, interpolate, useAnimatedStyle, useSharedValue, withTiming,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
-  CalendarDays, MapPin, Star, ShoppingBag, Wine, Sparkles, QrCode,
+  CalendarDays, MapPin, Star, ShoppingBag, Wine, Sparkles, QrCode, Bell, User,
   Ticket as TicketIcon, ChevronRight, type LucideIcon,
 } from "lucide-react-native";
-import { Screen } from "@/components/ui/Screen";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/badge";
 import { PressableScale } from "@/components/ui/PressableScale";
@@ -20,6 +20,8 @@ import { QRImage } from "@/components/ui/QRImage";
 import { AppleLogo, GoogleLogo } from "@/components/ui/BrandLogos";
 import { TaskList } from "@/components/consumer/TaskList";
 import { TiltCard } from "@/components/ui/TiltCard";
+import { ActionCard } from "@/components/ui/ActionCard";
+import { IconButton } from "@/components/ui/IconButton";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -240,8 +242,8 @@ export default function HomeScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-background items-center justify-center">
-        <ActivityIndicator size="large" color="#EBE05A" />
+      <View className="flex-1 items-center justify-center" style={{ backgroundColor: "#F6F5EE" }}>
+        <ActivityIndicator size="large" color="#163300" />
       </View>
     );
   }
@@ -249,33 +251,52 @@ export default function HomeScreen() {
   const activeTicket = tickets[active] ?? null;
 
   return (
-    <Screen scroll={false} padded={false}>
+    <View className="flex-1" style={{ backgroundColor: "#F6F5EE", paddingTop: insets.top }}>
       <ScrollView
         contentContainerStyle={{ paddingTop: 8, paddingBottom: 40 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#EBE05A" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#163300" />}
         showsVerticalScrollIndicator={false}
       >
-        {/* Greeting + credit chip */}
-        <View className="px-5 mb-6 flex-row items-start justify-between">
-          <View>
-            <Text className="text-muted-foreground text-sm">Welcome back</Text>
-            <Text className="text-foreground text-3xl font-bold tracking-tight">{firstName}</Text>
+        {/* Greeting + credit chip + bell */}
+        <View className="px-5 pt-2 mb-5 flex-row items-start justify-between">
+          <View className="flex-1 pr-3">
+            <Text style={{ color: "#6B6F63", fontSize: 14, fontWeight: "600" }}>Welcome back</Text>
+            <Text style={{ color: "#14160F", fontSize: 34, fontWeight: "800", letterSpacing: -1, marginTop: 2 }} numberOfLines={1}>
+              Hi {firstName} 👋
+            </Text>
           </View>
-          <PressableScale pressedScale={0.94} onPress={() => router.push("/(app)/buy" as never)}>
-            <View className="flex-row items-center gap-1.5 rounded-full px-3 py-1.5" style={{ borderWidth: 1, borderColor: "rgba(235,224,90,0.4)", backgroundColor: "rgba(235,224,90,0.1)" }}>
-              <Star size={13} color="#EBE05A" strokeWidth={2} fill="#EBE05A" />
-              <Text className="font-semibold text-sm" style={{ color: "#EBE05A" }}>{credits}</Text>
-            </View>
-          </PressableScale>
+          <View className="flex-row items-center gap-2 mt-1">
+            <PressableScale pressedScale={0.94} onPress={() => router.push("/(app)/buy" as never)}>
+              <View className="flex-row items-center gap-1.5 rounded-full px-3.5" style={{ height: 40, backgroundColor: "#fff", shadowColor: "#14160F", shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } }}>
+                <Star size={14} color="#163300" strokeWidth={2.5} fill="#9FE870" />
+                <Text style={{ color: "#14160F", fontWeight: "800", fontSize: 14 }}>{credits}</Text>
+              </View>
+            </PressableScale>
+            <IconButton icon={Bell} variant="white" size={40} onPress={() => router.push("/(app)/(tabs)/profile" as never)} />
+          </View>
+        </View>
+
+        {/* Quick actions — 2×2 pastel grid (matches the mock) */}
+        <View className="px-5 mb-7">
+          <View className="flex-row gap-3 mb-3">
+            <ActionCard style={{ flex: 1 }} tone="gold" icon={ShoppingBag} title="Buy tickets" subtitle="Upcoming events" onPress={() => router.push("/(app)/buy" as never)} />
+            <ActionCard style={{ flex: 1 }} tone="green" icon={Wine} title="Order at bar" subtitle="Drinks & menu" onPress={() => router.push("/(app)/(tabs)/menu" as never)} />
+          </View>
+          <View className="flex-row gap-3">
+            <ActionCard style={{ flex: 1 }} tone="sky" icon={TicketIcon} title="My tickets" subtitle="Wallet & passes" onPress={() => router.push("/(app)/(tabs)/tickets" as never)} />
+            <ActionCard style={{ flex: 1 }} tone="lavender" icon={User} title="Profile" subtitle="Account & perks" onPress={() => router.push("/(app)/(tabs)/profile" as never)} />
+          </View>
         </View>
 
         {/* Tickets */}
         {tickets.length === 0 ? (
           <View className="px-5">
-            <View className="items-center rounded-2xl border border-dashed border-border py-12">
-              <ShoppingBag size={36} color="#555" strokeWidth={1.5} />
-              <Text className="text-foreground font-semibold mt-3">No tickets yet</Text>
-              <Text className="text-muted-foreground text-sm mt-1">Grab a ticket and it'll show up here.</Text>
+            <View className="items-center rounded-3xl py-12" style={{ backgroundColor: "#fff", shadowColor: "#14160F", shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } }}>
+              <View style={{ width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center", backgroundColor: "#DDF2C6" }}>
+                <ShoppingBag size={26} color="#2C3A18" strokeWidth={1.75} />
+              </View>
+              <Text style={{ color: "#14160F", fontWeight: "700", marginTop: 12 }}>No tickets yet</Text>
+              <Text style={{ color: "#6B6F63", fontSize: 13, marginTop: 4 }}>Grab a ticket and it'll show up here.</Text>
             </View>
           </View>
         ) : (
@@ -335,7 +356,7 @@ export default function HomeScreen() {
                 <View key={i} style={{
                   height: 6, borderRadius: 999,
                   width: i === active ? 20 : 6,
-                  backgroundColor: i === active ? "#EBE05A" : "rgba(154,154,154,0.4)",
+                  backgroundColor: i === active ? "#163300" : "rgba(20,22,15,0.18)",
                 }} />
               ))}
             </View>
@@ -353,12 +374,11 @@ export default function HomeScreen() {
                     }}
                     style={{
                       flexDirection: "row", alignItems: "center", justifyContent: "center",
-                      gap: 8, borderWidth: 1, borderColor: "rgba(255,255,255,0.1)",
-                      borderRadius: 14, paddingVertical: 12, backgroundColor: "rgba(255,255,255,0.04)",
+                      gap: 8, borderRadius: 16, paddingVertical: 14, backgroundColor: "#16170F",
                     }}
                   >
-                    <AppleLogo size={18} color="#f5f5f5" />
-                    <Text style={{ fontSize: 13, fontWeight: "600", color: "#f5f5f5" }}>
+                    <AppleLogo size={18} color="#fff" />
+                    <Text style={{ fontSize: 13, fontWeight: "700", color: "#fff" }}>
                       Add to Apple Wallet
                     </Text>
                   </PressableScale>
@@ -372,12 +392,12 @@ export default function HomeScreen() {
                   }}
                   style={{
                     flexDirection: "row", alignItems: "center", justifyContent: "center",
-                    gap: 8, borderWidth: 1, borderColor: "rgba(255,255,255,0.1)",
-                    borderRadius: 14, paddingVertical: 12, backgroundColor: "rgba(255,255,255,0.04)",
+                    gap: 8, borderWidth: 1, borderColor: "#E2E0D4",
+                    borderRadius: 16, paddingVertical: 14, backgroundColor: "#fff",
                   }}
                 >
                   <GoogleLogo size={18} />
-                  <Text style={{ fontSize: 13, fontWeight: "600", color: "#f5f5f5" }}>
+                  <Text style={{ fontSize: 13, fontWeight: "700", color: "#14160F" }}>
                     Add to Google Wallet
                   </Text>
                 </PressableScale>
@@ -392,31 +412,31 @@ export default function HomeScreen() {
         {/* Recent activity */}
         {acts.length > 0 && (
           <View className="px-5 mt-10">
-            <Text className="text-foreground text-lg font-bold tracking-tight mb-3">Recent activity</Text>
-            <Card className="p-0 overflow-hidden">
+            <Text style={{ color: "#14160F", fontSize: 18, fontWeight: "800", letterSpacing: -0.4, marginBottom: 12 }}>Recent activity</Text>
+            <View style={{ backgroundColor: "#fff", borderRadius: 24, overflow: "hidden", shadowColor: "#14160F", shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } }}>
               {acts.map((a, i) => {
                 const Icon = actIcon[a.kind];
                 return (
-                  <View key={a.id} className={`flex-row items-center gap-3 p-3.5 ${i > 0 ? "border-t border-border" : ""}`}>
-                    <View className="w-9 h-9 rounded-full items-center justify-center bg-secondary">
-                      <Icon size={18} color="#f5f5f5" strokeWidth={1.75} />
+                  <View key={a.id} className="flex-row items-center gap-3 p-3.5" style={i > 0 ? { borderTopWidth: 1, borderTopColor: "#F0EEE3" } : undefined}>
+                    <View style={{ width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: "#ECEADD" }}>
+                      <Icon size={18} color="#14160F" strokeWidth={1.75} />
                     </View>
                     <View className="flex-1">
-                      <Text className="text-foreground text-sm font-medium" numberOfLines={1}>{a.label}</Text>
-                      {a.sub && <Text className="text-muted-foreground text-xs" numberOfLines={1}>{a.sub}</Text>}
+                      <Text style={{ color: "#14160F", fontSize: 14, fontWeight: "600" }} numberOfLines={1}>{a.label}</Text>
+                      {a.sub && <Text style={{ color: "#6B6F63", fontSize: 12 }} numberOfLines={1}>{a.sub}</Text>}
                     </View>
                     {a.amount && (
-                      <Text className="text-sm font-semibold" style={{ color: a.positive ? "#9FE870" : "#f5f5f5" }}>
+                      <Text style={{ fontSize: 14, fontWeight: "700", color: a.positive ? "#3E7B12" : "#14160F" }}>
                         {a.amount}
                       </Text>
                     )}
                   </View>
                 );
               })}
-            </Card>
+            </View>
           </View>
         )}
       </ScrollView>
-    </Screen>
+    </View>
   );
 }

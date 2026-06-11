@@ -6,32 +6,44 @@
   /* ── Monochrome base + green accent (shared with mobile app) ─────────── */
   /* Surfaces black/white. Bright Green #9FE870 used as the accent only. */
   /* Light theme: white surfaces, black ink, green accent. */
+  /* Brand-tinted pastel light theme — warm cream surfaces, ink headlines,    */
+  /* bright-green brand accent, soft pastel quadrant cards. Matches mobile.    */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 9%;
+    --background: 60 24% 95%;     /* #F6F5EE warm cream */
+    --foreground: 75 18% 7%;      /* #14160F warm ink */
+    --card: 0 0% 100%;            /* white cards */
+    --card-foreground: 75 18% 7%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
-    --primary: 55 70% 50%;
-    --primary-foreground: 58 100% 10%;
-    --secondary: 0 0% 95%;
-    --secondary-foreground: 0 0% 12%;
-    --muted: 0 0% 95%;
-    --muted-foreground: 0 0% 42%;
-    --accent: 0 0% 93%;
-    --accent-foreground: 0 0% 12%;
+    --popover-foreground: 75 18% 7%;
+    --primary: 95 71% 67%;        /* #9FE870 brand green */
+    --primary-foreground: 96 60% 8%;
+    --secondary: 54 33% 90%;      /* #ECEADD deep cream */
+    --secondary-foreground: 75 18% 12%;
+    --muted: 54 33% 90%;
+    --muted-foreground: 90 6% 42%;/* #6B6F63 soft ink */
+    --accent: 54 33% 90%;
+    --accent-foreground: 75 18% 12%;
     --destructive: 0 70% 45%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 88%;
-    --input: 0 0% 88%;
-    --ring: 55 70% 50%;
-    --radius: 0.5rem;
-    --chart-1: 55 78% 55%;
-    --chart-2: 96 60% 45%;
-    --chart-3: 0 0% 50%;
-    --chart-4: 0 0% 65%;
-    --chart-5: 0 0% 80%;
+    --border: 54 18% 85%;
+    --input: 54 18% 85%;
+    --ring: 95 71% 67%;
+    --radius: 1rem;              /* rounder, matches pastel card language */
+    --chart-1: 95 71% 67%;
+    --chart-2: 55 80% 65%;
+    --chart-3: 205 60% 70%;
+    --chart-4: 28 80% 75%;
+    --chart-5: 260 50% 80%;
+
+    /* Pastel quadrant fills + on-ink (mirror mobile tailwind pastel.*) */
+    --pastel-green: #DDF2C6;    --pastel-green-ink: #2C3A18;
+    --pastel-gold: #F7EFC0;     --pastel-gold-ink: #3A3608;
+    --pastel-sky: #D6E7F5;      --pastel-sky-ink: #15324A;
+    --pastel-peach: #F8DEC2;    --pastel-peach-ink: #4A2E12;
+    --pastel-lavender: #E7DFF6; --pastel-lavender-ink: #2E2350;
+    --pastel-rose: #F6D9DE;     --pastel-rose-ink: #4A1820;
+    --ink: #14160F;
+    --pill: #16170F;
   }
 
   /* Dark theme: deep dark-grey base + cards · gold CTA · green status. */
@@ -112,4 +124,43 @@
 .qr-scanner-border-invalid {
   box-shadow: 0 0 0 4px rgba(115, 115, 115, 0.8);
   border-color: rgb(115, 115, 115) !important;
+}
+
+/* ─── Pastel design-system helpers ─────────────────────────────────────────
+   Shared visual language from the scanner-app mock: big ink headlines, soft
+   pastel quadrant cards, white circular icon buttons, gentle shadows.        */
+@layer components {
+  /* Big bold headline, e.g. "Hi Peter, How can I help you today?" */
+  .headline-xl {
+    @apply text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.05];
+    color: var(--ink);
+    letter-spacing: -0.03em;
+  }
+
+  /* Pastel action / quadrant card */
+  .pastel-card {
+    @apply relative rounded-3xl p-5 transition-transform;
+    box-shadow: 0 1px 2px rgba(20, 22, 15, 0.04);
+  }
+  .pastel-card:hover { transform: translateY(-2px); }
+  .pastel-card.is-green    { background: var(--pastel-green);    color: var(--pastel-green-ink); }
+  .pastel-card.is-gold     { background: var(--pastel-gold);     color: var(--pastel-gold-ink); }
+  .pastel-card.is-sky      { background: var(--pastel-sky);      color: var(--pastel-sky-ink); }
+  .pastel-card.is-peach    { background: var(--pastel-peach);    color: var(--pastel-peach-ink); }
+  .pastel-card.is-lavender { background: var(--pastel-lavender); color: var(--pastel-lavender-ink); }
+  .pastel-card.is-rose     { background: var(--pastel-rose);     color: var(--pastel-rose-ink); }
+
+  /* White circular icon button (top-bar actions, card icon chips) */
+  .icon-circle {
+    @apply inline-flex items-center justify-center rounded-full bg-white shrink-0;
+    width: 3rem; height: 3rem;
+    box-shadow: 0 1px 3px rgba(20, 22, 15, 0.08);
+  }
+  .icon-circle-sm { width: 2.25rem; height: 2.25rem; }
+
+  /* Dark pill (bottom nav, focal scan button) */
+  .pill-dark {
+    background: var(--pill);
+    @apply text-white rounded-full;
+  }
 }
