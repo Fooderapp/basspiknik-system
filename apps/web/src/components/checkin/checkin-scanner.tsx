@@ -26,22 +26,23 @@ interface ScanResult {
   };
 }
 
-const BORDER_COLOR: Record<ScanStatus, string> = {
-  idle:         "",
-  ok:           "border-white    shadow-[0_0_0_4px_rgba(255,255,255,0.3)]",
-  already_used: "border-white/60 shadow-[0_0_0_4px_rgba(255,255,255,0.15)]",
-  invalid:      "border-white/40 shadow-[0_0_0_4px_rgba(115,115,115,0.3)]",
-  cancelled:    "border-white/30 shadow-[0_0_0_4px_rgba(115,115,115,0.3)]",
+// Accent colour per scan outcome — green admit, amber repeat, red reject.
+const ACCENT: Record<ScanStatus, string> = {
+  idle:         "#ffffff",
+  ok:           "#22c55e",
+  already_used: "#f59e0b",
+  invalid:      "#ef4444",
+  cancelled:    "#ef4444",
 };
 
-function buildPopupConfig(dict: Dictionary): Record<ScanStatus, { bar: string; icon: React.ReactNode; label: string; labelColor: string }> {
-  return {
-    idle:         { bar: "",            icon: null,                                              label: "",                        labelColor: "" },
-    ok:           { bar: "bg-white",    icon: <CheckCircle2 className="h-5 w-5 text-white"/>,    label: dict["checkin.admitted"],   labelColor: "text-white" },
-    already_used: { bar: "bg-white/60", icon: <AlertCircle  className="h-5 w-5 text-white/70"/>, label: dict["checkin.already_in"], labelColor: "text-white/70" },
-    invalid:      { bar: "bg-white/40", icon: <XCircle      className="h-5 w-5 text-white/60"/>, label: dict["checkin.invalid"],    labelColor: "text-white/60" },
-    cancelled:    { bar: "bg-white/30", icon: <XCircle      className="h-5 w-5 text-white/60"/>, label: dict["checkin.cancelled"],  labelColor: "text-white/60" },
-  };
+function statusMeta(dict: Dictionary, status: ScanStatus): { icon: React.ReactNode; label: string } {
+  switch (status) {
+    case "ok":           return { icon: <CheckCircle2 className="h-6 w-6 text-white" />, label: dict["checkin.admitted"] };
+    case "already_used": return { icon: <AlertCircle  className="h-6 w-6 text-white" />, label: dict["checkin.already_in"] };
+    case "invalid":      return { icon: <XCircle      className="h-6 w-6 text-white" />, label: dict["checkin.invalid"] };
+    case "cancelled":    return { icon: <XCircle      className="h-6 w-6 text-white" />, label: dict["checkin.cancelled"] };
+    default:             return { icon: null, label: "" };
+  }
 }
 
 const CORNER_CLASSES = [
@@ -179,7 +180,8 @@ export function CheckinScanner({ dict }: { dict: Dictionary }) {
   };
 
   const status  = result?.status ?? "idle";
-  const popup   = buildPopupConfig(dict)[status];
+  const accent  = ACCENT[status];
+  const meta    = statusMeta(dict, status);
   const isIdle  = status === "idle";
 
   return (
@@ -200,73 +202,14 @@ export function CheckinScanner({ dict }: { dict: Dictionary }) {
               <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover" muted playsInline />
               <canvas ref={canvasRef} className="hidden" />
 
-              {/* ── Scan frame wrapper — popup floats above, frame never moves ── */}
+              {/* ── The scan square ── */}
               <div className="relative z-10">
-
-                {/* Popup — absolutely above the scan square, no layout impact */}
                 <div
                   className={cn(
-                    "absolute bottom-full mb-3 left-0 right-0",
-                    "rounded-xl overflow-hidden bg-black/85 backdrop-blur-sm border border-white/10",
-                    "transition-all duration-300",
-                    popupVisible && result
-                      ? "opacity-100 translate-y-0 pointer-events-auto"
-                      : "opacity-0 translate-y-1 pointer-events-none",
+                    "w-64 h-64 sm:w-72 sm:h-72 rounded-2xl relative transition-all duration-200",
+                    isIdle ? "border-2 border-transparent" : "border-[6px]",
                   )}
-                >
-                  {result && result.status !== "idle" && (
-                    <>
-                      <div className={cn("h-1 w-full", popup.bar)} />
-                      <div className="px-4 py-3 flex items-start gap-3">
-                        {popup.icon}
-                        <div className="flex-1 min-w-0">
-                          <p className={cn("text-sm font-black tracking-wider", popup.labelColor)}>{popup.label}</p>
-                          {result.ticket && (
-                            <>
-                              <p className="text-white text-sm font-semibold truncate mt-0.5">
-                                {result.ticket.holderName ?? dict["checkin.guest"]}
-                              </p>
-                              <p className="text-white/60 text-xs truncate">{result.ticket.ticketName}</p>
-                              {result.ticket.tier && (
-                                <span className="inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/70 uppercase tracking-wide">
-                                  {result.ticket.tier.replace("_", " ")}
-                                </span>
-                              )}
-                              {status === "ok" && (result.ticket.entriesAllowed ?? 1) > 1 && (
-                                <div className="flex items-center gap-1.5 mt-2">
-                                  {Array.from({ length: result.ticket.entriesAllowed! }).map((_, i) => (
-                                    <div key={i} className={cn("h-2 w-2 rounded-full", i < (result.ticket!.entriesUsed ?? 0) ? "bg-white" : "bg-white/20")} />
-                                  ))}
-                                  <span className="text-[10px] text-white/50 ml-1">{result.ticket.entriesLeft} left</span>
-                                </div>
-                              )}
-                              {status === "already_used" && result.ticket.checkedInAt && (
-                                <p className="text-[10px] text-white/40 mt-1">
-                                  Last entry {new Date(result.ticket.checkedInAt).toLocaleTimeString()}
-                                </p>
-                              )}
-                            </>
-                          )}
-                          {status === "invalid" && (
-                            <p className="text-white/50 text-xs mt-0.5">{result.message}</p>
-                          )}
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {/* ── The scan square itself ── */}
-                <div
-                  className={cn(
-                    "w-64 h-64 sm:w-72 sm:h-72 rounded-2xl relative",
-                    "transition-all duration-200",
-                    // idle: transparent border (corners handle styling)
-                    // result: thick solid colored border
-                    isIdle
-                      ? "border-2 border-transparent"
-                      : cn("border-[10px]", BORDER_COLOR[status]),
-                  )}
+                  style={!isIdle ? { borderColor: accent, boxShadow: `0 0 0 4px ${accent}40` } : undefined}
                 >
                   {/* Corner brackets — only in idle */}
                   {isIdle && CORNER_CLASSES.map((cls, i) => (
@@ -276,6 +219,56 @@ export function CheckinScanner({ dict }: { dict: Dictionary }) {
                   {/* Scanning line — only in idle */}
                   {isIdle && (
                     <div className="absolute inset-x-0 top-1/2 h-0.5 bg-white/40 animate-scan-line" />
+                  )}
+                </div>
+              </div>
+
+              {/* ── Bottom sheet — scanned ticket info, slides up from the bottom ── */}
+              <div
+                className={cn(
+                  "absolute left-0 right-0 bottom-0 z-20 transition-transform duration-300 ease-out",
+                  result && status !== "idle" && popupVisible ? "translate-y-0" : "translate-y-full",
+                )}
+              >
+                <div className="rounded-t-3xl border-t border-white/10 bg-neutral-900/95 px-5 pt-3 pb-7 backdrop-blur-sm">
+                  <div className="mx-auto mb-4 h-1.5 w-10 rounded-full" style={{ backgroundColor: accent }} />
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: accent }}>
+                      {meta.icon}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-lg font-black tracking-wide" style={{ color: accent }}>{meta.label}</p>
+                      {result?.ticket ? (
+                        <p className="truncate text-sm text-white">
+                          <span className="font-semibold">{result.ticket.holderName ?? dict["checkin.guest"]}</span>
+                          <span className="text-white/50"> · {result.ticket.ticketName}</span>
+                        </p>
+                      ) : result?.message ? (
+                        <p className="truncate text-sm text-white/60">{result.message}</p>
+                      ) : null}
+                    </div>
+                    {result?.ticket?.tier && (
+                      <span className="shrink-0 rounded-full bg-white/10 px-2.5 py-1 text-[10px] uppercase tracking-wide text-white/70">
+                        {result.ticket.tier.replace("_", " ")}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Multi-entry slot usage */}
+                  {status === "ok" && result?.ticket && (result.ticket.entriesAllowed ?? 1) > 1 && (
+                    <div className="mt-3 flex items-center gap-1.5">
+                      {Array.from({ length: result.ticket.entriesAllowed! }).map((_, i) => (
+                        <div key={i} className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: i < (result.ticket!.entriesUsed ?? 0) ? accent : "rgba(255,255,255,0.2)" }} />
+                      ))}
+                      <span className="ml-1 text-xs text-white/50">{result.ticket.entriesLeft} left</span>
+                    </div>
+                  )}
+
+                  {/* Already-used: when they last came in */}
+                  {status === "already_used" && result?.ticket?.checkedInAt && (
+                    <p className="mt-2 text-xs text-white/40">
+                      Last entry {new Date(result.ticket.checkedInAt).toLocaleTimeString()}
+                    </p>
                   )}
                 </div>
               </div>
@@ -310,26 +303,27 @@ export function CheckinScanner({ dict }: { dict: Dictionary }) {
             </Button>
           </div>
 
-          {/* Result popup in manual mode */}
+          {/* Result card in manual mode */}
           {result && result.status !== "idle" && (
             <div className={cn(
-              "w-full max-w-sm rounded-xl overflow-hidden bg-white/5 border border-white/10",
+              "w-full max-w-sm overflow-hidden rounded-xl border border-white/10 bg-white/5",
               "transition-all duration-300",
               popupVisible ? "opacity-100" : "opacity-0",
             )}>
-              <div className={cn("h-1 w-full", popup.bar)} />
-              <div className="px-4 py-3 flex items-center gap-3">
-                {popup.icon}
-                <div>
-                  <p className={cn("text-sm font-black tracking-wider", popup.labelColor)}>{popup.label}</p>
-                  {result.ticket && (
-                    <p className="text-white/70 text-xs mt-0.5">
+              <div className="h-1.5 w-full" style={{ backgroundColor: accent }} />
+              <div className="flex items-center gap-3 px-4 py-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: accent }}>
+                  {meta.icon}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-black tracking-wider" style={{ color: accent }}>{meta.label}</p>
+                  {result.ticket ? (
+                    <p className="mt-0.5 truncate text-xs text-white/70">
                       {result.ticket.holderName ?? dict["checkin.guest"]} · {result.ticket.ticketName}
                     </p>
-                  )}
-                  {status === "invalid" && (
-                    <p className="text-white/50 text-xs mt-0.5">{result.message}</p>
-                  )}
+                  ) : result.message ? (
+                    <p className="mt-0.5 text-xs text-white/50">{result.message}</p>
+                  ) : null}
                 </div>
               </div>
             </div>
