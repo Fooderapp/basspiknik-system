@@ -3,7 +3,7 @@ import { ActivityIndicator, FlatList, Modal, Pressable, Vibration, View } from "
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Calendar, Camera, CheckCircle2, XCircle, RefreshCw, Ticket, ShoppingCart } from "lucide-react-native";
+import { Calendar, Camera, CheckCircle2, XCircle, RefreshCw, Ticket, ShoppingCart, ArrowLeft, X, SwitchCamera, Flashlight, FlashlightOff, ScanLine } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth";
 import type { Event } from "@/lib/types";
@@ -35,6 +35,8 @@ export default function CheckInScreen() {
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [event, setEvent] = useState<Event | null>(null);
   const [result, setResult] = useState<ScanResult | null>(null);
+  const [facing, setFacing] = useState<"back" | "front">("back");
+  const [torch, setTorch] = useState(false);
   const cooldown = useRef(false);
 
   // Blue  = multi-entry ticket
@@ -169,37 +171,85 @@ export default function CheckInScreen() {
   // ── Scanner ───────────────────────────────────────────────────────────────────
   const accent = accentColor();
 
-  return (
-    <View className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
-      {/* Header */}
-      <View className="absolute top-0 left-0 right-0 z-10 px-5 flex-row items-start justify-between" style={{ paddingTop: insets.top + 16 }}>
-        <View className="flex-1 mr-3">
-          <Text className="text-white text-xl font-bold" numberOfLines={1}>{event.name}</Text>
-          <Text className="text-white/60 text-sm">{profile?.name}</Text>
-        </View>
-        <View className="flex-row gap-2">
-          <Pressable onPress={() => router.push("/(app)/seller" as never)} className="active:opacity-60 bg-white/15 rounded-xl px-3 py-2 flex-row items-center gap-1.5">
-            <ShoppingCart size={14} color="#fff" strokeWidth={1.75} />
-            <Text className="text-white text-sm font-medium">POS</Text>
-          </Pressable>
-          <Pressable onPress={() => setEvent(null)} className="active:opacity-60 bg-white/15 rounded-xl px-3 py-2">
-            <Text className="text-white text-sm font-medium">Change</Text>
-          </Pressable>
-        </View>
-      </View>
+  const frameColor = result ? accent : "#ffffff";
 
-      {/* Camera */}
+  return (
+    <View className="flex-1 bg-black">
+      {/* Camera fills the screen */}
       <CameraView
         style={{ flex: 1 }}
-        facing="back"
+        facing={facing}
+        enableTorch={torch}
         barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
         onBarcodeScanned={({ data }) => handleScan(data)}
       />
 
-      {/* Scan frame overlay */}
-      <View className="absolute inset-0 items-center justify-center">
-        <View style={{ width: 256, height: 256, borderWidth: 3, borderRadius: 16, borderColor: accent }} />
-        <Text className="text-white/70 text-sm mt-4">Scan Wallet pass or ticket QR</Text>
+      {/* Top bar — circular back / title / close */}
+      <View className="absolute left-0 right-0 z-10 flex-row items-center justify-between px-5" style={{ top: insets.top + 8 }}>
+        <Pressable
+          onPress={() => setEvent(null)}
+          className="w-11 h-11 rounded-full items-center justify-center active:opacity-70"
+          style={{ backgroundColor: "rgba(255,255,255,0.92)" }}
+        >
+          <ArrowLeft size={20} color="#111" strokeWidth={2.25} />
+        </Pressable>
+        <View className="flex-1 mx-3 items-center">
+          <Text className="text-white text-base font-semibold" numberOfLines={1} style={{ textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 6 }}>
+            {event.name}
+          </Text>
+        </View>
+        <Pressable
+          onPress={() => router.push("/(app)/seller" as never)}
+          className="w-11 h-11 rounded-full items-center justify-center active:opacity-70"
+          style={{ backgroundColor: "rgba(255,255,255,0.92)" }}
+        >
+          <X size={20} color="#111" strokeWidth={2.25} />
+        </Pressable>
+      </View>
+
+      {/* Corner-bracket scan frame + scan line */}
+      <View className="absolute inset-0 items-center justify-center" pointerEvents="none">
+        <View style={{ width: 264, height: 264 }}>
+          {[
+            { top: 0, left: 0, borderTopWidth: 4, borderLeftWidth: 4, borderTopLeftRadius: 26 },
+            { top: 0, right: 0, borderTopWidth: 4, borderRightWidth: 4, borderTopRightRadius: 26 },
+            { bottom: 0, left: 0, borderBottomWidth: 4, borderLeftWidth: 4, borderBottomLeftRadius: 26 },
+            { bottom: 0, right: 0, borderBottomWidth: 4, borderRightWidth: 4, borderBottomRightRadius: 26 },
+          ].map((s, i) => (
+            <View key={i} style={{ position: "absolute", width: 46, height: 46, borderColor: frameColor, ...s }} />
+          ))}
+          <View style={{ position: "absolute", top: "50%", left: 10, right: 10, height: 2, backgroundColor: "rgba(255,255,255,0.6)" }} />
+        </View>
+      </View>
+
+      {/* Bottom control card — matches the scanner mock */}
+      <View className="absolute left-0 right-0 bottom-0" style={{ paddingBottom: insets.bottom + 14 }}>
+        <View className="mx-4 rounded-3xl px-6 pt-4 pb-5" style={{ backgroundColor: "rgba(255,255,255,0.96)" }}>
+          <Text className="text-center text-sm font-medium mb-4" style={{ color: "#444" }}>
+            Point at a ticket QR or Wallet pass
+          </Text>
+          <View className="flex-row items-center justify-between">
+            <Pressable
+              onPress={() => setTorch((t) => !t)}
+              className="w-14 h-14 rounded-full items-center justify-center active:opacity-70"
+              style={{ backgroundColor: torch ? "#111" : "#f0f0f0" }}
+            >
+              {torch ? <Flashlight size={22} color="#fff" strokeWidth={2} /> : <FlashlightOff size={22} color="#111" strokeWidth={2} />}
+            </Pressable>
+
+            <View className="w-20 h-20 rounded-full items-center justify-center" style={{ backgroundColor: "#111" }}>
+              <ScanLine size={30} color="#fff" strokeWidth={2} />
+            </View>
+
+            <Pressable
+              onPress={() => setFacing((f) => (f === "back" ? "front" : "back"))}
+              className="w-14 h-14 rounded-full items-center justify-center active:opacity-70"
+              style={{ backgroundColor: "#f0f0f0" }}
+            >
+              <SwitchCamera size={22} color="#111" strokeWidth={2} />
+            </Pressable>
+          </View>
+        </View>
       </View>
 
       {/* Result bottom sheet — matches the web check-in styling */}
