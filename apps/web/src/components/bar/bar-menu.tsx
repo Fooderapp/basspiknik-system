@@ -331,18 +331,19 @@ export function BarMenu({ drinks, categories, dict, currency }: Props) {
       </div>
 
       {/* Category pills — plain, uniform (no per-category colour or emoji) */}
-      <div className="mx-auto w-full max-w-4xl px-5 mb-2 flex gap-2 overflow-x-auto scrollbar-hide py-1">
+      <div className="mx-auto w-full max-w-4xl px-5 mb-2 flex items-center gap-2 overflow-x-auto scrollbar-hide py-1">
         {[{ key: "ALL", label: t("menu.all") }, ...categoryTabs].map((tab) => {
           const active = activeCategory === tab.key;
           return (
             <button
               key={tab.key}
               onClick={() => setActiveCategory(tab.key)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-[13px] whitespace-nowrap border transition-colors ${
+              className={`flex h-9 shrink-0 items-center rounded-full px-4 text-[13px] whitespace-nowrap border transition-colors ${
                 active
-                  ? "bg-gold text-gold-foreground border-transparent font-semibold"
+                  ? "border-transparent font-bold text-[#0a1305]"
                   : "bg-card border-border text-muted-foreground font-medium"
               }`}
+              style={active ? { background: "#9FE870" } : undefined}
             >
               {tab.label}
             </button>

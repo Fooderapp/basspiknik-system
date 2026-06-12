@@ -253,14 +253,14 @@ export default function HomeScreen() {
   return (
     <View className="flex-1" style={{ backgroundColor: "#F6F5EE", paddingTop: insets.top }}>
       <ScrollView
-        contentContainerStyle={{ paddingTop: 8, paddingBottom: 40 }}
+        contentContainerStyle={{ paddingTop: 16, paddingBottom: 40 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#163300" />}
         showsVerticalScrollIndicator={false}
       >
         {/* Greeting + credit chip + bell */}
-        <View className="px-5 pt-2 mb-5 flex-row items-start justify-between">
+        <View className="px-5 mb-5 flex-row items-center justify-between">
           <View className="flex-1 pr-3 justify-center">
-            <Text style={{ color: "#14160F", fontSize: 34, fontWeight: "800", letterSpacing: -1 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+            <Text style={{ color: "#14160F", fontSize: 32, lineHeight: 40, fontWeight: "800", letterSpacing: -1 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
               Hi {firstName} 👋
             </Text>
           </View>
