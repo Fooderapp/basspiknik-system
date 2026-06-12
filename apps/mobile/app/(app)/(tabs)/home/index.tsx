@@ -259,9 +259,8 @@ export default function HomeScreen() {
       >
         {/* Greeting + credit chip + bell */}
         <View className="px-5 pt-2 mb-5 flex-row items-start justify-between">
-          <View className="flex-1 pr-3">
-            <Text style={{ color: "#6B6F63", fontSize: 14, fontWeight: "600" }}>Welcome back</Text>
-            <Text style={{ color: "#14160F", fontSize: 32, fontWeight: "800", letterSpacing: -0.8, marginTop: 2 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+          <View className="flex-1 pr-3 justify-center">
+            <Text style={{ color: "#14160F", fontSize: 34, fontWeight: "800", letterSpacing: -1 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
               Hi {firstName} 👋
             </Text>
           </View>

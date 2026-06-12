@@ -158,8 +158,7 @@ export default async function HomePage() {
       {/* Greeting + credit chip + bell — mirrors mobile home */}
       <div className="mb-5 flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-muted-foreground">{t(dict, "dash.greeting")}</p>
-          <h1 className="mt-0.5 truncate text-[32px] font-extrabold leading-tight tracking-tight" style={{ letterSpacing: "-0.8px" }}>
+          <h1 className="truncate text-[34px] font-extrabold leading-tight tracking-tight" style={{ letterSpacing: "-1px" }}>
             Hi {firstName} 👋
           </h1>
         </div>

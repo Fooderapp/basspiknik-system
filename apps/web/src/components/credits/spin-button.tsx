@@ -103,30 +103,30 @@ export function SpinButton({ context, eventId, items = [], dict, onWin, disabled
 
   return (
     <>
-      {/* Amber lucky-roll banner — matches mobile buy footer */}
+      {/* Free-spin banner — black based, light content */}
       <button
         type="button"
         onClick={doSpin}
         disabled={!canSpin}
-        className="flex w-full items-center justify-between rounded-xl border px-3 py-2.5 transition-opacity active:opacity-75 disabled:opacity-50"
-        style={{ borderColor: "#f59e0b", backgroundColor: "rgba(245,158,11,0.08)" }}
+        className="flex w-full items-center justify-between rounded-2xl px-4 py-3 transition-opacity active:opacity-80 disabled:opacity-50"
+        style={{ backgroundColor: "#16170F" }}
       >
         <span className="flex items-center gap-2 text-left">
-          <Sparkles className="h-4 w-4 shrink-0" style={{ color: "#f59e0b" }} strokeWidth={2} />
-          <span className="text-sm font-semibold" style={{ color: "#f59e0b" }}>
+          <Sparkles className="h-4 w-4 shrink-0" style={{ color: "#FBBF24" }} strokeWidth={2.25} />
+          <span className="text-sm font-bold text-white">
             {!canSpin
               ? `${dict["credits.need"]} ${spinCost} ${dict["credits.balance"]}`
               : context === "DRINK"
               ? dict["credits.roll_cta_drink"]
               : dict["credits.roll_cta"]}
           </span>
-          <span className="hidden text-xs text-muted-foreground sm:inline">
+          <span className="hidden text-xs text-white/50 sm:inline">
             {dict["credits.costs"]} {spinCost} {dict["credits.balance"]}
           </span>
         </span>
-        <span className="flex items-center gap-1">
-          <Coins className="h-3 w-3" style={{ color: "#f59e0b" }} />
-          <span className="text-xs font-semibold" style={{ color: "#f59e0b" }}>{balance}</span>
+        <span className="flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5">
+          <Coins className="h-3 w-3" style={{ color: "#FBBF24" }} />
+          <span className="text-xs font-bold text-white">{balance}</span>
         </span>
       </button>
 
