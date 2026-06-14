@@ -21,8 +21,7 @@ export default async function ArtistsListPage() {
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader dict={dict} loggedIn={!!user} />
-      <div className="h-16" style={{ background: "#16170F" }} />
-      <div className="mx-auto w-full max-w-6xl px-5 py-12">
+      <div className="mx-auto w-full max-w-6xl px-5 pb-12 pt-28">
         <h1 className="mb-7 text-4xl font-extrabold tracking-tight sm:text-5xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "artists.title")}</h1>
         {(!artists || artists.length === 0) ? (
           <p className="text-muted-foreground">{t(dict, "artists.none")}</p>

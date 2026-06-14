@@ -2,13 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
 import type { Dictionary } from "@/lib/i18n";
 import { t } from "@/lib/i18n";
 
-/** Public site top bar — Bass Piknik logo + nav. Transparent over the hero,
- *  gains a dark blurred background once the page scrolls. Collapses into a
- *  fullscreen mobile menu below the `sm` breakpoint. */
+/** Floating rounded capsule nav — fixed top, logo left, big nav links inside,
+ *  green "Menu" pill on the right that opens a fullscreen overlay menu. */
 export function SiteHeader({ dict, loggedIn }: { dict: Dictionary; loggedIn: boolean }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
@@ -32,41 +30,34 @@ export function SiteHeader({ dict, loggedIn }: { dict: Dictionary; loggedIn: boo
   ];
 
   return (
-    <header
-      className={`fixed inset-x-0 top-9 z-30 transition-colors duration-300 ${
-        scrolled ? "backdrop-blur-md" : ""
-      }`}
-      style={{ background: scrolled ? "rgba(22,23,15,0.85)" : "transparent" }}
-    >
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5">
-        <Link href="/" className="text-lg font-extrabold tracking-tight text-white" style={{ letterSpacing: "-0.02em" }}>
-          Bass Piknik
-        </Link>
-        <nav className="hidden items-center gap-1 text-sm font-semibold sm:flex">
-          {links.map((l) => (
-            <Link key={l.href} href={l.href} className="rounded-full px-3 py-2 text-white/90 hover:bg-white/10">{l.label}</Link>
-          ))}
-          <Link
-            href={loggedIn ? "/home" : "/sign-in"}
-            className="rounded-full px-4 py-2 font-bold"
+    <>
+      <header className="fixed inset-x-0 top-4 z-40 flex justify-center px-4">
+        <div
+          className={`flex items-center gap-1 rounded-full p-1.5 transition-shadow ${scrolled ? "shadow-[0_8px_28px_rgba(0,0,0,0.35)]" : ""}`}
+          style={{ background: "rgba(22,23,15,0.85)", backdropFilter: "blur(14px)" }}
+        >
+          <Link href="/" className="px-4 text-base font-extrabold tracking-tight text-white" style={{ letterSpacing: "-0.02em" }}>
+            Bass Piknik
+          </Link>
+          <nav className="hidden items-center gap-1 sm:flex">
+            {links.map((l) => (
+              <Link key={l.href} href={l.href} className="rounded-full px-4 py-2.5 text-base font-bold text-white/90 hover:bg-white/10">
+                {l.label}
+              </Link>
+            ))}
+          </nav>
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="rounded-full px-5 py-2.5 text-base font-bold"
             style={{ background: "#9FE870", color: "#0a1305" }}
           >
-            {loggedIn ? t(dict, "nav.tickets") : t(dict, "nav.sign_in")}
-          </Link>
-        </nav>
+            {t(dict, "nav.menu")}
+          </button>
+        </div>
+      </header>
 
-        {/* Mobile menu toggle */}
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          aria-label={t(dict, "nav.menu")}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white sm:hidden"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-      </div>
-
-      {/* Fullscreen mobile menu */}
+      {/* Fullscreen overlay menu */}
       {open && (
         <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#16170F" }}>
           <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5">
@@ -76,10 +67,10 @@ export function SiteHeader({ dict, loggedIn }: { dict: Dictionary; loggedIn: boo
             <button
               type="button"
               onClick={() => setOpen(false)}
-              aria-label={t(dict, "nav.close")}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white"
+              className="rounded-full px-5 py-2.5 text-base font-bold"
+              style={{ background: "#9FE870", color: "#0a1305" }}
             >
-              <X className="h-5 w-5" />
+              {t(dict, "nav.close")}
             </button>
           </div>
           <nav className="flex flex-1 flex-col items-center justify-center gap-6">
@@ -99,6 +90,6 @@ export function SiteHeader({ dict, loggedIn }: { dict: Dictionary; loggedIn: boo
           </nav>
         </div>
       )}
-    </header>
+    </>
   );
 }
