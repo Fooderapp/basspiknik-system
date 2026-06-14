@@ -30,17 +30,19 @@ export async function POST(req: Request) {
     const meta = session.metadata ?? {};
     const currency = ((meta.currency as Currency) || "HUF");
 
-    // For invoice requests (számla), reuse the billing address Stripe collected.
+    // Invoice requests (számla) carry the buyer's billing form in metadata.
     const cd = session.customer_details as any;
     const wantsInvoice = meta.wantsInvoice === "1";
-    const billing = wantsInvoice ? {
-      name: cd?.name ?? null,
-      address: cd?.address?.line1 ?? null,
-      city: cd?.address?.city ?? null,
-      postalCode: cd?.address?.postal_code ?? null,
-      country: cd?.address?.country ?? null,
-      taxNumber: meta.taxNumber || null,
-    } : null;
+    let billing = null;
+    if (wantsInvoice && meta.billing) {
+      try {
+        const b = JSON.parse(meta.billing);
+        billing = {
+          name: b.name ?? null, address: b.address ?? null, city: b.city ?? null,
+          postalCode: b.postalCode ?? null, country: b.country ?? null, taxNumber: b.taxNumber ?? null,
+        };
+      } catch { /* ignore malformed */ }
+    }
 
     const result = await fulfillTicketOrder({
       eventId: meta.eventId,

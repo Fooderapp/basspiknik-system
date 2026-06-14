@@ -21,7 +21,15 @@ const checkoutSchema = z.object({
   freeSpinToken: z.string().optional(),
   // Buyer wants a full invoice (számla) instead of the default receipt (nyugta).
   wantsInvoice: z.boolean().optional(),
-  taxNumber: z.string().max(32).optional(),
+  billing: z.object({
+    name: z.string().max(120),
+    phone: z.string().max(40).optional(),
+    country: z.string().max(80),
+    postalCode: z.string().max(20),
+    city: z.string().max(80),
+    address: z.string().max(160),
+    taxNumber: z.string().max(32).optional(),
+  }).optional(),
 });
 
 /** Derive the base URL from the request so it works on localhost, LAN, and production.
@@ -58,7 +66,7 @@ export async function POST(req: Request) {
   const parsed = checkoutSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const { eventId, items, promoCode, promoId, creditsToApply, guestEmail, guestName, freeSpinToken, wantsInvoice, taxNumber } = parsed.data;
+  const { eventId, items, promoCode, promoId, creditsToApply, guestEmail, guestName, freeSpinToken, wantsInvoice, billing } = parsed.data;
 
   // Load app settings to get active currency
   const settings = await getSettings();
@@ -278,7 +286,8 @@ export async function POST(req: Request) {
       items: JSON.stringify(items), promoCodeId, currency,
       discountAmount: (discountAmount + creditDiscount).toString(), taxAmount: taxAmount.toString(),
       creditsApplied: String(creditsApplied),
-      wantsInvoice: wantsInvoice ? "1" : "", taxNumber: taxNumber ?? "",
+      wantsInvoice: wantsInvoice ? "1" : "",
+      billing: wantsInvoice && billing ? JSON.stringify(billing) : "",
     },
   });
 

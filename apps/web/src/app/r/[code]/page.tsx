@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { RedeemClient } from "@/components/consumer/redeem-client";
@@ -12,6 +13,13 @@ export const metadata = { title: "Redeem" };
 export default async function RedeemPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
   const supabase = await createClient() as any;
+
+  // Event codes open the public event page — no login required.
+  const { data: peek } = await supabase.rpc("qr_peek", { p_code: code });
+  if (peek?.type === "OPEN_EVENT" && peek.eventSlug) {
+    redirect(`/events/${peek.eventSlug}`);
+  }
+
   const { data: { user } } = await supabase.auth.getUser();
 
   // Not registered/signed in: don't silently bounce — tell them an account is

@@ -51,9 +51,15 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
   const [guestOpen, setGuestOpen] = useState(false);
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
-  // Default document is a receipt (nyugta); opt in for a full invoice (számla).
+  // Default document is a receipt (nyugta); opt in for a full invoice (számla),
+  // which needs full billing details like a normal webshop.
   const [wantsInvoice, setWantsInvoice] = useState(false);
-  const [taxNumber, setTaxNumber] = useState("");
+  const [bill, setBill] = useState({
+    name: "", phone: "", country: "Magyarország", zip: "", city: "", address: "", tax: "",
+  });
+  const setBillField = (k: keyof typeof bill) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setBill((b) => ({ ...b, [k]: e.target.value }));
+  const invoiceComplete = !!(bill.name.trim() && bill.country.trim() && bill.zip.trim() && bill.city.trim() && bill.address.trim());
 
   // Hidden promo applied by scanning a QR (?promo=<id>) — code never shown.
   const [qrPromo, setQrPromo] = useState<{ id: string; label: string } | null>(null);
@@ -159,7 +165,12 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
           guestName: guest?.name || undefined,
           guestEmail: guest?.email || undefined,
           wantsInvoice: wantsInvoice || undefined,
-          taxNumber: wantsInvoice && taxNumber.trim() ? taxNumber.trim() : undefined,
+          billing: wantsInvoice ? {
+            name: bill.name.trim(), phone: bill.phone.trim() || undefined,
+            country: bill.country.trim(), postalCode: bill.zip.trim(),
+            city: bill.city.trim(), address: bill.address.trim(),
+            taxNumber: bill.tax.trim() || undefined,
+          } : undefined,
         }),
       });
 
@@ -338,10 +349,18 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
                 {dict["invoice.request"]}
               </label>
               {wantsInvoice ? (
-                <>
-                  <p className="text-xs text-muted-foreground">{dict["invoice.address_hint"]}</p>
-                  <Input value={taxNumber} onChange={(e) => setTaxNumber(e.target.value)} placeholder={dict["invoice.tax_number"]} className="h-9" />
-                </>
+                <div className="space-y-2 pt-1">
+                  <p className="text-xs text-muted-foreground">{dict["invoice.billing_hint"]}</p>
+                  <Input value={bill.name} onChange={setBillField("name")} placeholder={dict["invoice.name"]} className="h-9" autoComplete="name" />
+                  <Input value={bill.phone} onChange={setBillField("phone")} placeholder={dict["invoice.phone"]} className="h-9" autoComplete="tel" />
+                  <Input value={bill.country} onChange={setBillField("country")} placeholder={dict["invoice.country"]} className="h-9" autoComplete="country-name" />
+                  <div className="flex gap-2">
+                    <Input value={bill.zip} onChange={setBillField("zip")} placeholder={dict["invoice.zip"]} className="h-9 w-1/3" autoComplete="postal-code" />
+                    <Input value={bill.city} onChange={setBillField("city")} placeholder={dict["invoice.city"]} className="h-9 flex-1" autoComplete="address-level2" />
+                  </div>
+                  <Input value={bill.address} onChange={setBillField("address")} placeholder={dict["invoice.address"]} className="h-9" autoComplete="street-address" />
+                  <Input value={bill.tax} onChange={setBillField("tax")} placeholder={dict["invoice.tax_number"]} className="h-9" />
+                </div>
               ) : (
                 <p className="text-xs text-muted-foreground">{dict["invoice.receipt_default"]}</p>
               )}
@@ -359,8 +378,8 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
               {loading ? "…" : dict["credits.claim_free"]}
             </Button>
           ) : (
-            <Button className="w-full" size="lg" onClick={startCheckout} disabled={loading}>
-              {loading ? "…" : `${dict["ticket.checkout"]} · ${fmt(displayTotal)}`}
+            <Button className="w-full" size="lg" onClick={startCheckout} disabled={loading || (wantsInvoice && !invoiceComplete)}>
+              {loading ? "…" : wantsInvoice && !invoiceComplete ? dict["invoice.fill_required"] : `${dict["ticket.checkout"]} · ${fmt(displayTotal)}`}
             </Button>
           )}
         </div>
