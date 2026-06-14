@@ -38,8 +38,14 @@ const TYPE_ICON: Record<QrType, LucideIcon> = {
   ONE_TIME_CREDIT: Coins, OPEN_EVENT: CalendarDays, LINK: LinkIcon, MESSAGE: MessageSquare,
 };
 
+// Encode a deep link (https://<app>/r/<code>) so a phone's default camera can
+// scan it and open the redeem page — not just the in-app scanner.
+function deepLink(code: string) {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  return `${origin}/r/${code}`;
+}
 function qrSrc(code: string) {
-  return `/api/tickets/qr?code=${encodeURIComponent(code)}`;
+  return `/api/tickets/qr?code=${encodeURIComponent(deepLink(code))}`;
 }
 
 export function QrManager({ events }: { events: { id: string; name: string }[] }) {
@@ -207,7 +213,7 @@ export function QrManager({ events }: { events: { id: string; name: string }[] }
                     </p>
                     <div className="mt-2 flex gap-1.5">
                       <Button size="sm" variant="secondary" className="h-8 gap-1 rounded-full"
-                        onClick={() => { navigator.clipboard.writeText(c.code); toast.success("Code copied"); }}>
+                        onClick={() => { navigator.clipboard.writeText(deepLink(c.code)); toast.success("Link copied"); }}>
                         <Copy className="h-3.5 w-3.5" />Copy
                       </Button>
                       <a href={qrSrc(c.code)} download={`qr-${c.code}.png`}>
