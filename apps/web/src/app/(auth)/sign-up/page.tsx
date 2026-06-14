@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { SignUpForm } from "@/components/auth/sign-up-form";
 import { Metadata } from "next";
 import { getSettings } from "@/lib/settings";
@@ -12,7 +13,9 @@ export default async function SignUpPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm">
-        <SignUpForm dict={dict} />
+        <Suspense>
+          <SignUpForm dict={dict} />
+        </Suspense>
       </div>
     </div>
   );
