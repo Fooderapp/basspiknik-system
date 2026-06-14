@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,8 @@ interface TicketSelectorProps {
 export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedIn }: TicketSelectorProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const signInHref = `/sign-in?redirectTo=${encodeURIComponent(pathname || "/events")}`;
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
   const [freeSpinToken, setFreeSpinToken] = useState<string | null>(null);
@@ -415,7 +417,7 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
               {loading ? "…" : `${dict["checkout.continue_guest"]} · ${fmt(subtotal)}`}
             </Button>
             <Button variant="outline" className="w-full gap-2" asChild>
-              <Link href="/sign-in">
+              <Link href={signInHref}>
                 <LogIn className="h-4 w-4" />
                 {dict["checkout.login_register"]}
               </Link>
