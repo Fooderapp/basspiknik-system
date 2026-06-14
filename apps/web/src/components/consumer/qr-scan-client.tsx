@@ -2,9 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Coins, CalendarDays, LinkIcon, MessageSquare, XCircle, ScanLine, type LucideIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import jsQR from "jsqr";
+import { Coins, CalendarDays, LinkIcon, MessageSquare, XCircle, CameraOff, type LucideIcon } from "lucide-react";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -31,9 +30,10 @@ export function QrScanClient() {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [result, setResult] = useState<QrResult | null>(null);
-  const [manual, setManual] = useState("");
-  const [supported, setSupported] = useState(true);
+  const [denied, setDenied] = useState(false);
   const busy = useRef(false);
+  const resultRef = useRef<QrResult | null>(null);
+  resultRef.current = result;
 
   async function redeem(code: string) {
     if (busy.current || !code.trim()) return;
@@ -50,31 +50,34 @@ export function QrScanClient() {
     finally { setTimeout(() => { busy.current = false; }, 800); }
   }
 
-  // Live camera scan via the native BarcodeDetector (Chrome/Edge/Android).
+  // Live camera scan, decoded with jsQR via a canvas — works in every browser
+  // that supports getUserMedia (incl. iOS Safari, which lacks BarcodeDetector).
   useEffect(() => {
-    const BD = (window as any).BarcodeDetector;
-    if (!BD) { setSupported(false); return; }
     let stream: MediaStream | null = null;
     let raf = 0;
-    const detector = new BD({ formats: ["qr_code"] });
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
     (async () => {
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play(); }
-        const tick = async () => {
-          if (videoRef.current && videoRef.current.readyState === 4 && !result && !busy.current) {
-            try {
-              const codes = await detector.detect(videoRef.current);
-              if (codes[0]?.rawValue) await redeem(codes[0].rawValue);
-            } catch { /* ignore frame */ }
+        const v = videoRef.current;
+        if (v) { v.srcObject = stream; v.setAttribute("playsinline", "true"); await v.play(); }
+        const tick = () => {
+          const vid = videoRef.current;
+          if (vid && vid.readyState === 4 && ctx && !resultRef.current && !busy.current) {
+            canvas.width = vid.videoWidth; canvas.height = vid.videoHeight;
+            ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
+            const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const found = jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" });
+            if (found?.data) void redeem(found.data);
           }
           raf = requestAnimationFrame(tick);
         };
         raf = requestAnimationFrame(tick);
-      } catch { setSupported(false); }
+      } catch { setDenied(true); }
     })();
     return () => { cancelAnimationFrame(raf); stream?.getTracks().forEach((t) => t.stop()); };
-  }, [result]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   function act() {
     const r = result; setResult(null);
@@ -113,19 +116,13 @@ export function QrScanClient() {
             ))}
           </div>
         </div>
-        {!supported && (
+        {denied && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/70 px-6 text-center text-white">
-            <ScanLine className="h-8 w-8" />
-            <p className="text-sm">Camera scanning isn't supported in this browser. Enter the code below.</p>
+            <CameraOff className="h-8 w-8" />
+            <p className="text-sm">Allow camera access to scan a QR code.</p>
           </div>
         )}
       </div>
-
-      {/* Manual entry */}
-      <form onSubmit={(e) => { e.preventDefault(); void redeem(manual); }} className="mt-4 flex gap-2">
-        <Input value={manual} onChange={(e) => setManual(e.target.value.toUpperCase())} placeholder="Enter code" className="uppercase" />
-        <Button type="submit" className="rounded-full px-5">Redeem</Button>
-      </form>
 
       {/* Result sheet */}
       {result && (

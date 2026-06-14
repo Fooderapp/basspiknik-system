@@ -264,9 +264,9 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
         </a>
       )}
 
-      {/* Summary + checkout */}
+      {/* Summary + checkout — floats above the bottom nav on mobile */}
       {hasItems && (
-        <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
+        <div className="sticky bottom-24 z-30 rounded-3xl bg-card p-4 space-y-3 shadow-[0_8px_28px_rgba(20,22,15,0.14)] md:bottom-4">
           <div className="flex justify-between text-sm">
             <span>{dict["ticket.subtotal"]}</span>
             <span className={freeSpinToken ? "line-through text-muted-foreground" : ""}>{fmt(subtotal)}</span>
@@ -274,13 +274,11 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
 
           {/* Credit redemption slider — logged-in, no promo, redemption enabled */}
           {!freeSpinToken && !promoActive && quote?.enabled && quote.maxCredits > 0 && (
-            <div className="rounded-2xl bg-card p-4 shadow-sm space-y-3">
+            <div className="rounded-2xl p-3 space-y-2" style={{ background: "#F6F5EE" }}>
               <div className="flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full" style={{ background: "var(--pastel-green)" }}>
-                  <Wallet className="h-[15px] w-[15px]" style={{ color: "#163300" }} />
-                </span>
+                <Wallet className="h-4 w-4 shrink-0" style={{ color: "#163300" }} />
                 <span className="text-sm font-bold">{dict["credits.redeem_title"]}</span>
-                <span className="ml-auto rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: "#ECEADD", color: "#3A3608" }}>
+                <span className="ml-auto inline-flex shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: "#ECEADD", color: "#3A3608" }}>
                   {dict["credits.redeem_balance"]}: {quote.maxCredits}
                 </span>
               </div>
@@ -298,7 +296,7 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
                 <span className="text-sm font-semibold" style={{ color: "#14160F" }}>
                   {credits} {dict["credits.redeem_credits"]}
                 </span>
-                <span className="text-base font-extrabold tabular-nums" style={{ color: "#163300" }}>
+                <span className="text-sm font-extrabold tabular-nums" style={{ color: "#163300" }}>
                   −{fmt(creditDiscount)} {dict["credits.redeem_off"]}
                 </span>
               </div>
