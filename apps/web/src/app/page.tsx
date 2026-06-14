@@ -6,6 +6,7 @@ import { getDictionary, t } from "@/lib/i18n";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { SiteHeader } from "@/components/public/site-header";
 import { ArtistMarquee } from "@/components/public/artist-marquee";
+import { Reveal } from "@/components/public/reveal";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -66,6 +67,7 @@ export default async function HomePage() {
       </section>
 
       {/* ── Events ── */}
+      <Reveal>
       <section id="events" className="mx-auto w-full max-w-6xl px-5 py-16">
         <h2 className="mb-7 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "nav.events")}</h2>
         {(!events || events.length === 0) ? (
@@ -106,9 +108,11 @@ export default async function HomePage() {
           </div>
         )}
       </section>
+      </Reveal>
 
       {/* ── Lineup / Artists ── */}
       {artists && artists.length > 0 && (
+        <Reveal>
         <section id="lineup" className="mx-auto w-full max-w-6xl px-5 py-16">
           <h2 className="mb-7 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "home.lineup")}</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
@@ -128,18 +132,22 @@ export default async function HomePage() {
             ))}
           </div>
         </section>
+        </Reveal>
       )}
 
       {/* ── About ── */}
       {(c.about_title || c.about_body) && (
+        <Reveal>
         <section className="mx-auto w-full max-w-3xl px-5 py-16 text-center">
           {c.about_title && <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{c.about_title}</h2>}
           {c.about_body && <p className="mx-auto mt-4 max-w-2xl whitespace-pre-line text-lg leading-relaxed text-muted-foreground">{c.about_body}</p>}
         </section>
+        </Reveal>
       )}
 
       {/* ── Gallery ── */}
       {gallery && gallery.length > 0 && (
+        <Reveal>
         <section className="mx-auto w-full max-w-6xl px-5 py-16">
           <h2 className="mb-7 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "home.gallery")}</h2>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
@@ -149,6 +157,7 @@ export default async function HomePage() {
             ))}
           </div>
         </section>
+        </Reveal>
       )}
 
       {/* ── Footer ── */}
