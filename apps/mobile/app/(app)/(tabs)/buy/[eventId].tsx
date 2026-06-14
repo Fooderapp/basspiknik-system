@@ -78,13 +78,14 @@ export default function BuyEventScreen() {
       ]);
       if (ev) {
         setEvent(ev as Event);
-        // Hide door tickets (POS-only), hidden types, and any outside their window.
+        // Hide door tickets (POS-only), manually-hidden, and expired types. A type
+        // whose sale hasn't started yet (visible_from in the future) is kept but
+        // rendered locked as "Coming Soon" — not purchasable.
         const now = Date.now();
         setTicketTypes(((ev.ticket_types as TicketType[]) ?? []).filter((t) => {
           const tt = t as any;
           if (tt.is_door_ticket) return false;
           if (tt.is_visible === false) return false;
-          if (tt.visible_from && new Date(tt.visible_from).getTime() > now) return false;
           if (tt.visible_until && new Date(tt.visible_until).getTime() < now) return false;
           return true;
         }));
@@ -347,12 +348,14 @@ export default function BuyEventScreen() {
         {/* Ticket types */}
         <View className="gap-3">
           {ticketTypes.map((t) => {
+            const tAny = t as any;
+            const comingSoon = !!(tAny.visible_from && new Date(tAny.visible_from).getTime() > Date.now());
             const available = t.quantity - t.sold;
-            const soldOut = available <= 0;
+            const soldOut = !comingSoon && available <= 0;
             const qty = quantities[t.id] ?? 0;
             const max = Math.min(available, t.max_per_order);
             return (
-              <Card key={t.id}>
+              <Card key={t.id} style={comingSoon ? { opacity: 0.7 } : undefined}>
                 <View className="flex-row items-start justify-between gap-3">
                   <View className="flex-1">
                     <View className="flex-row flex-wrap items-center gap-1.5 mb-1">
@@ -360,13 +363,14 @@ export default function BuyEventScreen() {
                       <Badge label={t.tier} variant="secondary" />
                       {t.is_bundle && <Badge label={`Bundle ×${t.bundle_size}`} variant="muted" />}
                       {soldOut && <Badge label="Sold out" variant="destructive" />}
+                      {comingSoon && <Badge label="Coming soon" variant="muted" />}
                     </View>
                     {t.description && <Text className="text-muted-foreground text-sm">{t.description}</Text>}
                     <Text className="text-foreground font-semibold mt-1">
                       {t.price === 0 ? "Free" : fmt(priceOf(t))}
                     </Text>
                   </View>
-                  {!soldOut && (
+                  {!soldOut && !comingSoon && (
                     <View className="flex-row items-center gap-2">
                       <Button variant="outline" size="icon" onPress={() => updateQty(t, -1)} disabled={qty === 0}>
                         <Minus size={14} color="#14160F" strokeWidth={2} />
