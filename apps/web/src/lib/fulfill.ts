@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { sendTicketConfirmation } from "@/lib/email";
 import { getSettings, type Currency } from "@/lib/settings";
-import { createBillingoInvoice, type BillingoLineItem } from "@/lib/billingo";
+import { createBillingoInvoice, createBillingoReceipt, type BillingoLineItem } from "@/lib/billingo";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -25,6 +25,18 @@ export interface FulfillInput {
   customerName?: string | null;
   stripeCheckoutSessionId?: string | null;
   stripePaymentIntentId?: string | null;
+  /** Buyer asked for a full invoice (számla) instead of the default receipt
+   *  (nyugta). When true we issue an invoice and require buyer billing details. */
+  wantsInvoice?: boolean;
+  /** Billing details supplied at checkout for a guest who requested an invoice. */
+  billing?: {
+    name?: string | null;
+    address?: string | null;
+    city?: string | null;
+    postalCode?: string | null;
+    country?: string | null;
+    taxNumber?: string | null;
+  } | null;
 }
 
 export interface FulfillResult {
@@ -159,7 +171,7 @@ export async function fulfillTicketOrder(input: FulfillInput): Promise<FulfillRe
       })
       .filter((x): x is BillingoLineItem => x !== null && x.unitPrice > 0);
 
-    // Billing details: registered buyer's profile, else guest.
+    // Billing details: registered buyer's profile, else guest-supplied at checkout.
     let billing: any = null;
     if (input.userId) {
       const { data: prof } = await supabase
@@ -170,22 +182,36 @@ export async function fulfillTicketOrder(input: FulfillInput): Promise<FulfillRe
       billing = prof;
     }
 
+    const lang = appSettingsForInvoice.language === "hu" ? "hu" : "en";
     let billingoResult = null;
     if (invoiceItems.length > 0) {
-      billingoResult = await createBillingoInvoice({
-        buyer: {
-          name: billing?.billing_name || buyerName,
+      // Default = receipt (nyugta), anonymous, no address needed. Only issue a
+      // full invoice (számla) when the buyer explicitly asked for one.
+      if (input.wantsInvoice) {
+        billingoResult = await createBillingoInvoice({
+          buyer: {
+            name: input.billing?.name || billing?.billing_name || buyerName,
+            email: buyerEmail,
+            countryCode: input.billing?.country || billing?.billing_country || "HU",
+            postCode: input.billing?.postalCode || billing?.billing_postal_code || null,
+            city: input.billing?.city || billing?.billing_city || null,
+            address: input.billing?.address || billing?.billing_address || null,
+            taxNumber: input.billing?.taxNumber || null,
+          },
+          items: invoiceItems,
+          currency: input.currency,
+          language: lang,
+          paid: true,
+        });
+      } else {
+        billingoResult = await createBillingoReceipt({
+          items: invoiceItems,
+          currency: input.currency,
+          language: lang,
+          paid: true,
           email: buyerEmail,
-          countryCode: billing?.billing_country || "HU",
-          postCode: billing?.billing_postal_code || null,
-          city: billing?.billing_city || null,
-          address: billing?.billing_address || null,
-        },
-        items: invoiceItems,
-        currency: input.currency,
-        language: appSettingsForInvoice.language === "hu" ? "hu" : "en",
-        paid: true,
-      });
+        });
+      }
     }
 
     await supabase.from("invoices").insert({

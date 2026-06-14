@@ -30,6 +30,18 @@ export async function POST(req: Request) {
     const meta = session.metadata ?? {};
     const currency = ((meta.currency as Currency) || "HUF");
 
+    // For invoice requests (számla), reuse the billing address Stripe collected.
+    const cd = session.customer_details as any;
+    const wantsInvoice = meta.wantsInvoice === "1";
+    const billing = wantsInvoice ? {
+      name: cd?.name ?? null,
+      address: cd?.address?.line1 ?? null,
+      city: cd?.address?.city ?? null,
+      postalCode: cd?.address?.postal_code ?? null,
+      country: cd?.address?.country ?? null,
+      taxNumber: meta.taxNumber || null,
+    } : null;
+
     const result = await fulfillTicketOrder({
       eventId: meta.eventId,
       userId: meta.userId || null,
@@ -43,9 +55,11 @@ export async function POST(req: Request) {
       creditsApplied: parseInt(meta.creditsApplied ?? "0", 10) || 0,
       total: fromStripeAmount(session.amount_total ?? 0, currency),
       customerEmail: session.customer_email,
-      customerName: (session.customer_details as any)?.name ?? null,
+      customerName: cd?.name ?? null,
       stripeCheckoutSessionId: session.id,
       stripePaymentIntentId: typeof session.payment_intent === "string" ? session.payment_intent : null,
+      wantsInvoice,
+      billing,
     });
 
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: 500 });

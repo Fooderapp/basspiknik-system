@@ -49,6 +49,9 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
   const [guestOpen, setGuestOpen] = useState(false);
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
+  // Default document is a receipt (nyugta); opt in for a full invoice (számla).
+  const [wantsInvoice, setWantsInvoice] = useState(false);
+  const [taxNumber, setTaxNumber] = useState("");
 
   // Hidden promo applied by scanning a QR (?promo=<id>) — code never shown.
   const [qrPromo, setQrPromo] = useState<{ id: string; label: string } | null>(null);
@@ -153,6 +156,8 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
           freeSpinToken: freeSpinToken || undefined,
           guestName: guest?.name || undefined,
           guestEmail: guest?.email || undefined,
+          wantsInvoice: wantsInvoice || undefined,
+          taxNumber: wantsInvoice && taxNumber.trim() ? taxNumber.trim() : undefined,
         }),
       });
 
@@ -321,6 +326,24 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
               dict={dict}
               onWin={setFreeSpinToken}
             />
+          )}
+
+          {/* Receipt by default; opt in for a full invoice (számla) */}
+          {!freeSpinToken && (
+            <div className="rounded-2xl p-3 space-y-2" style={{ background: "#F6F5EE" }}>
+              <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
+                <input type="checkbox" checked={wantsInvoice} onChange={(e) => setWantsInvoice(e.target.checked)} className="h-4 w-4" style={{ accentColor: "#163300" }} />
+                {dict["invoice.request"]}
+              </label>
+              {wantsInvoice ? (
+                <>
+                  <p className="text-xs text-muted-foreground">{dict["invoice.address_hint"]}</p>
+                  <Input value={taxNumber} onChange={(e) => setTaxNumber(e.target.value)} placeholder={dict["invoice.tax_number"]} className="h-9" />
+                </>
+              ) : (
+                <p className="text-xs text-muted-foreground">{dict["invoice.receipt_default"]}</p>
+              )}
+            </div>
           )}
 
           {freeSpinToken ? (

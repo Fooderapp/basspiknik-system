@@ -19,6 +19,9 @@ const checkoutSchema = z.object({
   guestEmail: z.string().email().optional(),
   guestName: z.string().optional(),
   freeSpinToken: z.string().optional(),
+  // Buyer wants a full invoice (számla) instead of the default receipt (nyugta).
+  wantsInvoice: z.boolean().optional(),
+  taxNumber: z.string().max(32).optional(),
 });
 
 /** Derive the base URL from the request so it works on localhost, LAN, and production.
@@ -55,7 +58,7 @@ export async function POST(req: Request) {
   const parsed = checkoutSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const { eventId, items, promoCode, promoId, creditsToApply, guestEmail, guestName, freeSpinToken } = parsed.data;
+  const { eventId, items, promoCode, promoId, creditsToApply, guestEmail, guestName, freeSpinToken, wantsInvoice, taxNumber } = parsed.data;
 
   // Load app settings to get active currency
   const settings = await getSettings();
@@ -275,6 +278,7 @@ export async function POST(req: Request) {
       items: JSON.stringify(items), promoCodeId, currency,
       discountAmount: (discountAmount + creditDiscount).toString(), taxAmount: taxAmount.toString(),
       creditsApplied: String(creditsApplied),
+      wantsInvoice: wantsInvoice ? "1" : "", taxNumber: taxNumber ?? "",
     },
   });
 

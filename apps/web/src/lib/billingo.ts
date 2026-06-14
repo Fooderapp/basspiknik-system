@@ -130,6 +130,77 @@ async function createPartner(buyer: BillingoBuyer): Promise<number> {
 }
 
 /**
+ * Issue a RECEIPT (Hungarian "nyugta") for a paid order — the default document
+ * for consumer ticket sales. A receipt is anonymous (no buyer name/address
+ * required by law), so this needs no partner. Uses the dedicated
+ * POST /documents/receipt endpoint and its own document block.
+ *
+ * Returns null when not configured (no receipt block) or on any error, so
+ * fulfilment never breaks. Falls back to an invoice block if no receipt block
+ * is set but invoicing is — keeps existing single-block setups working.
+ */
+export async function createBillingoReceipt(
+  input: Pick<BillingoInvoiceInput, "items" | "currency" | "language" | "paid" | "paymentMethod"> & { email?: string | null },
+): Promise<BillingoInvoiceResult | null> {
+  const key = await apiKey();
+  if (!key) return null;
+  const receiptBlock = (await getConfig("BILLINGO_RECEIPT_BLOCK_ID")) || (await getConfig("BILLINGO_BLOCK_ID"));
+  if (!receiptBlock) return null;
+
+  const vat = (await getConfig("BILLINGO_VAT")) || "27%";
+  const paymentMethod = input.paymentMethod || (await getConfig("BILLINGO_PAYMENT_METHOD")) || "online_bankcard";
+
+  try {
+    const body: Record<string, unknown> = {
+      block_id: Number(receiptBlock),
+      payment_method: paymentMethod,
+      language: (input.language || "hu").toUpperCase() === "EN" ? "en" : "hu",
+      currency: input.currency,
+      conversion_rate: 1,
+      electronic: true,
+      paid: input.paid ?? true,
+      items: input.items.map((it) => ({
+        name: it.name,
+        unit_price: it.unitPrice,
+        unit_price_type: "gross",
+        quantity: it.quantity,
+        unit: "db",
+        vat,
+        currency: input.currency,
+      })),
+      settings: {
+        round: input.currency === "HUF" ? "five" : "none",
+        without_financial_fulfillment: false,
+      },
+    };
+
+    const doc = await billingoFetch("/documents/receipt", { method: "POST", body: JSON.stringify(body) });
+
+    // Email the receipt when we have an address (optional — receipts are often
+    // just printed/shown). Non-fatal on failure.
+    if (input.email && doc.id) {
+      try {
+        await billingoFetch(`/documents/${doc.id}/send`, {
+          method: "POST",
+          body: JSON.stringify({ emails: [input.email] }),
+        });
+      } catch (sendErr) {
+        console.error(`Billingo receipt send FAILED — ${doc.id}:`, sendErr instanceof Error ? sendErr.message : String(sendErr));
+      }
+    }
+
+    return {
+      documentId: doc.id as number,
+      number: (doc.invoice_number as string) || (doc.receipt_number as string) || `BILLINGO-${doc.id}`,
+      pdfUrl: (doc.public_url as string) || null,
+    };
+  } catch (e) {
+    console.error("Billingo receipt failed:", e instanceof Error ? e.message : e);
+    return null;
+  }
+}
+
+/**
  * Issue an invoice for a paid order. Returns null when Billingo is not
  * configured or on any error (caller falls back to a local invoice number).
  */

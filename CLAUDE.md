@@ -29,8 +29,10 @@ All UI components come from **shadcn/ui**: https://ui.shadcn.com
 - `apps/web/src/lib/utils.ts` — `formatDate()`, `formatCurrency()`, `cn()`
 
 ## Internationalisation — MANDATORY
-- **Every new user-facing string MUST be added to both `en` and `hu` dictionaries** in `apps/web/src/lib/i18n.ts`
-- Never hard-code English text in JSX — always use `t(dict, "key")` or `dict["key"]`
+- **Author every new user-facing string in English first, then immediately add the Hungarian translation.** No feature, UI edit, alert, toast, button, or error message ships without BOTH `en` and `hu` entries.
+- **Every new user-facing string MUST be added to both `en` and `hu` dictionaries** in `apps/web/src/lib/i18n.ts` (`hu: typeof en` is type-enforced, so a missing key fails the build — fill it).
+- Never hard-code English text in JSX — always use `t(dict, "key")` or `dict["key"]`. This applies to web, mobile, and the admin dashboard.
+- When you add or change any UI, add/adjust the key in BOTH dictionaries in the same change — never leave a Hungarian gap for later.
 - Hungarian (`hu`) is the primary language for this platform; English is the fallback
 - Server components: call `getSettings()` → `getDictionary(settings.language)` → pass `dict` as prop
 - Client components: receive `dict: Dictionary` as a prop, use `dict["key"]` or a local `t` helper
