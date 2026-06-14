@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, CalendarDays, Users, BarChart3,
   Ticket, Wine, ScanLine, UserCheck, Gift,
-  LogOut, ChevronLeft, Menu, User, Settings, QrCode,
+  LogOut, ChevronLeft, Menu, User, Settings, QrCode, Music, Home, Image as ImageIcon,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -33,6 +33,9 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Bar",      href: "/bar",                icon: ScanLine,  roles: ["ADMIN", "EDITOR", "STAFF", "BARTENDER"] },
   { label: "Tasks",    href: "/dashboard/tasks",    icon: Gift,      roles: ["ADMIN"] },
   { label: "QR Codes", href: "/dashboard/qr",       icon: QrCode,    roles: ["ADMIN", "EDITOR"] },
+  { label: "Homepage", href: "/dashboard/site",     icon: Home,      roles: ["ADMIN", "EDITOR"] },
+  { label: "Artists",  href: "/dashboard/artists",  icon: Music,     roles: ["ADMIN", "EDITOR"] },
+  { label: "Gallery",  href: "/dashboard/gallery",  icon: ImageIcon, roles: ["ADMIN", "EDITOR"] },
   { label: "Settings", href: "/dashboard/settings", icon: Settings,  roles: ["ADMIN"] },
 ];
 
@@ -67,7 +70,7 @@ export function Sidebar({ userRole }: SidebarProps) {
         {!collapsed && (
           <Link href="/dashboard" className="flex items-center gap-2">
             <Ticket className="h-6 w-6 text-primary" />
-            <span className="font-bold text-lg">EventOS</span>
+            <span className="font-bold text-lg">Bass Piknik</span>
           </Link>
         )}
         <Button

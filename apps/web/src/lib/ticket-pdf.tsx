@@ -179,7 +179,7 @@ export async function generateTicketPdf(input: PdfTicketInput): Promise<Buffer> 
   );
 
   const doc = (
-    <Document title={`Tickets — ${input.eventName}`} author="EventOS">
+    <Document title={`Tickets — ${input.eventName}`} author="Bass Piknik">
       <Page size="A4" style={styles.page}>
 
         {/* Event banner (4:1) */}
@@ -193,7 +193,7 @@ export async function generateTicketPdf(input: PdfTicketInput): Promise<Buffer> 
 
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>EventOS</Text>
+          <Text style={styles.headerTitle}>Bass Piknik</Text>
           <Text style={styles.headerSub}>{t(dict, "pdf.confirmed")}</Text>
         </View>
 

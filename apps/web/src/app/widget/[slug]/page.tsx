@@ -88,7 +88,7 @@ export default async function WidgetPage({ params }: { params: Promise<{ slug: s
           )}
 
           <p className="text-[10px] text-muted-foreground text-center pt-2">
-            Powered by <a href={process.env.NEXT_PUBLIC_APP_URL} target="_blank" rel="noopener noreferrer" className="underline">EventOS</a>
+            Powered by <a href={process.env.NEXT_PUBLIC_APP_URL} target="_blank" rel="noopener noreferrer" className="underline">Bass Piknik</a>
           </p>
         </div>
       </body>

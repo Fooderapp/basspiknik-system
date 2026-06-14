@@ -41,7 +41,7 @@ export const CONFIG_KEYS = [
   { key: "BILLINGO_VAT", group: "Billingo", label: "VAT rate", secret: false, placeholder: "27%" },
   { key: "BILLINGO_PAYMENT_METHOD", group: "Billingo", label: "Payment method", secret: false, placeholder: "online_bankcard" },
   { key: "RESEND_API_KEY", group: "Resend", label: "API key", secret: true, placeholder: "re_…" },
-  { key: "RESEND_FROM", group: "Resend", label: "From address", secret: false, placeholder: "EventOS <tickets@mail.basspiknik.com>" },
+  { key: "RESEND_FROM", group: "Resend", label: "From address", secret: false, placeholder: "Bass Piknik <tickets@mail.basspiknik.com>" },
   { key: "NEXT_PUBLIC_APP_URL", group: "General", label: "Public app URL", secret: false, placeholder: "https://basspiknik.com", clientBuild: true },
 ] as const;
 

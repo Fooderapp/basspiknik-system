@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import jwt from "jsonwebtoken";
 
-// Google Wallet Generic pass for EventOS.
+// Google Wallet Generic pass for Bass Piknik.
 // Each user gets one pass — QR encodes their wallet_token.
 // At the door, staff scan the QR and check in the user's ticket.
 //

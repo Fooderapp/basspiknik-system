@@ -5,7 +5,7 @@ import { getConfig } from "./config";
 import type { Language, Currency } from "./settings";
 
 // RESEND_API_KEY  = from resend.com → API Keys (admin dashboard or env)
-// RESEND_FROM     = verified sender, e.g. "EventOS <tickets@mail.basspiknik.com>"
+// RESEND_FROM     = verified sender, e.g. "Bass Piknik <tickets@mail.basspiknik.com>"
 
 function formatEventDate(iso: string, lang: Language) {
   const locale = lang === "hu" ? "hu-HU" : "en-US";
@@ -89,7 +89,7 @@ export async function sendTicketConfirmation(input: SendTicketConfirmationInput)
 
         <!-- Header -->
         <tr><td style="background:#111827;border-radius:12px 12px 0 0;padding:28px 32px;text-align:center;">
-          <div style="font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.02em;">🎫 EventOS</div>
+          <div style="font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.02em;">🎫 Bass Piknik</div>
           <div style="font-size:13px;color:#9ca3af;margin-top:4px;">${t(dict, "email.header_sub")}</div>
         </td></tr>
 
@@ -160,7 +160,7 @@ export async function sendTicketConfirmation(input: SendTicketConfirmationInput)
   const apiKey = await getConfig("RESEND_API_KEY");
   if (!apiKey) throw new Error("RESEND_API_KEY is not configured (admin → settings or env).");
   const resend = new Resend(apiKey);
-  const from = (await getConfig("RESEND_FROM")) ?? "EventOS <onboarding@resend.dev>";
+  const from = (await getConfig("RESEND_FROM")) ?? "Bass Piknik <onboarding@resend.dev>";
   const subject = language === "hu"
     ? `${t(dict, "email.subject")} ${eventName} ${t(dict, "email.subject_suffix")}`
     : `${t(dict, "email.subject")} ${eventName} ${t(dict, "email.subject_suffix")}`;

@@ -14,6 +14,14 @@ const en = {
   "nav.tickets":    "Tickets",
   "nav.buy":        "Buy",
   "nav.home":       "Home",
+  "nav.artists":    "Artists",
+  "home.coming_soon":"Coming Soon",
+  "home.lineup":    "Lineup",
+  "home.gallery":   "Gallery",
+  "artist.back":    "All artists",
+  "artist.listen":  "Listen",
+  "artists.title":  "Artists",
+  "artists.none":   "No artists yet.",
 
   // Dashboard / home
   "dash.greeting":     "Welcome back",
@@ -217,7 +225,7 @@ const en = {
   "email.total_paid":      "TOTAL PAID",
   "email.show_qr":         "Show the QR code at the entrance.",
   "email.order_id":        "Order ID",
-  "email.footer":          "Powered by EventOS · This email was sent to",
+  "email.footer":          "Powered by Bass Piknik · This email was sent to",
   "email.ticket_count":    "ticket",
   "email.ticket_count_pl": "tickets",
 
@@ -228,7 +236,7 @@ const en = {
   "pdf.order":          "Order",
   "pdf.your_tickets":   "Your Tickets",
   "pdf.ticket_of":      "Ticket",
-  "pdf.footer":         "Show the QR code at the entrance · Powered by EventOS",
+  "pdf.footer":         "Show the QR code at the entrance · Powered by Bass Piknik",
 
   // Dashboard
   "dash.title":            "Dashboard",
@@ -320,9 +328,9 @@ const en = {
 
   // Auth
   "auth.signin_title":     "Welcome back",
-  "auth.signin_desc":      "Sign in to your EventOS account",
+  "auth.signin_desc":      "Sign in to your Bass Piknik account",
   "auth.signup_title":     "Create account",
-  "auth.signup_desc":      "Join EventOS — get 10% off every purchase",
+  "auth.signup_desc":      "Join Bass Piknik — get 10% off every purchase",
   "auth.email":            "Email",
   "auth.password":         "Password",
   "auth.confirm_password": "Confirm Password",
@@ -485,6 +493,14 @@ const hu: typeof en = {
   "nav.tickets":    "Jegyek",
   "nav.buy":        "Vásárlás",
   "nav.home":       "Főoldal",
+  "nav.artists":    "Fellépők",
+  "home.coming_soon":"Hamarosan",
+  "home.lineup":    "Fellépők",
+  "home.gallery":   "Galéria",
+  "artist.back":    "Összes fellépő",
+  "artist.listen":  "Meghallgatom",
+  "artists.title":  "Fellépők",
+  "artists.none":   "Még nincsenek fellépők.",
 
   // Dashboard / home
   "dash.greeting":     "Üdv újra",
@@ -688,7 +704,7 @@ const hu: typeof en = {
   "email.total_paid":      "FIZETETT ÖSSZEG",
   "email.show_qr":         "Mutasd a QR kódot a bejáratnál.",
   "email.order_id":        "Rendelési azonosító",
-  "email.footer":          "Powered by EventOS · Ez az e-mail a következő címre lett küldve:",
+  "email.footer":          "Powered by Bass Piknik · Ez az e-mail a következő címre lett küldve:",
   "email.ticket_count":    "jegy",
   "email.ticket_count_pl": "jegy",
 
@@ -699,7 +715,7 @@ const hu: typeof en = {
   "pdf.order":          "Rendelés",
   "pdf.your_tickets":   "Jegyeid",
   "pdf.ticket_of":      "Jegy",
-  "pdf.footer":         "Mutasd a QR kódot a bejáratnál · Powered by EventOS",
+  "pdf.footer":         "Mutasd a QR kódot a bejáratnál · Powered by Bass Piknik",
 
   // Dashboard
   "dash.title":            "Vezérlőpult",
@@ -791,9 +807,9 @@ const hu: typeof en = {
 
   // Auth
   "auth.signin_title":     "Üdv vissza",
-  "auth.signin_desc":      "Jelentkezz be EventOS fiókodba",
+  "auth.signin_desc":      "Jelentkezz be Bass Piknik fiókodba",
   "auth.signup_title":     "Fiók létrehozása",
-  "auth.signup_desc":      "Csatlakozz az EventOS-hoz — 10% kedvezmény minden vásárlásra",
+  "auth.signup_desc":      "Csatlakozz az Bass Piknik-hoz — 10% kedvezmény minden vásárlásra",
   "auth.email":            "E-mail",
   "auth.password":         "Jelszó",
   "auth.confirm_password": "Jelszó megerősítése",

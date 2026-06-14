@@ -52,9 +52,9 @@ export async function POST(req: Request) {
       }
     }
 
-    // 2. Check if there's already a location named "EventOS POS" in this account.
+    // 2. Check if there's already a location named "Bass Piknik POS" in this account.
     const existing = await stripe.terminal.locations.list({ limit: 100 });
-    const match = existing.data.find((l) => l.display_name === "EventOS POS");
+    const match = existing.data.find((l) => l.display_name === "Bass Piknik POS");
     if (match) {
       await setConfig("STRIPE_TERMINAL_LOCATION_ID", match.id);
       return NextResponse.json({ locationId: match.id });
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
 
     // 3. Create a new one.
     const created = await stripe.terminal.locations.create({
-      display_name: "EventOS POS",
+      display_name: "Bass Piknik POS",
       address: {
         line1: "POS Location",
         city: "Budapest",

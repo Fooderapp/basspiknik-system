@@ -6,7 +6,7 @@ import { Toaster } from "sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "EventOS", template: "%s | EventOS" },
+  title: { default: "Bass Piknik", template: "%s | Bass Piknik" },
   description: "Event ticketing and bar ordering platform",
 };
 

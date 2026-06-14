@@ -115,8 +115,8 @@ export async function GET(req: Request) {
       },
       {
         serialNumber:       walletToken,
-        description:        "EventOS Wallet",
-        organizationName:   "EventOS",
+        description:        "Bass Piknik Wallet",
+        organizationName:   "Bass Piknik",
         passTypeIdentifier: PASS_TYPE_ID,
         teamIdentifier:     TEAM_ID,
         foregroundColor: "rgb(255, 255, 255)",
