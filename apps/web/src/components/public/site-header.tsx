@@ -6,7 +6,7 @@ import { t } from "@/lib/i18n";
  *  and artist pages. */
 export function SiteHeader({ dict, loggedIn }: { dict: Dictionary; loggedIn: boolean }) {
   return (
-    <header className="absolute inset-x-0 top-0 z-30">
+    <header className="absolute inset-x-0 top-9 z-30">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5">
         <Link href="/" className="text-lg font-extrabold tracking-tight text-white" style={{ letterSpacing: "-0.02em" }}>
           Bass Piknik

@@ -5,6 +5,7 @@ import { getSettings } from "@/lib/settings";
 import { getDictionary, t } from "@/lib/i18n";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { SiteHeader } from "@/components/public/site-header";
+import { ArtistMarquee } from "@/components/public/artist-marquee";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -37,6 +38,10 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Top navbar slider — scrolling artist ticker */}
+      <div className="sticky top-0 z-40">
+        <ArtistMarquee artists={(artists ?? []).map((a: any) => ({ id: a.id, slug: a.slug, name: a.name }))} />
+      </div>
       <SiteHeader dict={dict} loggedIn={!!user} />
 
       {/* ── Hero ── */}
