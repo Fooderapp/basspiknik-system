@@ -30,6 +30,7 @@ interface TicketType {
   isBundle: boolean;
   bundleSize?: number;
   entriesPerTicket: number;
+  comingSoon?: boolean;
 }
 
 interface TicketSelectorProps {
@@ -203,9 +204,10 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
     <div className="space-y-4">
       {ticketTypes.map((ticket) => {
         const qty = quantities[ticket.id] ?? 0;
-        const soldOut = ticket.available === 0;
+        const soon = !!ticket.comingSoon;
+        const soldOut = !soon && ticket.available === 0;
         return (
-          <div key={ticket.id} className="rounded-xl border bg-card p-4">
+          <div key={ticket.id} className={`rounded-xl border bg-card p-4 ${soon ? "opacity-70" : ""}`}>
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-1.5 mb-1">
@@ -229,6 +231,9 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
                   {soldOut && (
                     <Badge variant="destructive" className="text-xs">{dict["ticket.sold_out"]}</Badge>
                   )}
+                  {soon && (
+                    <Badge className="text-xs border-0" style={{ background: "#16170F", color: "#fff" }}>{dict["home.coming_soon"]}</Badge>
+                  )}
                 </div>
                 {ticket.description && (
                   <p className="text-sm text-muted-foreground">{ticket.description}</p>
@@ -240,7 +245,7 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
                   )}
                 </p>
               </div>
-              {!soldOut && (
+              {!soldOut && !soon && (
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline" size="icon" className="h-8 w-8"

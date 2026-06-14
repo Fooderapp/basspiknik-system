@@ -29,14 +29,17 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   // Public purchase flow: hide door tickets (POS-only), hidden types, and any
   // outside their scheduled visibility window.
   const nowMs = Date.now();
-  const tts = event.ticket_types.filter((tt) => {
-    const t = tt as typeof tt & { is_visible?: boolean; visible_from?: string | null; visible_until?: string | null };
+  type VisTT = TicketType & { is_visible?: boolean; visible_from?: string | null; visible_until?: string | null };
+  // Hide only door (POS-only), manually-hidden, and expired types. A type whose
+  // sale hasn't started yet (visible_from in the future) is SHOWN but locked as
+  // "Coming Soon" — not purchasable.
+  const tts = (event.ticket_types as VisTT[]).filter((t) => {
     if (t.is_door_ticket) return false;
     if (t.is_visible === false) return false;
-    if (t.visible_from && new Date(t.visible_from).getTime() > nowMs) return false;
     if (t.visible_until && new Date(t.visible_until).getTime() < nowMs) return false;
     return true;
   });
+  const comingSoon = (t: VisTT) => !!(t.visible_from && new Date(t.visible_from).getTime() > nowMs);
 
   return (
     <div className="mx-auto w-full max-w-2xl px-5 py-4">
@@ -84,6 +87,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
           isBundle: tt.is_bundle,
           bundleSize: tt.bundle_size ?? undefined,
           entriesPerTicket: tt.entries_per_ticket ?? 1,
+          comingSoon: comingSoon(tt),
         }))}
       />
     </div>
