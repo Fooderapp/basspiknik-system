@@ -12,7 +12,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { formatCurrency } from "@/lib/utils";
-import { Minus, Plus, Tag, Sparkles, AlertTriangle, LogIn, Smartphone, Wallet, CheckCircle2 } from "lucide-react";
+import { Minus, Plus, ScanLine, Sparkles, AlertTriangle, LogIn, Smartphone, Wallet, CheckCircle2 } from "lucide-react";
 import { SpinButton } from "@/components/credits/spin-button";
 import type { Dictionary } from "@/lib/i18n";
 import type { Currency } from "@/lib/settings";
@@ -44,7 +44,6 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
   const router = useRouter();
   const searchParams = useSearchParams();
   const [quantities, setQuantities] = useState<Record<string, number>>({});
-  const [promoCode, setPromoCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [freeSpinToken, setFreeSpinToken] = useState<string | null>(null);
   const [guestOpen, setGuestOpen] = useState(false);
@@ -71,8 +70,8 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
 
   const fmt = (amount: number) => formatCurrency(amount, currency);
 
-  // Promo (manual code or scanned QR) and credits are mutually exclusive.
-  const promoActive = !!promoCode.trim() || !!qrPromo;
+  // Scanned-QR promo and credits are mutually exclusive.
+  const promoActive = !!qrPromo;
   const creditDiscount = credits * (quote?.valueHuf ?? 0);
   const displayTotal = Math.max(0, subtotal - creditDiscount);
 
@@ -149,7 +148,6 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           eventId, items,
-          promoCode: !qrPromo && promoCode ? promoCode : undefined,
           promoId: qrPromo?.id || undefined,
           creditsToApply: credits > 0 ? credits : undefined,
           freeSpinToken: freeSpinToken || undefined,
@@ -256,18 +254,14 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
           <Badge variant="secondary" className="ml-auto text-xs">{qrPromo.label}</Badge>
         </div>
       ) : (
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={dict["ticket.promo_code"]}
-              value={promoCode}
-              onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-              className="pl-9"
-              disabled={credits > 0}
-            />
-          </div>
-        </div>
+        <a
+          href="/scan"
+          className="flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-semibold transition-transform hover:-translate-y-0.5"
+          style={{ border: "1.5px dashed #D8D6C8", color: "#163300" }}
+        >
+          <ScanLine className="h-4 w-4" />
+          {dict["ticket.scan_code"]}
+        </a>
       )}
 
       {/* Summary + checkout */}
