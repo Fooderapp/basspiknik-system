@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,6 +19,9 @@ interface Props { dict: Dictionary }
 
 export function SignUpForm({ dict }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirectTo");
+  const signInHref = redirectTo ? `/sign-in?redirectTo=${encodeURIComponent(redirectTo)}` : "/sign-in";
   const [loading, setLoading] = useState(false);
 
   const schema = z.object({
@@ -64,7 +67,7 @@ export function SignUpForm({ dict }: Props) {
     }
 
     toast.success(dict["auth.confirm_email"]);
-    router.push("/sign-in");
+    router.push(signInHref);
   };
 
   return (
@@ -105,7 +108,7 @@ export function SignUpForm({ dict }: Props) {
       </CardContent>
       <CardFooter className="justify-center text-sm text-muted-foreground">
         {dict["auth.have_account"]}&nbsp;
-        <Link href="/sign-in" className="text-primary underline underline-offset-4">{dict["auth.sign_in_link"]}</Link>
+        <Link href={signInHref} className="text-primary underline underline-offset-4">{dict["auth.sign_in_link"]}</Link>
       </CardFooter>
     </Card>
   );
