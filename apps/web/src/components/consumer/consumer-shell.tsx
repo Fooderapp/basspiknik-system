@@ -30,11 +30,15 @@ function isActive(pathname: string, item: NavItem) {
 export function ConsumerShell({
   dict,
   children,
+  loggedIn = false,
 }: {
   dict: Dictionary;
   children: React.ReactNode;
+  loggedIn?: boolean;
 }) {
   const pathname = usePathname();
+  // Logged-out users have no in-app home — send them to the public landing.
+  const homeHref = (href: string) => (href === "/home" && !loggedIn ? "/" : href);
 
   return (
     <div className="min-h-screen bg-background">
@@ -51,7 +55,7 @@ export function ConsumerShell({
             return (
               <Link
                 key={item.href}
-                href={item.href}
+                href={homeHref(item.href)}
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors",
                   active
@@ -90,7 +94,7 @@ export function ConsumerShell({
               return (
                 <Link
                   key={item.href}
-                  href={item.href}
+                  href={homeHref(item.href)}
                   className={cn(
                     "group relative flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold transition-colors",
                   )}
