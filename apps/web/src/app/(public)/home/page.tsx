@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { formatDate, formatCurrency } from "@/lib/utils";
-import { Star, ShoppingBag, Wine, Sparkles, Bell } from "lucide-react";
+import { Star, ShoppingBag, Wine, Sparkles, ScanLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TicketWallet, type WalletTicket } from "@/components/consumer/ticket-wallet";
 import { TaskList } from "@/components/consumer/task-list";
@@ -167,8 +167,8 @@ export default async function HomePage() {
             <Star className="h-3.5 w-3.5" strokeWidth={2.5} style={{ color: "#163300", fill: "#9FE870" }} />
             <span className="text-sm font-extrabold">{balanceNum}</span>
           </Link>
-          <Link href="/profile" className="flex h-10 w-10 items-center justify-center rounded-full bg-card shadow-sm">
-            <Bell className="h-[18px] w-[18px]" strokeWidth={2} />
+          <Link href="/scan" className="flex h-10 w-10 items-center justify-center rounded-full bg-card shadow-sm">
+            <ScanLine className="h-[18px] w-[18px]" strokeWidth={2} />
           </Link>
         </div>
       </div>
