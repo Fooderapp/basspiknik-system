@@ -9,7 +9,11 @@ const config = getDefaultConfig(__dirname);
 // import from `nativewind/jsx-runtime`. Under pnpm's isolated store those nested
 // packages can't resolve nativewind. Force all nativewind / css-interop imports
 // to resolve from the mobile app root, where the single copy is linked.
-const FORCE_FROM_APP = ["nativewind", "react-native-css-interop"];
+// Only nativewind needs redirecting (deep packages like @expo/log-box import
+// `nativewind/jsx-runtime`). Its own `react-native-css-interop` dep then resolves
+// normally from nativewind's nested node_modules — do NOT alias css-interop, or
+// it'd wrongly resolve from the app root where it isn't a top-level dep.
+const FORCE_FROM_APP = ["nativewind"];
 const origin = path.join(__dirname, "index.js");
 const baseResolveRequest = config.resolver.resolveRequest;
 
