@@ -1,9 +1,33 @@
 import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)} {...props} />
+const cardVariants = cva("text-card-foreground", {
+  variants: {
+    variant: {
+      // Default shadcn card — bordered, square corners, for dashboard/admin UI
+      default: "rounded-lg border bg-card shadow-sm",
+      // Rounded white surface — ticket tiers, POS items, list rows
+      surface: "rounded-3xl border-none bg-card shadow-sm",
+      // Ink card — featured CTA / summary panels
+      dark: "rounded-3xl border-none bg-[#16170F] text-white shadow-sm",
+      // Pastel quadrant cards — match home/mobile pastel-card language
+      "pastel-green": "rounded-3xl border-none shadow-sm bg-[var(--pastel-green)] text-[var(--pastel-green-ink)]",
+      "pastel-gold": "rounded-3xl border-none shadow-sm bg-[var(--pastel-gold)] text-[var(--pastel-gold-ink)]",
+      "pastel-sky": "rounded-3xl border-none shadow-sm bg-[var(--pastel-sky)] text-[var(--pastel-sky-ink)]",
+      "pastel-peach": "rounded-3xl border-none shadow-sm bg-[var(--pastel-peach)] text-[var(--pastel-peach-ink)]",
+      "pastel-lavender": "rounded-3xl border-none shadow-sm bg-[var(--pastel-lavender)] text-[var(--pastel-lavender-ink)]",
+      "pastel-rose": "rounded-3xl border-none shadow-sm bg-[var(--pastel-rose)] text-[var(--pastel-rose-ink)]",
+    },
+  },
+  defaultVariants: { variant: "default" },
+});
+
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof cardVariants> {}
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, variant, ...props }, ref) => (
+    <div ref={ref} className={cn(cardVariants({ variant }), className)} {...props} />
   )
 );
 Card.displayName = "Card";

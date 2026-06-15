@@ -88,7 +88,7 @@ export default async function HomePage() {
       {/* ── Lineup / Artists ── */}
       {artists && artists.length > 0 && (
         <Reveal>
-        <section id="lineup" className="relative z-[1] mx-auto w-full max-w-6xl px-5 py-16">
+        <section id="lineup" className="relative z-[1] mx-auto my-6 w-full max-w-6xl rounded-[2.5rem] bg-card px-5 py-16">
           <h2 className="mb-7 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "home.lineup")}</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {artists.map((a: any) => (
@@ -136,7 +136,7 @@ export default async function HomePage() {
       )}
 
       {/* ── Footer ── */}
-      <footer className="border-t" style={{ background: "#16170F" }}>
+      <footer className="relative z-[1] mt-6 rounded-t-[2.5rem]" style={{ background: "#16170F" }}>
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-4 px-5 py-12 text-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.svg" alt="Bass Piknik" className="h-10 w-auto" />
