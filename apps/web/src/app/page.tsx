@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/public/site-header";
 import { HeroTypewriter } from "@/components/public/hero-typewriter";
 import { EventCarousel } from "@/components/public/event-carousel";
 import { ArtistCarousel } from "@/components/public/artist-carousel";
+import { StickyFadeTitle } from "@/components/public/sticky-fade-title";
 import { Button } from "@/components/ui/button";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -60,9 +61,9 @@ export default async function HomePage() {
 
       {/* ── Events ── */}
       <div id="events" className="scroll-mt-20" />
-      <section className="relative z-[1] flex min-h-screen flex-col justify-center px-5 py-16">
+      <section className="relative z-[1] flex min-h-screen flex-col justify-center px-5 py-8">
         <div className="mx-auto w-full max-w-6xl">
-          <h2 className="sticky top-24 z-0 mb-7 py-2 text-center text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "nav.events")}</h2>
+          <StickyFadeTitle className="sticky top-24 z-0 mb-7 py-2 text-center text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "nav.events")}</StickyFadeTitle>
           <div className="relative z-10">
           {(!events || events.length === 0) ? (
             <p className="text-muted-foreground">{t(dict, "events.none")}</p>
@@ -88,9 +89,9 @@ export default async function HomePage() {
       {artists && artists.length > 0 && (
         <>
         <div id="lineup" className="scroll-mt-20" />
-        <section className="relative z-[1] flex min-h-screen flex-col justify-center px-5 py-16">
+        <section className="relative z-[1] flex min-h-screen flex-col justify-center px-5 py-8">
           <div className="mx-auto w-full max-w-6xl">
-            <h2 className="sticky top-24 z-0 mb-7 py-2 text-center text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "home.lineup")}</h2>
+            <StickyFadeTitle className="sticky top-24 z-0 mb-7 py-2 text-center text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "home.lineup")}</StickyFadeTitle>
             <div className="relative z-10">
             <ArtistCarousel
               dict={dict}
@@ -106,9 +107,9 @@ export default async function HomePage() {
       {(c.about_title || c.about_body) && (
         <>
         <div id="about" className="scroll-mt-20" />
-        <section className="relative z-[1] flex min-h-screen flex-col justify-center px-5 py-16 text-center">
+        <section className="relative z-[1] flex min-h-screen flex-col justify-center px-5 py-8 text-center">
           <div className="mx-auto w-full max-w-3xl">
-            {c.about_title && <h2 className="sticky top-24 z-0 py-2 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{c.about_title}</h2>}
+            {c.about_title && <StickyFadeTitle className="sticky top-24 z-0 py-2 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{c.about_title}</StickyFadeTitle>}
             {c.about_body && <p className="relative z-10 mx-auto mt-4 max-w-2xl whitespace-pre-line text-lg leading-relaxed text-muted-foreground">{c.about_body}</p>}
           </div>
         </section>
@@ -117,9 +118,9 @@ export default async function HomePage() {
 
       {/* ── Gallery ── */}
       {gallery && gallery.length > 0 && (
-        <section className="relative z-[1] flex min-h-screen flex-col justify-center px-5 py-16">
+        <section className="relative z-[1] flex min-h-screen flex-col justify-center px-5 py-8">
           <div className="mx-auto w-full max-w-6xl">
-            <h2 className="sticky top-24 z-0 mb-7 py-2 text-center text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "home.gallery")}</h2>
+            <StickyFadeTitle className="sticky top-24 z-0 mb-7 py-2 text-center text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "home.gallery")}</StickyFadeTitle>
             <div className="relative z-10 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
               {gallery.map((g: any) => (
                 // eslint-disable-next-line @next/next/no-img-element
