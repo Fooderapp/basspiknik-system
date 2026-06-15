@@ -501,7 +501,7 @@ const hu: typeof en = {
   "nav.bar_menu":   "Bármenü",
   "nav.my_tickets": "Jegyeim",
   "nav.sign_in":    "Bejelentkezés",
-  "nav.dashboard":  "Vezérlőpult",
+  "nav.dashboard":  "Irányítópult",
   "nav.profile":    "Profil",
   "nav.bar":        "Bár",
   "nav.tickets":    "Jegyek",

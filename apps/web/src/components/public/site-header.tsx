@@ -20,6 +20,10 @@ export function SiteHeader({ dict, loggedIn }: { dict: Dictionary; loggedIn: boo
         href: loggedIn ? "/my-tickets" : "/sign-in",
       },
     ],
+    cta: {
+      label: loggedIn ? t(dict, "nav.dashboard") : t(dict, "nav.sign_in"),
+      href: loggedIn ? "/home" : "/sign-in",
+    },
   };
 
   return (

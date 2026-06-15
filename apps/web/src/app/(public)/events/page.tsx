@@ -58,7 +58,7 @@ export default async function EventsPage() {
 
             const card = (
               <div
-                className={`flex flex-col gap-4 overflow-hidden rounded-[2.25rem] p-4 transition-transform shadow-sm ${
+                className={`flex h-full flex-col gap-4 overflow-hidden rounded-[2.25rem] p-4 transition-transform shadow-sm ${
                   soldOut ? "opacity-60" : "hover:-translate-y-0.5"
                 }`}
                 style={{ background: "#E5E5E5" }}
@@ -76,31 +76,34 @@ export default async function EventsPage() {
                   </div>
                 )}
 
-                <div className="flex items-start justify-between gap-2">
-                  <h2 className="text-3xl font-extrabold uppercase leading-tight tracking-tight" style={{ letterSpacing: "-0.03em" }}>
-                    {bigDateFmt.format(startDate)}
-                  </h2>
-                  {soldOut && <Badge variant="destructive" className="shrink-0">{t(dict, "events.sold_out")}</Badge>}
-                </div>
-
-                {/* Itemized ticket prices */}
-                {priceList.length > 0 && (
-                  <div className="flex flex-col gap-1.5">
-                    {priceList.map((tt) => {
-                      const price = tt.sale_enabled && tt.sale_price != null ? tt.sale_price : tt.price;
-                      return (
-                        <div key={tt.id} className="flex items-baseline justify-between gap-2 text-sm">
-                          <span className="uppercase tracking-wide text-xs font-medium text-muted-foreground line-clamp-1">
-                            {tt.name}
-                          </span>
-                          <span className="font-semibold tabular-nums shrink-0">
-                            {price === 0 ? t(dict, "ticket.free") : formatCurrency(price, settings.currency)}
-                          </span>
-                        </div>
-                      );
-                    })}
+                {/* Grows to push the CTA to the same baseline on every card */}
+                <div className="flex flex-1 flex-col gap-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <h2 className="text-3xl font-extrabold uppercase leading-tight tracking-tight" style={{ letterSpacing: "-0.03em" }}>
+                      {bigDateFmt.format(startDate)}
+                    </h2>
+                    {soldOut && <Badge variant="destructive" className="shrink-0">{t(dict, "events.sold_out")}</Badge>}
                   </div>
-                )}
+
+                  {/* Itemized ticket prices */}
+                  {priceList.length > 0 && (
+                    <div className="flex flex-col gap-1.5">
+                      {priceList.map((tt) => {
+                        const price = tt.sale_enabled && tt.sale_price != null ? tt.sale_price : tt.price;
+                        return (
+                          <div key={tt.id} className="flex items-baseline justify-between gap-2 text-sm">
+                            <span className="uppercase tracking-wide text-xs font-medium text-muted-foreground line-clamp-1">
+                              {tt.name}
+                            </span>
+                            <span className="font-semibold tabular-nums shrink-0">
+                              {price === 0 ? t(dict, "ticket.free") : formatCurrency(price, settings.currency)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
 
                 {/* CTA */}
                 {!soldOut && (
@@ -112,9 +115,9 @@ export default async function EventsPage() {
             );
 
             return soldOut ? (
-              <div key={event.id}>{card}</div>
+              <div key={event.id} className="h-full">{card}</div>
             ) : (
-              <Link key={event.id} href={`/events/${event.slug}`} className="block">
+              <Link key={event.id} href={`/events/${event.slug}`} className="block h-full">
                 {card}
               </Link>
             );
