@@ -36,11 +36,11 @@ export function EventCarousel({ events, dict }: { events: EventCardData[]; dict:
 
   return (
     <div>
-      <div ref={trackRef} onScroll={onScroll} className="no-scrollbar flex snap-x snap-mandatory justify-center gap-4 overflow-x-auto pb-2">
+      <div ref={trackRef} onScroll={onScroll} className={`no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 ${events.length === 1 ? "justify-center" : "justify-start"}`}>
         {events.map((ev) => {
           const badge = ev.soon ? t(dict, "home.coming_soon") : formatDate(ev.start_date);
           const card = (
-            <div className="group relative flex aspect-[4/5] w-[78vw] shrink-0 snap-center flex-col justify-end overflow-hidden rounded-[2.25rem] bg-muted sm:w-[320px]">
+            <div className={`group relative flex aspect-[4/5] w-[78vw] shrink-0 flex-col justify-end overflow-hidden rounded-[2.25rem] bg-muted sm:w-[320px] ${events.length === 1 ? "snap-center" : "snap-start"}`}>
               {ev.home_cover_image_url || ev.cover_image_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={ev.home_cover_image_url || ev.cover_image_url || ""} alt={ev.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
