@@ -77,7 +77,7 @@ export function TransferTicketButton({ ticketId, ticketName, dict }: Props) {
       <Button
         variant="outline"
         size="sm"
-        className="gap-1.5"
+        className="gap-1.5 rounded-full"
         onClick={() => { reset(); setOpen(true); }}
       >
         <ArrowRightLeft className="h-3.5 w-3.5" />

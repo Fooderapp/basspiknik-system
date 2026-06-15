@@ -91,7 +91,7 @@ function TicketCard({
             : "rotateX(var(--rx)) rotateY(var(--ry))",
           transition: "transform 0.65s cubic-bezier(0.23, 1, 0.32, 1)",
           cursor: "pointer",
-          borderRadius: "24px",
+          borderRadius: "36px",
         }}
         onClick={() => setFlipped((f) => !f)}
       >
@@ -100,8 +100,9 @@ function TicketCard({
           style={{
             backfaceVisibility: "hidden",
             WebkitBackfaceVisibility: "hidden",
+            background: "#E5E5E5",
           }}
-          className="relative overflow-hidden rounded-3xl bg-card text-left shadow-sm"
+          className="relative overflow-hidden rounded-[2.25rem] text-left shadow-sm"
         >
           {/* Banner (4:1) / cover + pocket notch — 4:1 box so a 480×120 image fills exactly */}
           <div className="relative aspect-[4/1] w-full overflow-hidden bg-secondary">
@@ -124,7 +125,7 @@ function TicketCard({
           </div>
 
           <div className="p-5">
-            <p className="truncate text-xl font-bold tracking-tight">{tk.eventName}</p>
+            <p className="truncate text-2xl font-extrabold tracking-tight">{tk.eventName}</p>
             <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
               {tk.date && (
                 <span className="flex items-center gap-1">
@@ -174,9 +175,10 @@ function TicketCard({
             backfaceVisibility: "hidden",
             WebkitBackfaceVisibility: "hidden",
             transform: "rotateY(180deg)",
-            borderRadius: "24px",
+            borderRadius: "36px",
+            background: "#E5E5E5",
           }}
-          className="flex items-center justify-center overflow-hidden rounded-3xl border border-border bg-card"
+          className="flex items-center justify-center overflow-hidden rounded-[2.25rem]"
         >
           {/* Large QR — centered only */}
           <div

@@ -67,7 +67,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
 
       <div className="flex flex-col gap-[18px]">
         {/* Entry pass */}
-        <div className="rounded-[28px] p-[22px]" style={{ background: "#16170F" }}>
+        <div className="rounded-[2.25rem] p-[22px]" style={{ background: "#16170F" }}>
           <div className="mb-5 flex items-center justify-between">
             <span className="text-[11px] font-semibold tracking-[2px] text-muted-foreground">
               {(tk.tier ?? "TICKET").toUpperCase()}
@@ -104,7 +104,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
         </div>
 
         {/* Details */}
-        <div className="space-y-3 rounded-xl border border-border bg-card p-4">
+        <div className="space-y-3 rounded-[2.25rem] p-4" style={{ background: "#E5E5E5" }}>
           {tk.holder_name && <Row label={t(dict, "ticketdetail.name")} value={tk.holder_name} />}
           {tk.holder_email && <Row label={t(dict, "ticketdetail.email")} value={tk.holder_email} />}
           {tk.tier && <Row label={t(dict, "ticketdetail.tier")} value={tk.tier} />}
@@ -113,7 +113,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           {tk.transferred_to_user_id && (
             <Row label={t(dict, "ticketdetail.transferred")} value={t(dict, "ticketdetail.yes")} />
           )}
-          <Separator />
+          <Separator className="bg-black/10" />
           <p className="truncate font-mono text-xs text-muted-foreground">{tk.qr_code}</p>
         </div>
 
