@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSettings } from "@/lib/settings";
 import { getDictionary, t } from "@/lib/i18n";
 import { SiteHeader } from "@/components/public/site-header";
+import { Button } from "@/components/ui/button";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -59,11 +60,9 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
             {Object.entries(socials).filter(([, v]) => v).map(([k, v]) => {
               const Icon = SOCIAL_ICON[k] ?? Globe;
               return (
-                <a key={k} href={v} target="_blank" rel="noopener"
-                  className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold capitalize"
-                  style={{ background: "#16170F", color: "#fff" }}>
-                  <Icon className="h-4 w-4" />{k}
-                </a>
+                <Button key={k} asChild variant="brand" className="capitalize">
+                  <a href={v} target="_blank" rel="noopener"><Icon className="h-4 w-4" />{k}</a>
+                </Button>
               );
             })}
           </div>

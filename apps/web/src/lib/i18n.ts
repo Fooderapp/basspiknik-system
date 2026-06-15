@@ -27,8 +27,9 @@ const en = {
   "home.hero_word_3":"Friends",
   "home.hero_subtitle":"This is all of us:",
   "home.buy_tickets": "Buy Tickets",
-  "artist.back":    "All artists",
+  "artist.back":    "Back",
   "artist.listen":  "Listen",
+  "artist.view":    "View Artist",
   "artists.title":  "Artists",
   "artists.none":   "No artists yet.",
 
@@ -515,8 +516,9 @@ const hu: typeof en = {
   "home.hero_word_3":"Barátok",
   "home.hero_subtitle":"Ezek mind mi vagyunk:",
   "home.buy_tickets": "Jegyvásárlás",
-  "artist.back":    "Összes fellépő",
+  "artist.back":    "Vissza",
   "artist.listen":  "Meghallgatom",
+  "artist.view":    "Fellépő megtekintése",
   "artists.title":  "Fellépők",
   "artists.none":   "Még nincsenek fellépők.",
 

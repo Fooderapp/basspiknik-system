@@ -6,6 +6,8 @@ import { getDictionary, t } from "@/lib/i18n";
 import { SiteHeader } from "@/components/public/site-header";
 import { HeroTypewriter } from "@/components/public/hero-typewriter";
 import { EventCarousel } from "@/components/public/event-carousel";
+import { ArtistCarousel } from "@/components/public/artist-carousel";
+import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/public/reveal";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -50,8 +52,8 @@ export default async function HomePage() {
             <HeroTypewriter words={[t(dict, "home.hero_word_1"), t(dict, "home.hero_word_2"), t(dict, "home.hero_word_3")]} />
           </div>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
-            <Link href="/events" className="rounded-full px-7 py-3.5 font-bold" style={{ background: "#16170F", color: "#fff" }}>{ctaLabel}</Link>
-            <Link href="#lineup" className="rounded-full border px-7 py-3.5 font-bold" style={{ borderColor: "#16170F", color: "#16170F" }}>{t(dict, "nav.artists")}</Link>
+            <Button asChild variant="brand" size="pill"><Link href="/events">{ctaLabel}</Link></Button>
+            <Button asChild variant="brandOutline" size="pill"><Link href="#lineup">{t(dict, "nav.artists")}</Link></Button>
           </div>
         </div>
       </section>
@@ -84,23 +86,13 @@ export default async function HomePage() {
       {/* ── Lineup / Artists ── */}
       {artists && artists.length > 0 && (
         <Reveal>
-        <section id="lineup" className="sticky top-0 z-[1] mx-auto w-full max-w-6xl rounded-t-[2.5rem] bg-white px-5 py-16">
-          <h2 className="mb-7 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "home.lineup")}</h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {artists.map((a: any) => (
-              <Link key={a.id} href={`/artists/${a.slug}`} className="group">
-                <div className="relative aspect-[3/4] overflow-hidden rounded-3xl bg-muted shadow-sm">
-                  {a.photo_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={a.photo_url} alt={a.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                  ) : <div className="flex h-full items-center justify-center" style={{ background: "var(--pastel-lavender)" }}><Music2 className="h-8 w-8" style={{ color: "#2E2350" }} /></div>}
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-3">
-                    <p className="font-bold text-white line-clamp-1">{a.name}</p>
-                    {a.genre && <p className="text-xs text-white/70 line-clamp-1">{a.genre}</p>}
-                  </div>
-                </div>
-              </Link>
-            ))}
+        <section id="lineup" className="sticky top-0 z-[1] rounded-t-[2.5rem] bg-white px-5 py-16">
+          <div className="mx-auto w-full max-w-6xl">
+            <h2 className="mb-7 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "home.lineup")}</h2>
+            <ArtistCarousel
+              dict={dict}
+              artists={artists.map((a: any) => ({ id: a.id, slug: a.slug, name: a.name, genre: a.genre, photo_url: a.photo_url }))}
+            />
           </div>
         </section>
         </Reveal>
@@ -109,9 +101,11 @@ export default async function HomePage() {
       {/* ── About ── */}
       {(c.about_title || c.about_body) && (
         <Reveal>
-        <section id="about" className="sticky top-0 z-[1] mx-auto w-full max-w-3xl rounded-t-[2.5rem] bg-white px-5 py-16 text-center">
-          {c.about_title && <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{c.about_title}</h2>}
-          {c.about_body && <p className="mx-auto mt-4 max-w-2xl whitespace-pre-line text-lg leading-relaxed text-muted-foreground">{c.about_body}</p>}
+        <section id="about" className="sticky top-0 z-[1] rounded-t-[2.5rem] bg-white px-5 py-16 text-center">
+          <div className="mx-auto w-full max-w-3xl">
+            {c.about_title && <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{c.about_title}</h2>}
+            {c.about_body && <p className="mx-auto mt-4 max-w-2xl whitespace-pre-line text-lg leading-relaxed text-muted-foreground">{c.about_body}</p>}
+          </div>
         </section>
         </Reveal>
       )}
@@ -119,13 +113,15 @@ export default async function HomePage() {
       {/* ── Gallery ── */}
       {gallery && gallery.length > 0 && (
         <Reveal>
-        <section className="sticky top-0 z-[1] mx-auto w-full max-w-6xl rounded-t-[2.5rem] bg-white px-5 py-16">
-          <h2 className="mb-7 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "home.gallery")}</h2>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
-            {gallery.map((g: any) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img key={g.id} src={g.image_url} alt={g.caption ?? ""} className="aspect-square w-full rounded-2xl object-cover shadow-sm" />
-            ))}
+        <section className="sticky top-0 z-[1] rounded-t-[2.5rem] bg-white px-5 py-16">
+          <div className="mx-auto w-full max-w-6xl">
+            <h2 className="mb-7 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "home.gallery")}</h2>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+              {gallery.map((g: any) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img key={g.id} src={g.image_url} alt={g.caption ?? ""} className="aspect-square w-full rounded-2xl object-cover shadow-sm" />
+              ))}
+            </div>
           </div>
         </section>
         </Reveal>
