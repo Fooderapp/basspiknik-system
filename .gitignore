@@ -19,3 +19,10 @@ apps/mobile/.env
 apps/web/certs/*.pem
 apps/web/certs/*.p12
 .vercel
+
+# Local agent/dev tooling
+.agents
+.claude
+.expo
+/ios
+skills-lock.json
