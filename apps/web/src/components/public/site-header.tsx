@@ -13,7 +13,7 @@ export function SiteHeader({ dict, loggedIn }: { dict: Dictionary; loggedIn: boo
     close: t(dict, "nav.close_short"),
     items: [
       { label: t(dict, "nav.about"), href: "/#about" },
-      { label: t(dict, "nav.events"), href: "/events" },
+      { label: t(dict, "nav.events"), href: "/#events" },
       { label: t(dict, "nav.artists"), href: "/#lineup" },
       {
         label: loggedIn ? t(dict, "nav.my_tickets") : t(dict, "nav.sign_in"),
@@ -23,7 +23,7 @@ export function SiteHeader({ dict, loggedIn }: { dict: Dictionary; loggedIn: boo
   };
 
   return (
-    <header className="fixed inset-x-0 top-4 z-40 flex justify-center px-4">
+    <header className="fixed inset-x-0 top-4 z-[2] flex justify-center px-4">
       <HeaderFramer labels={labels} />
     </header>
   );

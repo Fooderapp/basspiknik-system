@@ -10,6 +10,7 @@ const updateSchema = z.object({
   description: z.string().optional(),
   coverImageUrl: z.string().url().optional().nullable(),
   bannerImageUrl: z.string().url().optional().nullable(),
+  homeCoverImageUrl: z.string().url().optional().nullable(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   venue: z.string().optional(),
@@ -46,13 +47,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const { name, description, coverImageUrl, bannerImageUrl, startDate, endDate, venue, address, capacity, status, taxRate } = parsed.data;
+  const { name, description, coverImageUrl, bannerImageUrl, homeCoverImageUrl, startDate, endDate, venue, address, capacity, status, taxRate } = parsed.data;
   const supabase = await createAdminClient() as any;
   const { data, error } = await supabase.from("events").update({
     ...(name && { name }),
     ...(description !== undefined && { description }),
     ...(coverImageUrl !== undefined && { cover_image_url: coverImageUrl }),
     ...(bannerImageUrl !== undefined && { banner_image_url: bannerImageUrl }),
+    ...(homeCoverImageUrl !== undefined && { home_cover_image_url: homeCoverImageUrl }),
     ...(startDate && { start_date: startDate }),
     ...(endDate !== undefined && { end_date: endDate }),
     ...(venue !== undefined && { venue }),

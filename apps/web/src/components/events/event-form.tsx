@@ -13,12 +13,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { CoverImageUploader } from "@/components/events/cover-image-uploader";
 import { BannerImageUploader } from "@/components/events/banner-image-uploader";
+import { HomeCoverImageUploader } from "@/components/events/home-cover-image-uploader";
 
 const eventSchema = z.object({
   name: z.string().min(2, "Name too short"),
   description: z.string().optional(),
   coverImageUrl: z.string().url().optional().or(z.literal("")).or(z.null()),
   bannerImageUrl: z.string().url().optional().or(z.literal("")).or(z.null()),
+  homeCoverImageUrl: z.string().url().optional().or(z.literal("")).or(z.null()),
   startDate: z.string().min(1, "Start date required"),
   endDate: z.string().optional(),
   venue: z.string().optional(),
@@ -59,6 +61,7 @@ export function EventForm({ defaultValues, eventId }: EventFormProps) {
         ...data,
         coverImageUrl: data.coverImageUrl || null,
         bannerImageUrl: data.bannerImageUrl || null,
+        homeCoverImageUrl: data.homeCoverImageUrl || null,
       };
       const res = await fetch(eventId ? `/api/events/${eventId}` : "/api/events", {
         method: eventId ? "PATCH" : "POST",
@@ -103,6 +106,17 @@ export function EventForm({ defaultValues, eventId }: EventFormProps) {
             />
             <p className="text-xs text-muted-foreground">
               Auto-resized to 1920×1080. Mobile shows a centre-cropped 1080×1080 square.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Homepage Cover (4:5)</Label>
+            <HomeCoverImageUploader
+              value={watch("homeCoverImageUrl") ?? undefined}
+              onChange={(url) => setValue("homeCoverImageUrl", url ?? "")}
+            />
+            <p className="text-xs text-muted-foreground">
+              Portrait crop (4:5, Instagram-style) shown on the homepage events carousel card.
             </p>
           </div>
 

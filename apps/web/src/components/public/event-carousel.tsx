@@ -11,6 +11,7 @@ interface EventCardData {
   name: string;
   start_date: string;
   cover_image_url?: string | null;
+  home_cover_image_url?: string | null;
   soon: boolean;
 }
 
@@ -39,10 +40,10 @@ export function EventCarousel({ events, dict }: { events: EventCardData[]; dict:
         {events.map((ev) => {
           const badge = ev.soon ? t(dict, "home.coming_soon") : formatDate(ev.start_date);
           const card = (
-            <div className="group relative flex aspect-[2/3] w-[78vw] shrink-0 snap-start flex-col justify-end overflow-hidden rounded-[2.25rem] bg-muted sm:w-[320px]">
-              {ev.cover_image_url ? (
+            <div className="group relative flex aspect-[4/5] w-[78vw] shrink-0 snap-start flex-col justify-end overflow-hidden rounded-[2.25rem] bg-muted sm:w-[320px]">
+              {ev.home_cover_image_url || ev.cover_image_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={ev.cover_image_url} alt={ev.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <img src={ev.home_cover_image_url || ev.cover_image_url || ""} alt={ev.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
               ) : (
                 <div className="absolute inset-0" style={{ background: "var(--pastel-green)" }} />
               )}

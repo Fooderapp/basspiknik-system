@@ -50,7 +50,7 @@ export default async function HomePage() {
         <img src="/hero-bg.png" alt="" className="absolute inset-0 h-full w-full object-cover" />
         <div className="relative">
           <p className="mb-3 text-sm font-bold uppercase tracking-[3px]" style={{ color: "#3C7A1E" }}>{heroSubtitle}</p>
-          <div className="text-5xl font-extrabold leading-[0.98] tracking-tight sm:text-7xl" style={{ letterSpacing: "-0.03em", color: "#16170F" }}>
+          <div className="text-5xl font-extrabold uppercase leading-[0.98] tracking-tight sm:text-7xl" style={{ letterSpacing: "-0.03em", color: "#16170F" }}>
             <HeroTypewriter words={[t(dict, "home.hero_word_1"), t(dict, "home.hero_word_2"), t(dict, "home.hero_word_3")]} />
           </div>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
@@ -62,7 +62,7 @@ export default async function HomePage() {
 
       {/* ── Events ── */}
       <Reveal>
-      <section id="events" className="relative z-10 rounded-t-[2.5rem] bg-background px-5 py-16">
+      <section id="events" className="relative z-[1] rounded-t-[2.5rem] bg-background px-5 py-16">
         <div className="mx-auto w-full max-w-6xl">
           <h2 className="mb-7 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "nav.events")}</h2>
           {(!events || events.length === 0) ? (
@@ -76,6 +76,7 @@ export default async function HomePage() {
                 name: ev.name,
                 start_date: ev.start_date,
                 cover_image_url: ev.cover_image_url,
+                home_cover_image_url: ev.home_cover_image_url,
                 soon: ticketState(ev).soon,
               }))}
             />
@@ -87,7 +88,7 @@ export default async function HomePage() {
       {/* ── Lineup / Artists ── */}
       {artists && artists.length > 0 && (
         <Reveal>
-        <section id="lineup" className="mx-auto w-full max-w-6xl px-5 py-16">
+        <section id="lineup" className="relative z-[1] mx-auto w-full max-w-6xl px-5 py-16">
           <h2 className="mb-7 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "home.lineup")}</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {artists.map((a: any) => (
@@ -112,7 +113,7 @@ export default async function HomePage() {
       {/* ── About ── */}
       {(c.about_title || c.about_body) && (
         <Reveal>
-        <section id="about" className="mx-auto w-full max-w-3xl px-5 py-16 text-center">
+        <section id="about" className="relative z-[1] mx-auto w-full max-w-3xl px-5 py-16 text-center">
           {c.about_title && <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{c.about_title}</h2>}
           {c.about_body && <p className="mx-auto mt-4 max-w-2xl whitespace-pre-line text-lg leading-relaxed text-muted-foreground">{c.about_body}</p>}
         </section>
@@ -122,7 +123,7 @@ export default async function HomePage() {
       {/* ── Gallery ── */}
       {gallery && gallery.length > 0 && (
         <Reveal>
-        <section className="mx-auto w-full max-w-6xl px-5 py-16">
+        <section className="relative z-[1] mx-auto w-full max-w-6xl px-5 py-16">
           <h2 className="mb-7 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "home.gallery")}</h2>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
             {gallery.map((g: any) => (
