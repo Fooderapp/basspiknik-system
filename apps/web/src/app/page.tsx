@@ -162,7 +162,8 @@ export default async function HomePage() {
       {/* ── Footer ── */}
       <footer className="border-t" style={{ background: "#16170F" }}>
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-4 px-5 py-12 text-center">
-          <p className="text-2xl font-extrabold text-white tracking-tight">Bass Piknik</p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="Bass Piknik" className="h-10 w-auto" />
           <div className="flex gap-3">
             {socials.instagram && <a href={socials.instagram} target="_blank" rel="noopener" className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white"><Instagram className="h-5 w-5" /></a>}
             {socials.facebook && <a href={socials.facebook} target="_blank" rel="noopener" className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white"><Facebook className="h-5 w-5" /></a>}

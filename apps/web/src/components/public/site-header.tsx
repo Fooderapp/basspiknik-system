@@ -34,15 +34,16 @@ export function SiteHeader({ dict, loggedIn }: { dict: Dictionary; loggedIn: boo
           className={`relative z-10 flex items-center justify-between rounded-full p-1.5 transition-shadow ${scrolled ? "shadow-[0_8px_28px_rgba(0,0,0,0.35)]" : ""}`}
           style={{ background: "rgba(22,23,15,0.85)", backdropFilter: "blur(14px)" }}
         >
-          <Link href="/" className="px-4 text-base font-extrabold tracking-tight text-white" style={{ letterSpacing: "-0.02em" }}>
-            Bass Piknik
+          <Link href="/" className="px-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.svg" alt="Bass Piknik" className="h-6 w-auto" />
           </Link>
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
-            className="rounded-full px-5 py-2.5 text-base font-bold"
-            style={{ background: "#9FE870", color: "#0a1305" }}
+            className="rounded-full px-5 py-2.5 text-base font-bold transition-transform duration-100 ease-out active:scale-90"
+            style={{ background: "#9FE870", color: "#0a1305", touchAction: "manipulation" }}
           >
             {open ? t(dict, "nav.close") : t(dict, "nav.menu")}
           </button>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 import { ChevronLeft, CalendarDays, MapPin } from "lucide-react";
 import { TicketSelector } from "@/components/events/ticket-selector";
+import { EventCover } from "@/components/public/event-cover";
 import type { Event, TicketType } from "@/lib/supabase/types";
 import { getSettings } from "@/lib/settings";
 import { getDictionary, t } from "@/lib/i18n";
@@ -42,7 +43,10 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   const comingSoon = (t: VisTT) => !!(t.visible_from && new Date(t.visible_from).getTime() > nowMs);
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-5 py-4">
+    <div>
+      <EventCover src={event.cover_image_url} />
+
+      <div className="mx-auto w-full max-w-2xl px-5 py-4">
       {/* Header — back + event name (mobile parity) */}
       <div className="mb-5 flex items-center gap-3">
         <Link href="/events" className="flex items-center gap-0.5 text-base hover:opacity-60">
@@ -90,6 +94,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
           comingSoon: comingSoon(tt),
         }))}
       />
+      </div>
     </div>
   );
 }
