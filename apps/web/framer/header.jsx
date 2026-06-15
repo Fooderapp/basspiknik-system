@@ -229,18 +229,11 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 							<motion.div
 								suppressHydrationWarning={true}
 								className={"framer-lugj6d"}
-								data-border={true}
 								data-highlight={true}
 								layoutDependency={layoutDependency}
 								layoutId={"zk8PnVbJV"}
 								onTap={onTapqy13ya}
 								style={{
-									"--border-bottom-width": "1px",
-									"--border-color": "rgba(255, 255, 255, 0.15)",
-									"--border-left-width": "1px",
-									"--border-right-width": "1px",
-									"--border-style": "solid",
-									"--border-top-width": "1px",
 									backdropFilter: "blur(10px)",
 									backgroundColor: "rgba(255, 255, 255, 0.08)",
 									borderBottomLeftRadius: 23,

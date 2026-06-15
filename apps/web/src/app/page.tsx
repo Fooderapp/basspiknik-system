@@ -6,6 +6,7 @@ import { getDictionary, t } from "@/lib/i18n";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { SiteHeader } from "@/components/public/site-header";
 import { ArtistCarousel } from "@/components/public/artist-carousel";
+import { HeroTypewriter } from "@/components/public/hero-typewriter";
 import { Reveal } from "@/components/public/reveal";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -45,22 +46,20 @@ export default async function HomePage() {
       <ArtistCarousel artists={(artists ?? []).map((a: any) => ({ id: a.id, slug: a.slug, name: a.name, genre: a.genre, photo_url: a.photo_url }))} />
 
       {/* ── Hero ── */}
-      <section className="relative flex min-h-[78vh] items-end overflow-hidden">
-        {c.hero_image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={c.hero_image_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
-        ) : (
-          <div className="absolute inset-0" style={{ background: "linear-gradient(135deg,#163300,#2C3A18 60%,#16170F)" }} />
-        )}
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(15,16,10,0.92), rgba(15,16,10,0.25) 55%, rgba(15,16,10,0.45))" }} />
-        <div className="relative mx-auto w-full max-w-6xl px-5 pb-16">
-          <p className="mb-3 text-sm font-bold uppercase tracking-[3px]" style={{ color: "#9FE870" }}>{heroSubtitle}</p>
-          <h1 className="max-w-3xl text-5xl font-extrabold leading-[0.98] tracking-tight text-white sm:text-7xl" style={{ letterSpacing: "-0.03em" }}>
+      <section className="relative flex min-h-[78vh] flex-col items-center justify-center overflow-hidden px-5 py-24 text-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/hero-bg.png" alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="relative">
+          <p className="mb-3 text-sm font-bold uppercase tracking-[3px]" style={{ color: "#3C7A1E" }}>{heroSubtitle}</p>
+          <h1 className="text-5xl font-extrabold leading-[0.98] tracking-tight sm:text-7xl" style={{ letterSpacing: "-0.03em", color: "#16170F" }}>
             {heroTitle}
           </h1>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <Link href="/events" className="rounded-full px-7 py-3.5 font-bold" style={{ background: "#9FE870", color: "#0a1305" }}>{ctaLabel}</Link>
-            <Link href="#lineup" className="rounded-full border border-white/30 px-7 py-3.5 font-bold text-white backdrop-blur-sm">{t(dict, "nav.artists")}</Link>
+          <div className="mt-3 text-4xl font-extrabold tracking-tight sm:text-6xl" style={{ letterSpacing: "-0.03em", color: "#16170F" }}>
+            <HeroTypewriter words={[t(dict, "home.hero_word_1"), t(dict, "home.hero_word_2"), t(dict, "home.hero_word_3")]} />
+          </div>
+          <div className="mt-7 flex flex-wrap justify-center gap-3">
+            <Link href="/events" className="rounded-full px-7 py-3.5 font-bold" style={{ background: "#16170F", color: "#fff" }}>{ctaLabel}</Link>
+            <Link href="#lineup" className="rounded-full border px-7 py-3.5 font-bold" style={{ borderColor: "#16170F", color: "#16170F" }}>{t(dict, "nav.artists")}</Link>
           </div>
         </div>
       </section>
