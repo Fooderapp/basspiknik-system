@@ -137,7 +137,7 @@ export default async function HomePage() {
       {/* ── About ── */}
       {(c.about_title || c.about_body) && (
         <Reveal>
-        <section className="mx-auto w-full max-w-3xl px-5 py-16 text-center">
+        <section id="about" className="mx-auto w-full max-w-3xl px-5 py-16 text-center">
           {c.about_title && <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{c.about_title}</h2>}
           {c.about_body && <p className="mx-auto mt-4 max-w-2xl whitespace-pre-line text-lg leading-relaxed text-muted-foreground">{c.about_body}</p>}
         </section>
