@@ -65,7 +65,7 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
   // Hidden promo applied by scanning a QR (?promo=<id>) — code never shown.
   const [qrPromo, setQrPromo] = useState<{ id: string; label: string } | null>(null);
   // Credit redemption
-  const [quote, setQuote] = useState<{ enabled: boolean; maxCredits: number; valueHuf: number } | null>(null);
+  const [quote, setQuote] = useState<{ enabled: boolean; maxCredits: number; valueHuf: number; balance: number } | null>(null);
   const [credits, setCredits] = useState(0);
 
   const updateQty = (id: string, delta: number, max: number) => {
@@ -118,7 +118,7 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
         body: JSON.stringify({ orderTotal }),
       });
       const d = await res.json();
-      if (d?.enabled) setQuote({ enabled: true, maxCredits: d.maxCredits ?? 0, valueHuf: d.value ?? 0 });
+      if (d?.enabled) setQuote({ enabled: true, maxCredits: d.maxCredits ?? 0, valueHuf: d.value ?? 0, balance: d.balance ?? 0 });
       else setQuote(null);
     } catch { setQuote(null); }
   }, [isLoggedIn]);
@@ -315,7 +315,7 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
                 <Wallet className="h-4 w-4 shrink-0" style={{ color: "#163300" }} />
                 <span className="text-sm font-bold">{dict["credits.redeem_title"]}</span>
                 <span className="ml-auto inline-flex shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: "var(--background)", color: "#404040" }}>
-                  {dict["credits.redeem_balance"]}: {quote.maxCredits}
+                  {dict["credits.redeem_balance"]}: {quote.balance}
                 </span>
               </div>
               <input
