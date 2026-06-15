@@ -206,8 +206,13 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
         const qty = quantities[ticket.id] ?? 0;
         const soon = !!ticket.comingSoon;
         const soldOut = !soon && ticket.available === 0;
+        const selected = qty > 0 && !soon && !soldOut;
         return (
-          <div key={ticket.id} className={`rounded-xl border bg-card p-4 ${soon || soldOut ? "opacity-60" : ""}`}>
+          <div
+            key={ticket.id}
+            className={`rounded-2xl p-4 transition-colors ${soon || soldOut ? "opacity-60 bg-muted" : "bg-muted"}`}
+            style={selected ? { background: "var(--pastel-green)" } : undefined}
+          >
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-1.5 mb-1">
@@ -246,17 +251,17 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
                 </p>
               </div>
               {!soldOut && !soon && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 rounded-full bg-white p-1 shadow-sm">
                   <Button
-                    variant="outline" size="icon" className="h-8 w-8"
+                    variant="ghost" size="icon" className="h-7 w-7 rounded-full hover:bg-muted"
                     onClick={() => updateQty(ticket.id, -1, Math.min(ticket.available, ticket.maxPerOrder))}
                     disabled={qty === 0}
                   >
                     <Minus className="h-3 w-3" />
                   </Button>
-                  <span className="w-5 text-center text-sm font-medium">{qty}</span>
+                  <span className="w-5 text-center text-sm font-bold tabular-nums">{qty}</span>
                   <Button
-                    variant="outline" size="icon" className="h-8 w-8"
+                    variant="ghost" size="icon" className="h-7 w-7 rounded-full hover:bg-muted"
                     onClick={() => updateQty(ticket.id, 1, Math.min(ticket.available, ticket.maxPerOrder))}
                     disabled={qty >= Math.min(ticket.available, ticket.maxPerOrder)}
                   >
@@ -374,7 +379,7 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
 
           {freeSpinToken ? (
             <Button
-              className="w-full bg-amber-500 hover:bg-amber-600 gap-2"
+              className="w-full rounded-full bg-amber-500 hover:bg-amber-600 gap-2"
               size="lg"
               onClick={() => handleCheckout()}
               disabled={loading}
@@ -383,7 +388,7 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
               {loading ? "…" : dict["credits.claim_free"]}
             </Button>
           ) : (
-            <Button className="w-full" size="lg" onClick={startCheckout} disabled={loading || (wantsInvoice && !invoiceComplete)}>
+            <Button variant="brand" className="w-full" size="lg" onClick={startCheckout} disabled={loading || (wantsInvoice && !invoiceComplete)}>
               {loading ? "…" : wantsInvoice && !invoiceComplete ? dict["invoice.fill_required"] : `${dict["ticket.checkout"]} · ${fmt(displayTotal)}`}
             </Button>
           )}
@@ -437,10 +442,10 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
           </div>
 
           <DialogFooter className="flex-col gap-2 sm:flex-col">
-            <Button className="w-full" onClick={submitGuest} disabled={loading}>
+            <Button variant="brand" className="w-full" onClick={submitGuest} disabled={loading}>
               {loading ? "…" : `${dict["checkout.continue_guest"]} · ${fmt(subtotal)}`}
             </Button>
-            <Button variant="outline" className="w-full gap-2" asChild>
+            <Button variant="brandOutline" className="w-full gap-2" asChild>
               <Link href={signInHref}>
                 <LogIn className="h-4 w-4" />
                 {dict["checkout.login_register"]}

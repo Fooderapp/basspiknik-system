@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["-C", "apps/web", "exec", "next", "dev", "--port", "8081"],
+      "port": 8081
+    },
+    {
+      "name": "konopka-preview",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["hyperframes", "preview", "--port", "4455", "--dir", "/Users/nagybertalan/Desktop/konopka-video"],
+      "port": 4455
+    }
+  ]
+}

@@ -82,31 +82,31 @@ export default async function EventsPage() {
                   </div>
                 )}
 
-                <div className="flex flex-col gap-3 p-4">
-                  {/* Name + sold-out badge */}
+                {/* Info panel */}
+                <div className="m-2 flex flex-col gap-3 rounded-[1.5rem] p-4" style={{ background: "var(--muted)" }}>
+                  {/* Date heading */}
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="flex-1 text-lg font-bold tracking-tight line-clamp-2">{event.name}</h3>
+                    <div className="flex items-center gap-1.5 text-xl font-extrabold tracking-tight leading-tight" style={{ letterSpacing: "-0.02em" }}>
+                      <CalendarDays className="h-4 w-4 shrink-0" strokeWidth={2} />
+                      <span>
+                        {formatDate(event.start_date)}
+                        {event.end_date ? ` — ${formatDate(event.end_date)}` : ""}
+                      </span>
+                    </div>
                     {soldOut && <Badge variant="destructive">{t(dict, "events.sold_out")}</Badge>}
                   </div>
 
-                  {/* Date */}
-                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <CalendarDays className="h-3.5 w-3.5" strokeWidth={1.75} />
-                    <span>
-                      {formatDate(event.start_date)}
-                      {event.end_date ? ` — ${formatDate(event.end_date)}` : ""}
-                    </span>
-                  </div>
+                  <h3 className="text-base font-bold tracking-tight line-clamp-2">{event.name}</h3>
 
-                  {/* Venue */}
+                  {/* Venue pill */}
                   {event.venue && (
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                      <MapPin className="h-3.5 w-3.5" strokeWidth={1.75} />
+                    <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-medium">
+                      <MapPin className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
                       <span className="line-clamp-1">
                         {event.venue}
                         {event.address ? `, ${event.address}` : ""}
                       </span>
-                    </div>
+                    </span>
                   )}
 
                   <Separator />
@@ -126,6 +126,13 @@ export default async function EventsPage() {
                       </span>
                     )}
                   </div>
+
+                  {/* CTA */}
+                  {!soldOut && (
+                    <span className="block w-full rounded-full bg-[#16170F] py-3 text-center text-sm font-bold text-white">
+                      {t(dict, "events.buy")}
+                    </span>
+                  )}
                 </div>
               </div>
             );
