@@ -36,7 +36,10 @@ export function HeroTypewriter({ words }: { words: string[] }) {
   return (
     <span>
       {text}
-      <span className="animate-pulse">|</span>
+      <span
+        className="ml-1 inline-block h-[0.85em] w-[2px] animate-pulse align-middle"
+        style={{ background: "rgba(22, 23, 15, 0.35)" }}
+      />
     </span>
   );
 }

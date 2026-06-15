@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { CalendarDays, MapPin, Instagram, Facebook, Music2 } from "lucide-react";
+import { Instagram, Facebook, Music2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getSettings } from "@/lib/settings";
 import { getDictionary, t } from "@/lib/i18n";
-import { formatDate, formatCurrency } from "@/lib/utils";
 import { SiteHeader } from "@/components/public/site-header";
 import { ArtistCarousel } from "@/components/public/artist-carousel";
 import { HeroTypewriter } from "@/components/public/hero-typewriter";
+import { EventCarousel } from "@/components/public/event-carousel";
 import { Reveal } from "@/components/public/reveal";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -24,8 +24,7 @@ export default async function HomePage() {
 
   const dict = getDictionary(settings.language);
   const c = content ?? {};
-  const heroTitle = c.hero_title || "Bass Piknik";
-  const heroSubtitle = c.hero_subtitle || "Open-air electronic music";
+  const heroSubtitle = c.hero_subtitle || t(dict, "home.hero_subtitle");
   const ctaLabel = c.hero_cta_label || t(dict, "home.browse_events");
   const socials: Record<string, string> = c.socials ?? {};
 
@@ -46,15 +45,12 @@ export default async function HomePage() {
       <ArtistCarousel artists={(artists ?? []).map((a: any) => ({ id: a.id, slug: a.slug, name: a.name, genre: a.genre, photo_url: a.photo_url }))} />
 
       {/* ── Hero ── */}
-      <section className="relative flex min-h-[78vh] flex-col items-center justify-center overflow-hidden px-5 py-24 text-center">
+      <section className="sticky top-0 z-0 flex h-screen flex-col items-center justify-center overflow-hidden px-5 py-24 text-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/hero-bg.png" alt="" className="absolute inset-0 h-full w-full object-cover" />
         <div className="relative">
           <p className="mb-3 text-sm font-bold uppercase tracking-[3px]" style={{ color: "#3C7A1E" }}>{heroSubtitle}</p>
-          <h1 className="text-5xl font-extrabold leading-[0.98] tracking-tight sm:text-7xl" style={{ letterSpacing: "-0.03em", color: "#16170F" }}>
-            {heroTitle}
-          </h1>
-          <div className="mt-3 text-4xl font-extrabold tracking-tight sm:text-6xl" style={{ letterSpacing: "-0.03em", color: "#16170F" }}>
+          <div className="text-5xl font-extrabold leading-[0.98] tracking-tight sm:text-7xl" style={{ letterSpacing: "-0.03em", color: "#16170F" }}>
             <HeroTypewriter words={[t(dict, "home.hero_word_1"), t(dict, "home.hero_word_2"), t(dict, "home.hero_word_3")]} />
           </div>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
@@ -66,45 +62,25 @@ export default async function HomePage() {
 
       {/* ── Events ── */}
       <Reveal>
-      <section id="events" className="mx-auto w-full max-w-6xl px-5 py-16">
-        <h2 className="mb-7 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "nav.events")}</h2>
-        {(!events || events.length === 0) ? (
-          <p className="text-muted-foreground">{t(dict, "events.none")}</p>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {events.map((ev: any) => {
-              const st = ticketState(ev);
-              const card = (
-                <div className="group overflow-hidden rounded-3xl bg-card shadow-sm transition-transform hover:-translate-y-0.5">
-                  <div className="relative aspect-[16/10] overflow-hidden bg-muted">
-                    {ev.cover_image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={ev.cover_image_url} alt={ev.name} className="h-full w-full object-cover" />
-                    ) : <div className="h-full w-full" style={{ background: "var(--pastel-green)" }} />}
-                    {st.soon && (
-                      <span className="absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-extrabold" style={{ background: "#16170F", color: "#fff" }}>
-                        {t(dict, "home.coming_soon")}
-                      </span>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <h3 className="text-lg font-bold tracking-tight line-clamp-1">{ev.name}</h3>
-                    <div className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-                      <CalendarDays className="h-3.5 w-3.5" />{formatDate(ev.start_date)}
-                    </div>
-                    {ev.venue && <div className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground"><MapPin className="h-3.5 w-3.5" /><span className="line-clamp-1">{ev.venue}</span></div>}
-                    <div className="mt-3 text-sm font-semibold" style={{ color: "#163300" }}>
-                      {st.soon ? t(dict, "home.coming_soon") : `${t(dict, "events.from")} ${formatCurrency(st.from!, settings.currency)}`}
-                    </div>
-                  </div>
-                </div>
-              );
-              return st.soon
-                ? <div key={ev.id}>{card}</div>
-                : <Link key={ev.id} href={`/events/${ev.slug}`}>{card}</Link>;
-            })}
-          </div>
-        )}
+      <section id="events" className="relative z-10 rounded-t-[2.5rem] bg-background px-5 py-16">
+        <div className="mx-auto w-full max-w-6xl">
+          <h2 className="mb-7 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "nav.events")}</h2>
+          {(!events || events.length === 0) ? (
+            <p className="text-muted-foreground">{t(dict, "events.none")}</p>
+          ) : (
+            <EventCarousel
+              dict={dict}
+              events={events.map((ev: any) => ({
+                id: ev.id,
+                slug: ev.slug,
+                name: ev.name,
+                start_date: ev.start_date,
+                cover_image_url: ev.cover_image_url,
+                soon: ticketState(ev).soon,
+              }))}
+            />
+          )}
+        </div>
       </section>
       </Reveal>
 
