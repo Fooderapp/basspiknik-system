@@ -207,7 +207,7 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
         const soon = !!ticket.comingSoon;
         const soldOut = !soon && ticket.available === 0;
         return (
-          <div key={ticket.id} className={`rounded-xl border bg-card p-4 ${soon ? "opacity-70" : ""}`}>
+          <div key={ticket.id} className={`rounded-xl border bg-card p-4 ${soon || soldOut ? "opacity-60" : ""}`}>
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-1.5 mb-1">

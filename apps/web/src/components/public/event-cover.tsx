@@ -9,8 +9,15 @@ const DESKTOP_HEIGHT = 300;
  *  Collapses from its natural height to 0 as the page starts scrolling. */
 export function EventCover({ src }: { src: string | null | undefined }) {
   const wrapRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
   const [height, setHeight] = useState(DESKTOP_HEIGHT);
   const [loaded, setLoaded] = useState(false);
+
+  // Cached images are already `complete` by the time React attaches the
+  // onLoad handler, so `load` never fires — check on mount too.
+  useEffect(() => {
+    if (imgRef.current?.complete) setLoaded(true);
+  }, [src]);
 
   useEffect(() => {
     if (!src) return;
@@ -52,6 +59,7 @@ export function EventCover({ src }: { src: string | null | undefined }) {
       <div className="absolute inset-0 flex items-center justify-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
+          ref={imgRef}
           src={src}
           alt=""
           onLoad={() => setLoaded(true)}
