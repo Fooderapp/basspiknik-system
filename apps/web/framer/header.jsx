@@ -186,7 +186,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 							"--border-style": "solid",
 							"--border-top-width": "1px",
 							backdropFilter: "blur(30px)",
-							backgroundColor: "rgba(0, 0, 0, 0.1)",
+							backgroundColor: "rgba(0, 0, 0, 1)",
 							borderBottomLeftRadius: 30,
 							borderBottomRightRadius: 30,
 							borderTopLeftRadius: 30,
@@ -242,7 +242,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 									"--border-style": "solid",
 									"--border-top-width": "1px",
 									backdropFilter: "blur(10px)",
-									backgroundColor: "rgba(0, 0, 0, 0.21)",
+									backgroundColor: "rgba(255, 255, 255, 0.08)",
 									borderBottomLeftRadius: 23,
 									borderBottomRightRadius: 23,
 									borderTopLeftRadius: 23,
@@ -284,7 +284,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 																"--font-selector":
 																	"R0Y7RnVubmVsIERpc3BsYXktcmVndWxhcg==",
 																"--framer-font-family":
-																	'"Funnel Display", sans-serif',
+																	'var(--font-geist-sans), sans-serif',
 																"--framer-font-size": "15px",
 																"--framer-text-alignment": "center",
 																"--framer-text-color":
@@ -307,7 +307,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 											style={{
 												"--font-selector":
 													"R0Y7RnVubmVsIERpc3BsYXktcmVndWxhcg==",
-												"--framer-font-family": '"Funnel Display", sans-serif',
+												"--framer-font-family": 'var(--font-geist-sans), sans-serif',
 												"--framer-font-size": "15px",
 												"--framer-text-alignment": "center",
 												"--framer-text-color":
@@ -350,7 +350,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												style={{
 													"--font-selector": "R0Y7RnVubmVsIERpc3BsYXktODAw",
 													"--framer-font-family":
-														'"Funnel Display", sans-serif',
+														'var(--font-geist-sans), sans-serif',
 													"--framer-font-size": "38px",
 													"--framer-font-weight": "800",
 													"--framer-text-color":
@@ -385,7 +385,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												style={{
 													"--font-selector": "R0Y7RnVubmVsIERpc3BsYXktODAw",
 													"--framer-font-family":
-														'"Funnel Display", sans-serif',
+														'var(--font-geist-sans), sans-serif',
 													"--framer-font-size": "38px",
 													"--framer-font-weight": "800",
 													"--framer-text-color":
@@ -420,7 +420,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												style={{
 													"--font-selector": "R0Y7RnVubmVsIERpc3BsYXktODAw",
 													"--framer-font-family":
-														'"Funnel Display", sans-serif',
+														'var(--font-geist-sans), sans-serif',
 													"--framer-font-size": "38px",
 													"--framer-font-weight": "800",
 													"--framer-text-color":
@@ -455,7 +455,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 												style={{
 													"--font-selector": "R0Y7RnVubmVsIERpc3BsYXktODAw",
 													"--framer-font-family":
-														'"Funnel Display", sans-serif',
+														'var(--font-geist-sans), sans-serif',
 													"--framer-font-size": "38px",
 													"--framer-font-weight": "800",
 													"--framer-text-color":
@@ -506,7 +506,8 @@ var css = [
 	".framer-vMfWh .framer-lugj6d { align-content: center; align-items: center; cursor: pointer; display: flex; flex: none; flex-direction: row; flex-wrap: nowrap; gap: 10px; height: 46px; justify-content: center; overflow: var(--overflow-clip-fallback, clip); padding: 0px; position: relative; width: 82px; will-change: var(--framer-will-change-override, transform); }",
 	".framer-vMfWh .framer-1iqy00d { flex: none; height: 18px; position: relative; white-space: pre-wrap; width: 55px; word-break: break-word; word-wrap: break-word; }",
 	".framer-vMfWh .framer-1ou1rhh { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 2px; height: min-content; justify-content: center; left: 0px; min-height: 432px; overflow: visible; padding: 0px; position: absolute; top: -72px; width: 100%; }",
-	".framer-vMfWh .framer-1ft3hw2, .framer-vMfWh .framer-1tt2cf6, .framer-vMfWh .framer-1ewb01i, .framer-vMfWh .framer-18js542 { flex: none; height: auto; position: relative; white-space: pre; width: auto; }",
+	".framer-vMfWh .framer-1ft3hw2, .framer-vMfWh .framer-1tt2cf6, .framer-vMfWh .framer-1ewb01i, .framer-vMfWh .framer-18js542 { flex: none; height: auto; position: relative; white-space: pre; width: auto; transition: --extracted-r6o4lv 0.2s ease; }",
+	".framer-vMfWh .framer-1ft3hw2:hover, .framer-vMfWh .framer-1tt2cf6:hover, .framer-vMfWh .framer-1ewb01i:hover, .framer-vMfWh .framer-18js542:hover { --extracted-r6o4lv: rgb(255, 255, 255) !important; }",
 	".framer-vMfWh.framer-v-1rfli15.framer-u8ibv2 { height: 470px; }",
 	".framer-vMfWh.framer-v-1rfli15 .framer-1jq0t8w { top: 5px; }",
 	".framer-vMfWh.framer-v-1rfli15 .framer-1ou1rhh { min-height: unset; top: 86px; }",
