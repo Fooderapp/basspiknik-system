@@ -1,16 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 const DESKTOP_HEIGHT = 300;
 
 /** Full-bleed event cover. Mobile: plain 16:9 image. Desktop: a 300px-tall
  *  blurred full-width backdrop with the sharp 16:9 cover centered on top.
- *  Collapses from its natural height to 0 as the page starts scrolling. */
+ *  Collapses from its natural height to 0 as the page starts scrolling.
+ *  Height is written straight to the DOM (no setState, no CSS transition)
+ *  so it tracks the scroll position 1:1 every frame without jitter. */
 export function EventCover({ src }: { src: string | null | undefined }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
-  const [height, setHeight] = useState(DESKTOP_HEIGHT);
   const [loaded, setLoaded] = useState(false);
 
   // Cached images are already `complete` by the time React attaches the
@@ -19,17 +20,31 @@ export function EventCover({ src }: { src: string | null | undefined }) {
     if (imgRef.current?.complete) setLoaded(true);
   }, [src]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!src) return;
+    const el = wrapRef.current;
+    if (!el) return;
+
     let max = DESKTOP_HEIGHT;
+    let ticking = false;
+
     const computeMax = () => {
       const isDesktop = window.innerWidth >= 640;
-      max = isDesktop ? DESKTOP_HEIGHT : ((wrapRef.current?.offsetWidth ?? window.innerWidth) * 9) / 16;
+      max = isDesktop ? DESKTOP_HEIGHT : (el.offsetWidth * 9) / 16;
     };
-    const onScroll = () => setHeight(Math.max(0, max - window.scrollY));
-    const onResize = () => { computeMax(); onScroll(); };
+    const apply = () => {
+      el.style.height = `${Math.max(0, Math.round(max - window.scrollY))}px`;
+      ticking = false;
+    };
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(apply);
+    };
+    const onResize = () => { computeMax(); apply(); };
+
     computeMax();
-    onScroll();
+    apply();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onResize);
     return () => {
@@ -43,8 +58,8 @@ export function EventCover({ src }: { src: string | null | undefined }) {
   return (
     <div
       ref={wrapRef}
-      className="relative w-full overflow-hidden transition-[height] duration-150 ease-out"
-      style={{ height }}
+      className="relative w-full overflow-hidden"
+      style={{ height: DESKTOP_HEIGHT, willChange: "height" }}
     >
       {/* Desktop: full-width blurred backdrop */}
       <div
