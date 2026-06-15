@@ -60,9 +60,9 @@ export default async function HomePage() {
 
       {/* ── Events ── */}
       <div id="events" className="scroll-mt-20" />
-      <section className="relative z-[1] flex min-h-screen flex-col justify-center bg-white px-5 py-16">
+      <section className="relative z-[1] flex min-h-screen flex-col justify-center px-5 py-16">
         <div className="mx-auto w-full max-w-6xl">
-          <h2 className="sticky top-24 z-10 mb-7 bg-white py-2 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "nav.events")}</h2>
+          <h2 className="sticky top-24 z-10 mb-7 py-2 text-center text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "nav.events")}</h2>
           {(!events || events.length === 0) ? (
             <p className="text-muted-foreground">{t(dict, "events.none")}</p>
           ) : (
@@ -86,9 +86,9 @@ export default async function HomePage() {
       {artists && artists.length > 0 && (
         <>
         <div id="lineup" className="scroll-mt-20" />
-        <section className="relative z-[1] flex min-h-screen flex-col justify-center bg-white px-5 py-16">
+        <section className="relative z-[1] flex min-h-screen flex-col justify-center px-5 py-16">
           <div className="mx-auto w-full max-w-6xl">
-            <h2 className="sticky top-24 z-10 mb-7 bg-white py-2 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "home.lineup")}</h2>
+            <h2 className="sticky top-24 z-10 mb-7 py-2 text-center text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "home.lineup")}</h2>
             <ArtistCarousel
               dict={dict}
               artists={artists.map((a: any) => ({ id: a.id, slug: a.slug, name: a.name, genre: a.genre, photo_url: a.photo_url }))}
@@ -102,9 +102,9 @@ export default async function HomePage() {
       {(c.about_title || c.about_body) && (
         <>
         <div id="about" className="scroll-mt-20" />
-        <section className="relative z-[1] flex min-h-screen flex-col justify-center bg-white px-5 py-16 text-center">
+        <section className="relative z-[1] flex min-h-screen flex-col justify-center px-5 py-16 text-center">
           <div className="mx-auto w-full max-w-3xl">
-            {c.about_title && <h2 className="sticky top-24 z-10 bg-white py-2 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{c.about_title}</h2>}
+            {c.about_title && <h2 className="sticky top-24 z-10 py-2 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{c.about_title}</h2>}
             {c.about_body && <p className="mx-auto mt-4 max-w-2xl whitespace-pre-line text-lg leading-relaxed text-muted-foreground">{c.about_body}</p>}
           </div>
         </section>
@@ -113,9 +113,9 @@ export default async function HomePage() {
 
       {/* ── Gallery ── */}
       {gallery && gallery.length > 0 && (
-        <section className="relative z-[1] flex min-h-screen flex-col justify-center bg-white px-5 py-16">
+        <section className="relative z-[1] flex min-h-screen flex-col justify-center px-5 py-16">
           <div className="mx-auto w-full max-w-6xl">
-            <h2 className="sticky top-24 z-10 mb-7 bg-white py-2 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "home.gallery")}</h2>
+            <h2 className="sticky top-24 z-10 mb-7 py-2 text-center text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "home.gallery")}</h2>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
               {gallery.map((g: any) => (
                 // eslint-disable-next-line @next/next/no-img-element
