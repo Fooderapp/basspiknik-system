@@ -243,7 +243,7 @@ export function TicketWallet({
           <Link
             href="/my-tickets"
             className="group flex h-full min-h-[260px] flex-col items-center justify-center gap-3 rounded-3xl bg-card p-8 text-center transition-transform hover:-translate-y-0.5"
-            style={{ border: "1.5px dashed #D8D6C8" }}
+            style={{ border: "1.5px dashed var(--border)" }}
           >
             <div className="flex h-14 w-14 items-center justify-center rounded-full" style={{ background: "var(--pastel-sky)", color: "var(--pastel-sky-ink)" }}>
               <TicketIcon className="h-6 w-6" />

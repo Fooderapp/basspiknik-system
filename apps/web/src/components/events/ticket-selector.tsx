@@ -291,7 +291,7 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
         <a
           href="/scan"
           className="flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-semibold transition-transform hover:-translate-y-0.5"
-          style={{ border: "1.5px dashed #D8D6C8", color: "#163300" }}
+          style={{ border: "1.5px dashed var(--border)", color: "#163300" }}
         >
           <ScanLine className="h-4 w-4" />
           {dict["ticket.scan_code"]}
@@ -310,11 +310,11 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
 
           {/* Credit redemption slider — logged-in, no promo, redemption enabled */}
           {!freeSpinToken && !promoActive && quote?.enabled && quote.maxCredits > 0 && (
-            <div className="rounded-2xl p-3 space-y-2" style={{ background: "#F6F5EE" }}>
+            <div className="rounded-2xl p-3 space-y-2" style={{ background: "var(--muted)" }}>
               <div className="flex items-center gap-2">
                 <Wallet className="h-4 w-4 shrink-0" style={{ color: "#163300" }} />
                 <span className="text-sm font-bold">{dict["credits.redeem_title"]}</span>
-                <span className="ml-auto inline-flex shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: "#ECEADD", color: "#3A3608" }}>
+                <span className="ml-auto inline-flex shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: "#E5E5E5", color: "#404040" }}>
                   {dict["credits.redeem_balance"]}: {quote.maxCredits}
                 </span>
               </div>
@@ -361,7 +361,7 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
 
           {/* Receipt by default; opt in for a full invoice (számla) */}
           {!freeSpinToken && (
-            <div className="rounded-2xl p-3 space-y-2" style={{ background: "#F6F5EE" }}>
+            <div className="rounded-2xl p-3 space-y-2" style={{ background: "var(--muted)" }}>
               <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
                 <input type="checkbox" checked={wantsInvoice} onChange={(e) => setWantsInvoice(e.target.checked)} className="h-4 w-4" style={{ accentColor: "#163300" }} />
                 {dict["invoice.request"]}

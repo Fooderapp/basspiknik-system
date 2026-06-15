@@ -202,8 +202,8 @@ export default async function HomePage() {
             {recent.map((a, i) => {
               const Icon = actIcon(a.kind);
               return (
-                <div key={a.id} className="flex items-center gap-3 p-3.5" style={i > 0 ? { borderTop: "1px solid #F0EEE3" } : undefined}>
-                  <div className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full" style={{ background: "#ECEADD" }}>
+                <div key={a.id} className="flex items-center gap-3 p-3.5" style={i > 0 ? { borderTop: "1px solid var(--border)" } : undefined}>
+                  <div className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full" style={{ background: "#E5E5E5" }}>
                     <Icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
                   </div>
                   <div className="min-w-0 flex-1">

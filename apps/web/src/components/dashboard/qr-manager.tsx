@@ -121,7 +121,7 @@ export function QrManager({ events }: { events: { id: string; name: string }[] }
                 onClick={() => setType(t.value)}
                 className="rounded-2xl p-3 text-left transition-transform hover:-translate-y-0.5"
                 style={{
-                  background: active ? "var(--pastel-green)" : "var(--secondary, #ECEADD)",
+                  background: active ? "var(--pastel-green)" : "var(--secondary, #F2F2F2)",
                   outline: active ? "2px solid #163300" : "none",
                 }}
               >

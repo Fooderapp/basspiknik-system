@@ -27,7 +27,7 @@ export default async function RedeemPage({ params }: { params: Promise<{ code: s
   if (!user) {
     const back = encodeURIComponent(`/r/${code}`);
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center px-6 text-center" style={{ background: "#F6F5EE" }}>
+      <div className="flex min-h-screen flex-col items-center justify-center px-6 text-center bg-background">
         <span className="flex h-20 w-20 items-center justify-center rounded-full" style={{ background: "var(--pastel-gold)" }}>
           <Lock className="h-9 w-9" style={{ color: "#3A3608" }} />
         </span>
@@ -41,7 +41,7 @@ export default async function RedeemPage({ params }: { params: Promise<{ code: s
           <Link href={`/sign-in?redirectTo=${back}`} className="rounded-full px-7 py-3 font-bold text-white" style={{ background: "#16170F" }}>
             Sign in
           </Link>
-          <Link href={`/sign-up?redirectTo=${back}`} className="rounded-full border px-7 py-3 font-bold" style={{ borderColor: "#D8D6C8" }}>
+          <Link href={`/sign-up?redirectTo=${back}`} className="rounded-full border px-7 py-3 font-bold" style={{ borderColor: "var(--border)" }}>
             Create account
           </Link>
         </div>

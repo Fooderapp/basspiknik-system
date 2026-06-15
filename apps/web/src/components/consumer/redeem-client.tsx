@@ -53,7 +53,7 @@ export function RedeemClient({ code }: { code: string }) {
   // Loading
   if (!result) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3" style={{ background: "#F6F5EE" }}>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3" style={{ background: "var(--background)" }}>
         <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#163300" }} />
         <p className="text-sm text-muted-foreground">Redeeming…</p>
       </div>
@@ -73,7 +73,7 @@ export function RedeemClient({ code }: { code: string }) {
     : null;
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-6 text-center" style={{ background: "#F6F5EE" }}>
+    <div className="flex min-h-screen flex-col items-center justify-center px-6 text-center" style={{ background: "var(--background)" }}>
       <span className="flex h-20 w-20 items-center justify-center rounded-full" style={{ background: ok ? "var(--pastel-green)" : "var(--pastel-rose)" }}>
         <Icon className="h-9 w-9" style={{ color: ok ? "#2C3A18" : "#4A1820" }} />
       </span>

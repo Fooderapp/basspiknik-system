@@ -94,7 +94,7 @@ export function TaskList({ dict }: { dict: Dictionary }) {
                 <p className="text-sm font-bold leading-snug line-clamp-2">{t.title}</p>
                 {t.description && <p className="line-clamp-2 text-xs text-muted-foreground">{t.description}</p>}
               </div>
-              <span className="shrink-0 rounded-full px-2.5 py-1 text-xs font-extrabold" style={{ background: "#ECEADD", color: "#3A3608" }}>+{t.reward}</span>
+              <span className="shrink-0 rounded-full px-2.5 py-1 text-xs font-extrabold" style={{ background: "#E5E5E5", color: "#404040" }}>+{t.reward}</span>
 
               {done ? (
                 <span className="flex items-center gap-1 text-xs font-semibold" style={{ color: "#3E7B12" }}><Check className="h-4 w-4" strokeWidth={2.5} />{dict["tasks.done"]}</span>
