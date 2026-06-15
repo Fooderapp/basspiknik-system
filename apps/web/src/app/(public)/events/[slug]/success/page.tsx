@@ -74,7 +74,7 @@ export default async function SuccessPage({
         </div>
 
         {/* Event info card */}
-        <div className="rounded-xl border bg-card p-5 space-y-3">
+        <div className="rounded-[2.25rem] p-5 space-y-3" style={{ background: "#E5E5E5" }}>
           {event.cover_image_url && (
             <div className="w-full aspect-video rounded-lg overflow-hidden mb-4">
               <img src={event.cover_image_url} alt={event.name} className="w-full h-full object-cover object-center" />
@@ -97,7 +97,7 @@ export default async function SuccessPage({
         </div>
 
         {/* Order summary */}
-        <div className="rounded-xl border bg-card p-5 space-y-4">
+        <div className="rounded-[2.25rem] p-5 space-y-4" style={{ background: "#E5E5E5" }}>
           <h3 className="font-semibold">{t(dict, "success.order_summary")}</h3>
           <div className="space-y-2">
             {lineItems.map((item, i) => (
@@ -107,7 +107,7 @@ export default async function SuccessPage({
               </div>
             ))}
           </div>
-          <div className="border-t pt-3 flex justify-between font-bold">
+          <div className="flex justify-between font-bold pt-3" style={{ borderTop: "1px solid rgba(20,22,15,0.08)" }}>
             <span>{t(dict, "success.total_paid")}</span>
             <span>{formatCurrency(totalAmount, currency)}</span>
           </div>
@@ -123,7 +123,7 @@ export default async function SuccessPage({
           <div className="space-y-3">
             <h3 className="font-semibold">{t(dict, "success.your_tickets")}</h3>
             {orderData.tickets.map((ticket: any, i: number) => (
-              <div key={ticket.qr_code} className="rounded-xl border bg-card p-4 flex items-center gap-4">
+              <div key={ticket.qr_code} className="rounded-[2.25rem] p-4 flex items-center gap-4" style={{ background: "#E5E5E5" }}>
                 <img
                   src={`/api/tickets/qr?code=${encodeURIComponent(ticket.qr_code)}`}
                   alt="QR Code"

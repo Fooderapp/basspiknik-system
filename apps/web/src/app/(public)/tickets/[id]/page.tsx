@@ -77,7 +77,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
 
           <div className="flex justify-center">
             {valid ? (
-              <div className="rounded-3xl bg-white p-4">
+              <div className="rounded-[2.25rem] bg-white p-4">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`/api/tickets/qr?code=${encodeURIComponent(tk.qr_code)}`}
@@ -87,7 +87,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                 />
               </div>
             ) : (
-              <div className="flex h-56 w-56 flex-col items-center justify-center gap-3 rounded-3xl bg-muted">
+              <div className="flex h-56 w-56 flex-col items-center justify-center gap-3 rounded-[2.25rem] bg-muted">
                 <Ban className="h-10 w-10 text-muted-foreground" strokeWidth={1.5} />
                 <span className="text-sm text-muted-foreground">{statusLabel(dict, tk.status)}</span>
               </div>

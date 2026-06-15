@@ -90,7 +90,7 @@ export function EventCover({ src }: { src: string | null | undefined }) {
             src={src}
             alt=""
             onLoad={() => setLoaded(true)}
-            className={`h-full w-full object-cover transition-opacity duration-500 sm:aspect-video sm:h-[300px] sm:w-auto sm:max-w-full sm:rounded-3xl sm:shadow-2xl ${loaded ? "opacity-100" : "opacity-0"}`}
+            className={`h-full w-full object-cover transition-opacity duration-500 sm:aspect-video sm:h-[300px] sm:w-auto sm:max-w-full sm:rounded-[2.25rem] sm:shadow-2xl ${loaded ? "opacity-100" : "opacity-0"}`}
           />
         </div>
       </div>

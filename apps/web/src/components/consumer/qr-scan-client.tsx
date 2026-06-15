@@ -106,7 +106,7 @@ export function QrScanClient() {
       <p className="text-muted-foreground mt-1 mb-5">Scan a BassPiknik QR for credits, events and more.</p>
 
       {/* Camera viewport */}
-      <div className="relative aspect-square w-full overflow-hidden rounded-3xl bg-black shadow-sm">
+      <div className="relative aspect-square w-full overflow-hidden rounded-[2.25rem] bg-black shadow-sm">
         <video ref={videoRef} muted playsInline className="h-full w-full object-cover" />
         {/* frame */}
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -127,8 +127,8 @@ export function QrScanClient() {
       {/* Result sheet */}
       {result && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setResult(null)}>
-          <div className="w-full max-w-md rounded-t-3xl bg-card p-5" onClick={(e) => e.stopPropagation()}>
-            <div className="mx-auto mb-4 h-1.5 w-10 rounded-full" style={{ background: "#E2E0D4" }} />
+          <div className="w-full max-w-md rounded-t-[2.25rem] p-5" style={{ background: "#E5E5E5" }} onClick={(e) => e.stopPropagation()}>
+            <div className="mx-auto mb-4 h-1.5 w-10 rounded-full" style={{ background: "rgba(20,22,15,0.15)" }} />
             <div className="flex items-center gap-3">
               <span className="flex h-13 w-13 items-center justify-center rounded-full" style={{ width: 52, height: 52, background: ok ? "var(--pastel-green)" : "var(--pastel-rose)" }}>
                 <Icon className="h-6 w-6" style={{ color: ok ? "#2C3A18" : "#4A1820" }} />
@@ -138,7 +138,7 @@ export function QrScanClient() {
                 {sub && <p className="text-sm text-muted-foreground">{sub}</p>}
               </div>
             </div>
-            <button onClick={act} className="mt-5 w-full rounded-2xl py-3.5 font-bold text-white" style={{ background: "#16170F" }}>
+            <button onClick={act} className="mt-5 w-full rounded-full py-3.5 font-bold text-white" style={{ background: "#16170F" }}>
               {actLabel}
             </button>
           </div>

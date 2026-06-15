@@ -70,7 +70,7 @@ export default async function ProfilePage() {
             <p className="text-2xl font-bold tracking-tight line-clamp-1">{p.name ?? user.email}</p>
             <p className="text-xs text-muted-foreground mb-5 line-clamp-1">{p.email ?? user.email}</p>
             <div className="flex justify-center">
-              <div className="bg-white p-4 rounded-3xl">
+              <div className="bg-white p-4 rounded-[2.25rem]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`/api/tickets/qr?code=${encodeURIComponent(walletToken)}`}
