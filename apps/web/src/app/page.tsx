@@ -4,7 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { getSettings } from "@/lib/settings";
 import { getDictionary, t } from "@/lib/i18n";
 import { SiteHeader } from "@/components/public/site-header";
-import { ArtistCarousel } from "@/components/public/artist-carousel";
 import { HeroTypewriter } from "@/components/public/hero-typewriter";
 import { EventCarousel } from "@/components/public/event-carousel";
 import { Reveal } from "@/components/public/reveal";
@@ -38,11 +37,8 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white">
       <SiteHeader dict={dict} loggedIn={!!user} />
-
-      {/* ── Artist carousel — sits below the floating nav ── */}
-      <ArtistCarousel artists={(artists ?? []).map((a: any) => ({ id: a.id, slug: a.slug, name: a.name, genre: a.genre, photo_url: a.photo_url }))} />
 
       {/* ── Hero ── */}
       <section className="sticky top-0 z-0 flex h-screen flex-col items-center justify-center overflow-hidden px-5 py-24 text-center">
@@ -62,7 +58,7 @@ export default async function HomePage() {
 
       {/* ── Events ── */}
       <Reveal>
-      <section id="events" className="relative z-[1] rounded-t-[2.5rem] bg-background px-5 py-16">
+      <section id="events" className="sticky top-0 z-[1] rounded-t-[2.5rem] bg-white px-5 py-16">
         <div className="mx-auto w-full max-w-6xl">
           <h2 className="mb-7 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "nav.events")}</h2>
           {(!events || events.length === 0) ? (
@@ -88,7 +84,7 @@ export default async function HomePage() {
       {/* ── Lineup / Artists ── */}
       {artists && artists.length > 0 && (
         <Reveal>
-        <section id="lineup" className="relative z-[1] mx-auto my-6 w-full max-w-6xl rounded-[2.5rem] bg-card px-5 py-16">
+        <section id="lineup" className="sticky top-0 z-[1] mx-auto w-full max-w-6xl rounded-t-[2.5rem] bg-white px-5 py-16">
           <h2 className="mb-7 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "home.lineup")}</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {artists.map((a: any) => (
@@ -113,7 +109,7 @@ export default async function HomePage() {
       {/* ── About ── */}
       {(c.about_title || c.about_body) && (
         <Reveal>
-        <section id="about" className="relative z-[1] mx-auto w-full max-w-3xl px-5 py-16 text-center">
+        <section id="about" className="sticky top-0 z-[1] mx-auto w-full max-w-3xl rounded-t-[2.5rem] bg-white px-5 py-16 text-center">
           {c.about_title && <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{c.about_title}</h2>}
           {c.about_body && <p className="mx-auto mt-4 max-w-2xl whitespace-pre-line text-lg leading-relaxed text-muted-foreground">{c.about_body}</p>}
         </section>
@@ -123,7 +119,7 @@ export default async function HomePage() {
       {/* ── Gallery ── */}
       {gallery && gallery.length > 0 && (
         <Reveal>
-        <section className="relative z-[1] mx-auto w-full max-w-6xl px-5 py-16">
+        <section className="sticky top-0 z-[1] mx-auto w-full max-w-6xl rounded-t-[2.5rem] bg-white px-5 py-16">
           <h2 className="mb-7 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "home.gallery")}</h2>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
             {gallery.map((g: any) => (
