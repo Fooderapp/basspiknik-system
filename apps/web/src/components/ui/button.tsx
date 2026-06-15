@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -13,16 +13,16 @@ const buttonVariants = cva(
         outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+        link: "text-primary underline-offset-4 hover:underline rounded-none",
         // ── Brand CTAs — solid ink / outline ink / brand-green pills ──
-        brand: "rounded-full bg-[#16170F] text-white font-bold hover:bg-[#16170F]/90",
-        brandOutline: "rounded-full border-2 border-[#16170F] bg-transparent text-[#16170F] font-bold hover:bg-[#16170F]/5",
-        brandGreen: "rounded-full bg-brand text-brand-foreground font-bold hover:bg-brand/90",
+        brand: "bg-[#16170F] text-white font-bold hover:bg-[#16170F]/90",
+        brandOutline: "border-2 border-[#16170F] bg-transparent text-[#16170F] font-bold hover:bg-[#16170F]/5",
+        brandGreen: "bg-brand text-brand-foreground font-bold hover:bg-brand/90",
       },
       size: {
         default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
+        sm: "h-9 px-3",
+        lg: "h-11 px-8",
         icon: "h-10 w-10",
         pill: "h-[52px] px-7 text-sm",
       },

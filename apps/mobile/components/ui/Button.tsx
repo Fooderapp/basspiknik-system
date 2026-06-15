@@ -12,7 +12,7 @@ import { TextClassContext } from "@/components/ui/text";
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const buttonVariants = cva(
-  "flex flex-row items-center justify-center rounded-xl active:opacity-70",
+  "flex flex-row items-center justify-center rounded-full active:opacity-70",
   {
     variants: {
       variant: {
@@ -26,7 +26,7 @@ const buttonVariants = cva(
       },
       size: {
         default: "h-12 px-5",
-        sm:      "h-9 px-4 rounded-lg",
+        sm:      "h-9 px-4",
         lg:      "h-14 px-8",
         icon:    "h-10 w-10",
       },
