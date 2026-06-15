@@ -311,7 +311,7 @@ function CartBar({
           flexDirection: "row",
           alignItems: "center",
           backgroundColor: "#EBE05A",
-          borderRadius: 18,
+          borderRadius: 999,
           paddingVertical: 14,
           paddingHorizontal: 18,
           shadowColor: "#000",

@@ -361,7 +361,7 @@ export default function HomeScreen() {
                     }}
                     style={{
                       flexDirection: "row", alignItems: "center", justifyContent: "center",
-                      gap: 8, borderRadius: 16, paddingVertical: 14, backgroundColor: "#16170F",
+                      gap: 8, borderRadius: 999, paddingVertical: 14, backgroundColor: "#16170F",
                     }}
                   >
                     <AppleLogo size={18} color="#fff" />
@@ -380,7 +380,7 @@ export default function HomeScreen() {
                   style={{
                     flexDirection: "row", alignItems: "center", justifyContent: "center",
                     gap: 8, borderWidth: 1, borderColor: "#E2E0D4",
-                    borderRadius: 16, paddingVertical: 14, backgroundColor: "#fff",
+                    borderRadius: 999, paddingVertical: 14, backgroundColor: "#fff",
                   }}
                 >
                   <GoogleLogo size={18} />
