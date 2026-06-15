@@ -4,20 +4,20 @@ import { useEffect, useRef, type CSSProperties } from "react";
 
 const FADE_RANGE = 160;
 
-/** Sticky section title that fades out as its section's bottom edge
- *  approaches, just before the next section carries it away. */
+/** Sticky section title that fades out as the section's content scrolls
+ *  up and reaches it (and fades back in if scrolled back down). */
 export function StickyFadeTitle({ children, className, style }: { children: React.ReactNode; className?: string; style?: CSSProperties }) {
   const ref = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     const el = ref.current;
-    const section = el?.closest("section");
-    if (!el || !section) return;
+    const content = el?.nextElementSibling as HTMLElement | null;
+    if (!el || !content) return;
 
     function onScroll() {
       const top = parseFloat(getComputedStyle(el!).top) || 0;
-      const rect = section!.getBoundingClientRect();
-      const distance = rect.bottom - (top + el!.offsetHeight);
+      const titleBottom = top + el!.offsetHeight;
+      const distance = content!.getBoundingClientRect().top - titleBottom;
       el!.style.opacity = String(Math.max(0, Math.min(1, distance / FADE_RANGE)));
     }
 
