@@ -86,7 +86,7 @@ export function TaskList({ dict }: { dict: Dictionary }) {
           const pending = t.state === "pending";
           const cooldown = t.state === "cooldown";
           return (
-            <div key={t.id} className="flex items-center gap-3 rounded-[22px] bg-card p-3.5 shadow-sm">
+            <div key={t.id} className="flex items-center gap-3 rounded-[2.25rem] p-3.5" style={{ background: "#E5E5E5" }}>
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full" style={{ background: "var(--pastel-green)", color: "var(--pastel-green-ink)" }}>
                 <Icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
               </div>
@@ -94,7 +94,7 @@ export function TaskList({ dict }: { dict: Dictionary }) {
                 <p className="text-sm font-bold leading-snug line-clamp-2">{t.title}</p>
                 {t.description && <p className="line-clamp-2 text-xs text-muted-foreground">{t.description}</p>}
               </div>
-              <span className="shrink-0 rounded-full px-2.5 py-1 text-xs font-extrabold" style={{ background: "#E5E5E5", color: "#404040" }}>+{t.reward}</span>
+              <span className="shrink-0 rounded-full px-2.5 py-1 text-xs font-extrabold" style={{ background: "var(--background)", color: "#404040" }}>+{t.reward}</span>
 
               {done ? (
                 <span className="flex items-center gap-1 text-xs font-semibold" style={{ color: "#3E7B12" }}><Check className="h-4 w-4" strokeWidth={2.5} />{dict["tasks.done"]}</span>

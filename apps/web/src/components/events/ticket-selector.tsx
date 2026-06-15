@@ -300,7 +300,7 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
 
       {/* Summary + checkout — floats above the bottom nav on mobile */}
       {hasItems && (
-        <div className="sticky bottom-24 z-30 rounded-3xl bg-card p-4 space-y-3 shadow-[0_8px_28px_rgba(20,22,15,0.14)] md:bottom-4">
+        <div className="sticky bottom-24 z-30 rounded-[2.25rem] p-4 space-y-3 shadow-[0_8px_28px_rgba(20,22,15,0.14)] md:bottom-4" style={{ background: "#E5E5E5" }}>
           <div className="flex items-baseline justify-between">
             <span className="text-xs font-bold uppercase tracking-[2px] text-muted-foreground">
               {t(dict, "ticket.total")} ({totalQty} {totalQty === 1 ? t(dict, "ticket.ticket_singular") : t(dict, "ticket.ticket_plural")})
@@ -314,7 +314,7 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
               <div className="flex items-center gap-2">
                 <Wallet className="h-4 w-4 shrink-0" style={{ color: "#163300" }} />
                 <span className="text-sm font-bold">{dict["credits.redeem_title"]}</span>
-                <span className="ml-auto inline-flex shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: "#E5E5E5", color: "#404040" }}>
+                <span className="ml-auto inline-flex shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: "var(--background)", color: "#404040" }}>
                   {dict["credits.redeem_balance"]}: {quote.maxCredits}
                 </span>
               </div>

@@ -175,13 +175,13 @@ export default async function HomePage() {
 
       {/* Ticket wallet */}
       {walletTickets.length === 0 ? (
-        <div className="flex flex-col items-center rounded-3xl bg-card py-12 text-center shadow-sm">
+        <div className="flex flex-col items-center rounded-[2.25rem] py-12 text-center" style={{ background: "#E5E5E5" }}>
           <span className="mb-3 flex h-14 w-14 items-center justify-center rounded-full" style={{ background: "var(--pastel-green)", color: "var(--pastel-green-ink)" }}>
             <ShoppingBag className="h-6 w-6" strokeWidth={1.75} />
           </span>
           <p className="font-bold">{t(dict, "mytickets.empty")}</p>
           <p className="mt-1 text-sm text-muted-foreground">{t(dict, "dash.no_next_sub")}</p>
-          <Button asChild className="mt-5 rounded-full px-6"><Link href="/events">{t(dict, "dash.browse")}</Link></Button>
+          <Button asChild variant="brand" className="mt-5 px-6"><Link href="/events">{t(dict, "dash.browse")}</Link></Button>
         </div>
       ) : (
         <TicketWallet
@@ -198,12 +198,12 @@ export default async function HomePage() {
       {recent.length > 0 && (
         <div className="mt-10">
           <h2 className="mb-3 text-lg font-extrabold tracking-tight">{t(dict, "dash.activity")}</h2>
-          <div className="overflow-hidden rounded-3xl bg-card shadow-sm">
+          <div className="overflow-hidden rounded-[2.25rem]" style={{ background: "#E5E5E5" }}>
             {recent.map((a, i) => {
               const Icon = actIcon(a.kind);
               return (
-                <div key={a.id} className="flex items-center gap-3 p-3.5" style={i > 0 ? { borderTop: "1px solid var(--border)" } : undefined}>
-                  <div className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full" style={{ background: "#E5E5E5" }}>
+                <div key={a.id} className="flex items-center gap-3 p-3.5" style={i > 0 ? { borderTop: "1px solid rgba(20,22,15,0.08)" } : undefined}>
+                  <div className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-white">
                     <Icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
                   </div>
                   <div className="min-w-0 flex-1">

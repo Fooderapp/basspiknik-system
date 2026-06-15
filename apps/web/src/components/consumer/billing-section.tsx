@@ -62,10 +62,10 @@ export function BillingSection({ initial }: Props) {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4 mb-6">
+    <div className="rounded-[2.25rem] p-4 mb-6" style={{ background: "#E5E5E5" }}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white">
             <MapPin className="h-4 w-4 text-muted-foreground" />
           </div>
           <div>
@@ -77,7 +77,7 @@ export function BillingSection({ initial }: Props) {
         </div>
         {!editing && (
           <Button variant="ghost" size="sm" onClick={() => { setDraft(data); setEditing(true); }}
-            className="gap-1.5 text-muted-foreground">
+            className="gap-1.5 rounded-full text-muted-foreground">
             <Pencil className="h-3.5 w-3.5" />
             {hasBilling ? "Edit" : "Add"}
           </Button>
@@ -95,10 +95,10 @@ export function BillingSection({ initial }: Props) {
             <div className="col-span-2">{field("billing_country", "Country", "Magyarország")}</div>
           </div>
           <div className="flex gap-2 justify-end pt-1">
-            <Button variant="outline" size="sm" onClick={() => setEditing(false)} disabled={saving}>
+            <Button variant="outline" size="sm" className="rounded-full" onClick={() => setEditing(false)} disabled={saving}>
               Cancel
             </Button>
-            <Button size="sm" onClick={save} disabled={saving} className="gap-1.5">
+            <Button variant="brand" size="sm" onClick={save} disabled={saving} className="gap-1.5">
               {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               Save
             </Button>

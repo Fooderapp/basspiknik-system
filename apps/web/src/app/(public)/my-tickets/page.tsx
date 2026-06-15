@@ -83,7 +83,7 @@ export default async function MyTicketsPage() {
           </div>
           <p className="text-lg font-semibold tracking-tight">{t(dict, "mytickets.empty")}</p>
           <p className="text-sm text-muted-foreground mt-1 mb-5">{t(dict, "mytickets.empty_sub2")}</p>
-          <Button asChild>
+          <Button asChild variant="brand">
             <Link href="/events">{t(dict, "mytickets.browse")}</Link>
           </Button>
         </div>
@@ -93,14 +93,15 @@ export default async function MyTicketsPage() {
             <Link
               key={tk.id}
               href={`/tickets/${tk.id}`}
-              className="relative flex items-center gap-4 overflow-hidden rounded-2xl bg-card p-4 shadow-sm transition-transform hover:-translate-y-0.5"
+              className="relative flex items-center gap-4 overflow-hidden rounded-[2.25rem] p-4 transition-transform hover:-translate-y-0.5"
+              style={{ background: "#E5E5E5" }}
             >
               {/* status stripe */}
               <span
                 className="absolute left-0 top-0 bottom-0 w-1.5"
                 style={{ backgroundColor: STRIPE[tk.status] ?? "#6b7280" }}
               />
-              <div className="ml-1 flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-muted">
+              <div className="ml-1 flex h-11 w-11 items-center justify-center rounded-2xl bg-white">
                 <TicketIcon className="h-[19px] w-[19px]" strokeWidth={1.75} />
               </div>
               <div className="flex-1 min-w-0">

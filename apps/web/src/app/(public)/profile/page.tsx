@@ -25,7 +25,7 @@ export default async function ProfilePage() {
       <div className="container max-w-md px-4 py-16 text-center">
         <User className="h-10 w-10 mx-auto mb-4 text-muted-foreground/40" />
         <p className="text-muted-foreground mb-6">{t(dict, "profile.sign_in_prompt")}</p>
-        <Button asChild>
+        <Button asChild variant="brand">
           <Link href="/sign-in?redirectTo=/profile">{t(dict, "nav.sign_in")}</Link>
         </Button>
       </div>
@@ -63,7 +63,7 @@ export default async function ProfilePage() {
       {/* Entry pass */}
       {walletToken && (
         <div className="mb-6">
-          <div className="rounded-[28px] border border-border bg-card p-6 shadow-sm">
+          <div className="rounded-[2.25rem] p-6" style={{ background: "#E5E5E5" }}>
             <p className="text-[11px] font-semibold tracking-[2px] text-muted-foreground mb-5">
               {t(dict, "profile.entry_pass")}
             </p>
@@ -95,7 +95,7 @@ export default async function ProfilePage() {
       )}
 
       {/* Account info */}
-      <div className="rounded-xl border border-border bg-card p-4 space-y-3 mb-6">
+      <div className="rounded-[2.25rem] p-4 space-y-3 mb-6" style={{ background: "#E5E5E5" }}>
         <Row icon={<User className="h-4 w-4 text-muted-foreground" />} label={t(dict, "profile.name")} value={p.name ?? "—"} />
         <Separator />
         <Row icon={<Mail className="h-4 w-4 text-muted-foreground" />} label={t(dict, "profile.email")} value={p.email ?? user.email} />
@@ -118,7 +118,9 @@ export default async function ProfilePage() {
         }}
       />
 
-      <SignOutButton label={t(dict, "profile.sign_out")} />
+      <div className="mt-2">
+        <SignOutButton label={t(dict, "profile.sign_out")} />
+      </div>
     </div>
   );
 }
@@ -126,7 +128,7 @@ export default async function ProfilePage() {
 function Row({ icon, label, value, mono }: { icon: React.ReactNode; label: string; value: string; mono?: boolean }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">{icon}</div>
+      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white">{icon}</div>
       <div className="flex-1 min-w-0">
         <p className="text-xs text-muted-foreground">{label}</p>
         <p className={`font-semibold truncate ${mono ? "font-mono" : ""}`}>{value}</p>

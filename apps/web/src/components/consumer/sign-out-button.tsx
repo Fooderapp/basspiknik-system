@@ -15,7 +15,7 @@ export function SignOutButton({ label }: { label: string }) {
   }
 
   return (
-    <Button variant="outline" className="w-full" onClick={handleSignOut}>
+    <Button variant="outline" className="w-full rounded-full" onClick={handleSignOut}>
       {label}
     </Button>
   );
