@@ -57,7 +57,7 @@ export default async function SuccessPage({
   const lineItems = session.line_items?.data ?? [];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div>
       <div className="container max-w-2xl py-12 px-4 space-y-8">
 
         {/* Success header */}

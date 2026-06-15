@@ -67,7 +67,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
 
       <div className="flex flex-col gap-[18px]">
         {/* Entry pass */}
-        <div className="rounded-[28px] border border-[#26263a] bg-[#0d0d12] p-[22px]">
+        <div className="rounded-[28px] p-[22px]" style={{ background: "#16170F" }}>
           <div className="mb-5 flex items-center justify-between">
             <span className="text-[11px] font-semibold tracking-[2px] text-muted-foreground">
               {(tk.tier ?? "TICKET").toUpperCase()}

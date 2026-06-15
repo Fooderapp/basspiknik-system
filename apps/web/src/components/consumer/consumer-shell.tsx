@@ -42,6 +42,9 @@ export function ConsumerShell({
 
   return (
     <div className="min-h-screen bg-background">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/hero-bg.png" alt="" className="fixed inset-0 z-0 h-screen w-screen object-cover" />
+
       {/* ── Desktop sidebar (md+) ───────────────────────────────────────────── */}
       <aside className="hidden md:flex fixed inset-y-0 left-0 z-40 w-60 flex-col border-r border-border bg-card">
         <Link href="/" className="flex h-16 items-center gap-2 px-6 font-bold text-lg tracking-tight">
@@ -73,7 +76,7 @@ export function ConsumerShell({
       </aside>
 
       {/* ── Main content ────────────────────────────────────────────────────── */}
-      <div className="md:pl-60">
+      <div className="relative z-[1] md:pl-60">
         {/* extra bottom padding on mobile for the tab bar */}
         <main className="pb-24 md:pb-0">{children}</main>
       </div>
