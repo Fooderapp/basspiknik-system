@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { CalendarDays, MapPin, Tag, ShoppingBag } from "lucide-react";
+import { CalendarDays, MapPin, ShoppingBag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { formatDate, formatCurrency } from "@/lib/utils";
@@ -13,14 +13,6 @@ import type { Event, TicketType } from "@/lib/supabase/types";
 export const metadata = { title: "Buy Tickets" };
 
 type EventWithTickets = Event & { ticket_types: TicketType[] };
-
-function lowestPrice(types: TicketType[]): number | null {
-  const available = types.filter((t) => t.quantity - t.sold > 0);
-  if (available.length === 0) return null;
-  return Math.min(
-    ...available.map((t) => (t.sale_enabled && t.sale_price != null ? t.sale_price : t.price)),
-  );
-}
 
 export default async function EventsPage() {
   const supabase = await createClient() as any;
@@ -56,11 +48,10 @@ export default async function EventsPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {events.map((event) => {
             const types = event.ticket_types ?? [];
-            const minPrice = lowestPrice(types);
             const totalSold = types.reduce((s, t) => s + t.sold, 0);
             const totalQty = types.reduce((s, t) => s + t.quantity, 0);
             const soldOut = totalQty > 0 && totalSold >= totalQty;
-            const ticketCount = types.length;
+            const priceList = types.filter((tt) => !tt.is_door_ticket);
 
             const card = (
               <div
@@ -109,23 +100,28 @@ export default async function EventsPage() {
                     </span>
                   )}
 
-                  <Separator />
+                  {priceList.length > 0 && (
+                    <>
+                      <Separator />
 
-                  {/* Ticket types + lowest price */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                      <Tag className="h-3.5 w-3.5" strokeWidth={1.75} />
-                      <span>
-                        {ticketCount}{" "}
-                        {ticketCount === 1 ? t(dict, "events.ticket_type") : t(dict, "events.ticket_types")}
-                      </span>
-                    </div>
-                    {minPrice != null && (
-                      <span className="text-sm font-semibold">
-                        {t(dict, "events.from")} {formatCurrency(minPrice, settings.currency)}
-                      </span>
-                    )}
-                  </div>
+                      {/* Itemized ticket prices */}
+                      <div className="flex flex-col gap-1.5">
+                        {priceList.map((tt) => {
+                          const price = tt.sale_enabled && tt.sale_price != null ? tt.sale_price : tt.price;
+                          return (
+                            <div key={tt.id} className="flex items-baseline justify-between gap-2 text-sm">
+                              <span className="uppercase tracking-wide text-xs font-medium text-muted-foreground line-clamp-1">
+                                {tt.name}
+                              </span>
+                              <span className="font-semibold tabular-nums shrink-0">
+                                {price === 0 ? t(dict, "ticket.free") : formatCurrency(price, settings.currency)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
 
                   {/* CTA */}
                   {!soldOut && (

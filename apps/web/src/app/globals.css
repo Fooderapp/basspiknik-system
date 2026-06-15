@@ -9,7 +9,7 @@
   /* Brand-tinted pastel light theme — warm cream surfaces, ink headlines,    */
   /* bright-green brand accent, soft pastel quadrant cards. Matches mobile.    */
   :root {
-    --background: 60 24% 95%;     /* #F6F5EE warm cream */
+    --background: 0 0% 100%;      /* #FFFFFF white */
     --foreground: 75 18% 7%;      /* #14160F warm ink */
     --card: 0 0% 100%;            /* white cards */
     --card-foreground: 75 18% 7%;
@@ -17,16 +17,16 @@
     --popover-foreground: 75 18% 7%;
     --primary: 95 71% 67%;        /* #9FE870 brand green */
     --primary-foreground: 96 60% 8%;
-    --secondary: 54 33% 90%;      /* #ECEADD deep cream */
+    --secondary: 0 0% 95%;        /* #F2F2F2 light grey */
     --secondary-foreground: 75 18% 12%;
-    --muted: 54 33% 90%;
+    --muted: 0 0% 95%;             /* #F2F2F2 light grey */
     --muted-foreground: 90 6% 42%;/* #6B6F63 soft ink */
-    --accent: 54 33% 90%;
+    --accent: 0 0% 95%;
     --accent-foreground: 75 18% 12%;
     --destructive: 0 70% 45%;
     --destructive-foreground: 0 0% 98%;
-    --border: 54 18% 85%;
-    --input: 54 18% 85%;
+    --border: 0 0% 90%;            /* #E5E5E5 light grey */
+    --input: 0 0% 90%;
     --ring: 95 71% 67%;
     --radius: 1rem;              /* rounder, matches pastel card language */
     --chart-1: 95 71% 67%;
