@@ -36,7 +36,7 @@ export function EventCarousel({ events, dict }: { events: EventCardData[]; dict:
 
   return (
     <div>
-      <div ref={trackRef} onScroll={onScroll} className={`no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 ${events.length === 1 ? "justify-center" : "justify-start"}`}>
+      <div ref={trackRef} onScroll={onScroll} className="no-scrollbar flex snap-x snap-mandatory justify-[safe_center] gap-4 overflow-x-auto pb-2">
         {events.map((ev) => {
           const badge = ev.soon ? t(dict, "home.coming_soon") : formatDate(ev.start_date);
           const card = (

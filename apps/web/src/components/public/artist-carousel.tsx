@@ -34,7 +34,7 @@ export function ArtistCarousel({ artists, dict }: { artists: ArtistCardData[]; d
 
   return (
     <div>
-      <div ref={trackRef} onScroll={onScroll} className={`no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 ${artists.length === 1 ? "justify-center" : "justify-start"}`}>
+      <div ref={trackRef} onScroll={onScroll} className="no-scrollbar flex snap-x snap-mandatory justify-[safe_center] gap-4 overflow-x-auto pb-2">
         {artists.map((a) => (
           <Link key={a.id} href={`/artists/${a.slug}`} className={`group w-[68vw] shrink-0 sm:w-[260px] ${artists.length === 1 ? "snap-center" : "snap-start"}`}>
             <div className="flex h-full flex-col gap-4 rounded-[2.25rem] p-2" style={{ background: "#16170F" }}>
