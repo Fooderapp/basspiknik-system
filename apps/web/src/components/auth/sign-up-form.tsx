@@ -11,8 +11,6 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Ticket } from "lucide-react";
 import type { Dictionary } from "@/lib/i18n";
 
 interface Props { dict: Dictionary }
@@ -71,45 +69,69 @@ export function SignUpForm({ dict }: Props) {
   };
 
   return (
-    <Card>
-      <CardHeader className="text-center">
-        <div className="flex justify-center mb-2">
-          <Ticket className="h-8 w-8 text-primary" />
+    <div className="rounded-[2.25rem] bg-white p-8 shadow-sm">
+      <div className="mb-6 text-center">
+        <h1 className="text-3xl font-extrabold tracking-tight" style={{ letterSpacing: "-0.03em" }}>
+          {dict["auth.signup_title"]}
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">{dict["auth.signup_desc"]}</p>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="name">{dict["auth.full_name"]}</Label>
+          <Input
+            id="name"
+            placeholder="Jane Smith"
+            className="h-12 rounded-2xl border-none bg-[#F6F5EE] px-4"
+            {...register("name")}
+          />
+          {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
         </div>
-        <CardTitle className="text-2xl">{dict["auth.signup_title"]}</CardTitle>
-        <CardDescription>{dict["auth.signup_desc"]}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">{dict["auth.full_name"]}</Label>
-            <Input id="name" placeholder="Jane Smith" {...register("name")} />
-            {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">{dict["auth.email"]}</Label>
-            <Input id="email" type="email" placeholder="you@example.com" {...register("email")} />
-            {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">{dict["auth.password"]}</Label>
-            <Input id="password" type="password" placeholder={dict["auth.pw_placeholder"]} {...register("password")} />
-            {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirm">{dict["auth.confirm_password"]}</Label>
-            <Input id="confirm" type="password" placeholder="••••••••" {...register("confirm")} />
-            {errors.confirm && <p className="text-sm text-destructive">{errors.confirm.message}</p>}
-          </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? dict["auth.creating"] : dict["auth.create"]}
-          </Button>
-        </form>
-      </CardContent>
-      <CardFooter className="justify-center text-sm text-muted-foreground">
-        {dict["auth.have_account"]}&nbsp;
-        <Link href={signInHref} className="text-primary underline underline-offset-4">{dict["auth.sign_in_link"]}</Link>
-      </CardFooter>
-    </Card>
+        <div className="space-y-2">
+          <Label htmlFor="email">{dict["auth.email"]}</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="you@example.com"
+            className="h-12 rounded-2xl border-none bg-[#F6F5EE] px-4"
+            {...register("email")}
+          />
+          {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="password">{dict["auth.password"]}</Label>
+          <Input
+            id="password"
+            type="password"
+            placeholder={dict["auth.pw_placeholder"]}
+            className="h-12 rounded-2xl border-none bg-[#F6F5EE] px-4"
+            {...register("password")}
+          />
+          {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="confirm">{dict["auth.confirm_password"]}</Label>
+          <Input
+            id="confirm"
+            type="password"
+            placeholder="••••••••"
+            className="h-12 rounded-2xl border-none bg-[#F6F5EE] px-4"
+            {...register("confirm")}
+          />
+          {errors.confirm && <p className="text-sm text-destructive">{errors.confirm.message}</p>}
+        </div>
+        <Button type="submit" variant="brand" size="pill" className="w-full" disabled={loading}>
+          {loading ? dict["auth.creating"] : dict["auth.create"]}
+        </Button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        {dict["auth.have_account"]}{" "}
+        <Link href={signInHref} className="font-semibold text-[#16170F] underline underline-offset-4">
+          {dict["auth.sign_in_link"]}
+        </Link>
+      </p>
+    </div>
   );
 }

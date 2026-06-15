@@ -11,8 +11,6 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Ticket } from "lucide-react";
 import type { Dictionary } from "@/lib/i18n";
 
 interface Props { dict: Dictionary }
@@ -53,35 +51,48 @@ export function SignInForm({ dict }: Props) {
   };
 
   return (
-    <Card>
-      <CardHeader className="text-center">
-        <div className="flex justify-center mb-2">
-          <Ticket className="h-8 w-8 text-primary" />
+    <div className="rounded-[2.25rem] bg-white p-8 shadow-sm">
+      <div className="mb-6 text-center">
+        <h1 className="text-3xl font-extrabold tracking-tight" style={{ letterSpacing: "-0.03em" }}>
+          {dict["auth.signin_title"]}
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">{dict["auth.signin_desc"]}</p>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="email">{dict["auth.email"]}</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="you@example.com"
+            className="h-12 rounded-2xl border-none bg-[#F6F5EE] px-4"
+            {...register("email")}
+          />
+          {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
         </div>
-        <CardTitle className="text-2xl">{dict["auth.signin_title"]}</CardTitle>
-        <CardDescription>{dict["auth.signin_desc"]}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">{dict["auth.email"]}</Label>
-            <Input id="email" type="email" placeholder="you@example.com" {...register("email")} />
-            {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">{dict["auth.password"]}</Label>
-            <Input id="password" type="password" placeholder="••••••••" {...register("password")} />
-            {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
-          </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? dict["auth.signing_in"] : dict["auth.sign_in"]}
-          </Button>
-        </form>
-      </CardContent>
-      <CardFooter className="justify-center text-sm text-muted-foreground">
-        {dict["auth.no_account"]}&nbsp;
-        <Link href="/sign-up" className="text-primary underline underline-offset-4">{dict["auth.sign_up"]}</Link>
-      </CardFooter>
-    </Card>
+        <div className="space-y-2">
+          <Label htmlFor="password">{dict["auth.password"]}</Label>
+          <Input
+            id="password"
+            type="password"
+            placeholder="••••••••"
+            className="h-12 rounded-2xl border-none bg-[#F6F5EE] px-4"
+            {...register("password")}
+          />
+          {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+        </div>
+        <Button type="submit" variant="brand" size="pill" className="w-full" disabled={loading}>
+          {loading ? dict["auth.signing_in"] : dict["auth.sign_in"]}
+        </Button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        {dict["auth.no_account"]}{" "}
+        <Link href="/sign-up" className="font-semibold text-[#16170F] underline underline-offset-4">
+          {dict["auth.sign_up"]}
+        </Link>
+      </p>
+    </div>
   );
 }
