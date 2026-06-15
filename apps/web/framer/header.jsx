@@ -518,11 +518,11 @@ var css = [
 	".framer-vMfWh .framer-1ou1rhh { align-content: center; align-items: center; display: flex; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 2px; height: min-content; justify-content: center; left: 0px; min-height: 432px; overflow: visible; padding: 0px; position: absolute; top: -72px; width: 100%; }",
 	".framer-vMfWh .framer-1ft3hw2, .framer-vMfWh .framer-1tt2cf6, .framer-vMfWh .framer-1ewb01i, .framer-vMfWh .framer-18js542 { flex: none; height: auto; position: relative; white-space: pre; width: auto; transition: --extracted-r6o4lv 0.2s ease; }",
 	".framer-vMfWh .framer-1ft3hw2:hover, .framer-vMfWh .framer-1tt2cf6:hover, .framer-vMfWh .framer-1ewb01i:hover, .framer-vMfWh .framer-18js542:hover { --extracted-r6o4lv: rgb(255, 255, 255) !important; }",
-	".framer-vMfWh .framer-cta-pill { background-color: rgb(255, 255, 255); border-radius: 999px; padding: 12px 28px; margin-top: 6px; flex: none; }",
-	".framer-vMfWh .framer-cta-pill p { font-family: var(--font-geist-sans), sans-serif; font-size: 16px; font-weight: 800; color: rgb(20, 22, 15); white-space: pre; }",
+	".framer-vMfWh .framer-cta-pill { background-color: rgb(255, 255, 255); border-radius: 999px; padding: 16px 28px; margin: auto 20px 20px 20px; align-self: stretch; box-sizing: border-box; text-align: center; flex: none; }",
+	".framer-vMfWh .framer-cta-pill p { font-family: var(--font-geist-sans), sans-serif; font-size: 16px; font-weight: 800; color: rgb(20, 22, 15); white-space: pre; text-align: center; }",
 	".framer-vMfWh.framer-v-1rfli15.framer-u8ibv2 { height: 470px; }",
 	".framer-vMfWh.framer-v-1rfli15 .framer-1jq0t8w { top: 5px; }",
-	".framer-vMfWh.framer-v-1rfli15 .framer-1ou1rhh { min-height: unset; top: 86px; }",
+	".framer-vMfWh.framer-v-1rfli15 .framer-1ou1rhh { min-height: unset; top: 86px; height: 384px; }",
 	'.framer-vMfWh[data-border="true"]::after, .framer-vMfWh [data-border="true"]::after { content: ""; border-width: var(--border-top-width, 0) var(--border-right-width, 0) var(--border-bottom-width, 0) var(--border-left-width, 0); border-color: var(--border-color, none); border-style: var(--border-style, none); width: 100%; height: 100%; position: absolute; box-sizing: border-box; left: 0; top: 0; border-radius: inherit; corner-shape: inherit; pointer-events: none; }',
 ];
 var FrameraQpj0WMWY = withCSS(Component, css, "framer-vMfWh");
