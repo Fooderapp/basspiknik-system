@@ -1,9 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { CalendarDays, MapPin, ShoppingBag } from "lucide-react";
+import { MapPin, ShoppingBag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { formatDate, formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import { getSettings } from "@/lib/settings";
 import { getDictionary, t } from "@/lib/i18n";
 import type { Event, TicketType } from "@/lib/supabase/types";
@@ -13,6 +12,9 @@ import type { Event, TicketType } from "@/lib/supabase/types";
 export const metadata = { title: "Buy Tickets" };
 
 type EventWithTickets = Event & { ticket_types: TicketType[] };
+
+const timeFmt = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" });
+const bigDateFmt = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "short", day: "numeric", year: "numeric" });
 
 export default async function EventsPage() {
   const supabase = await createClient() as any;
@@ -53,58 +55,58 @@ export default async function EventsPage() {
             const soldOut = totalQty > 0 && totalSold >= totalQty;
             const priceList = types.filter((tt) => !tt.is_door_ticket);
 
+            const startDate = new Date(event.start_date);
+            const endDate = event.end_date ? new Date(event.end_date) : null;
+            const sameDay = endDate ? startDate.toDateString() === endDate.toDateString() : false;
+
             const card = (
               <div
-                className={`overflow-hidden rounded-3xl bg-card transition-transform shadow-sm ${
+                className={`overflow-hidden rounded-[2.25rem] bg-card transition-transform shadow-sm ${
                   soldOut ? "opacity-60" : "hover:-translate-y-0.5"
                 }`}
               >
-                {/* Cover */}
-                {event.cover_image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={event.cover_image_url}
-                    alt={event.name}
-                    className="h-40 w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-24 w-full items-center justify-center bg-muted">
-                    <ShoppingBag className="h-8 w-8 text-muted-foreground/40" strokeWidth={1.5} />
-                  </div>
-                )}
-
-                {/* Info panel */}
-                <div className="m-2 flex flex-col gap-3 rounded-[1.5rem] p-4" style={{ background: "var(--muted)" }}>
-                  {/* Date heading */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-1.5 text-xl font-extrabold tracking-tight leading-tight" style={{ letterSpacing: "-0.02em" }}>
-                      <CalendarDays className="h-4 w-4 shrink-0" strokeWidth={2} />
-                      <span>
-                        {formatDate(event.start_date)}
-                        {event.end_date ? ` — ${formatDate(event.end_date)}` : ""}
-                      </span>
+                <div className="flex flex-col gap-3 p-2">
+                  {/* Header */}
+                  <div className="flex flex-col gap-2 px-4 pt-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-base font-semibold tracking-tight line-clamp-2">{event.name}</h3>
+                      {soldOut && <Badge variant="destructive" className="shrink-0">{t(dict, "events.sold_out")}</Badge>}
                     </div>
-                    {soldOut && <Badge variant="destructive">{t(dict, "events.sold_out")}</Badge>}
+                    <p className="text-sm font-medium text-muted-foreground">
+                      {timeFmt.format(startDate)} – {sameDay && endDate ? timeFmt.format(endDate) : t(dict, "events.time_end")}
+                    </p>
+                    {event.venue && (
+                      <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[#16170F] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                        <MapPin className="h-3 w-3 shrink-0" strokeWidth={2} />
+                        <span className="line-clamp-1">
+                          {event.venue}
+                          {event.address ? `, ${event.address}` : ""}
+                        </span>
+                      </span>
+                    )}
                   </div>
 
-                  <h3 className="text-base font-bold tracking-tight line-clamp-2">{event.name}</h3>
+                  {/* Grey panel */}
+                  <div className="flex flex-col gap-4 rounded-[1.75rem] p-4" style={{ background: "var(--muted)" }}>
+                    {event.cover_image_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={event.cover_image_url}
+                        alt={event.name}
+                        className="h-[190px] w-full rounded-xl object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-[190px] w-full items-center justify-center rounded-xl bg-card">
+                        <ShoppingBag className="h-8 w-8 text-muted-foreground/40" strokeWidth={1.5} />
+                      </div>
+                    )}
 
-                  {/* Venue pill */}
-                  {event.venue && (
-                    <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-medium">
-                      <MapPin className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
-                      <span className="line-clamp-1">
-                        {event.venue}
-                        {event.address ? `, ${event.address}` : ""}
-                      </span>
-                    </span>
-                  )}
+                    <h2 className="text-3xl font-extrabold uppercase leading-tight tracking-tight" style={{ letterSpacing: "-0.03em" }}>
+                      {bigDateFmt.format(startDate)}
+                    </h2>
 
-                  {priceList.length > 0 && (
-                    <>
-                      <Separator />
-
-                      {/* Itemized ticket prices */}
+                    {/* Itemized ticket prices */}
+                    {priceList.length > 0 && (
                       <div className="flex flex-col gap-1.5">
                         {priceList.map((tt) => {
                           const price = tt.sale_enabled && tt.sale_price != null ? tt.sale_price : tt.price;
@@ -120,15 +122,15 @@ export default async function EventsPage() {
                           );
                         })}
                       </div>
-                    </>
-                  )}
+                    )}
 
-                  {/* CTA */}
-                  {!soldOut && (
-                    <span className="block w-full rounded-full bg-[#16170F] py-3 text-center text-sm font-bold text-white">
-                      {t(dict, "events.buy")}
-                    </span>
-                  )}
+                    {/* CTA */}
+                    {!soldOut && (
+                      <span className="block w-full rounded-full bg-[#16170F] py-3 text-center text-sm font-bold text-white">
+                        {t(dict, "events.buy")}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             );

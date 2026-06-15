@@ -59,6 +59,7 @@ const en = {
   "events.from":          "from",
   "events.buy":           "Buy Tickets",
   "events.sold_out":      "Sold out",
+  "events.time_end":      "End",
   "events.ticket_type":   "ticket type",
   "events.ticket_types":  "ticket types",
 
@@ -551,6 +552,7 @@ const hu: typeof en = {
   "events.from":          "ártól",
   "events.buy":           "Jegyvásárlás",
   "events.sold_out":      "Elfogyott",
+  "events.time_end":      "Vége",
   "events.ticket_type":   "jegytípus",
   "events.ticket_types":  "jegytípus",
 
