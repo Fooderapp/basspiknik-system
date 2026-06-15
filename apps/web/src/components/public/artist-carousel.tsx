@@ -34,9 +34,10 @@ export function ArtistCarousel({ artists, dict }: { artists: ArtistCardData[]; d
 
   return (
     <div>
-      <div ref={trackRef} onScroll={onScroll} className="no-scrollbar flex snap-x snap-mandatory justify-[safe_center] gap-4 overflow-x-auto pb-2">
+      <div className="flex justify-center">
+      <div ref={trackRef} onScroll={onScroll} className="no-scrollbar inline-flex max-w-full snap-x snap-mandatory justify-start gap-4 overflow-x-auto pb-2">
         {artists.map((a) => (
-          <Link key={a.id} href={`/artists/${a.slug}`} className={`group w-[68vw] shrink-0 sm:w-[260px] ${artists.length === 1 ? "snap-center" : "snap-start"}`}>
+          <Link key={a.id} href={`/artists/${a.slug}`} className="group w-[68vw] shrink-0 snap-start sm:w-[260px]">
             <div className="flex h-full flex-col gap-4 rounded-[2.25rem] p-2" style={{ background: "#16170F" }}>
               <div className="relative aspect-square w-full overflow-hidden rounded-[1.75rem] bg-muted">
                 {a.photo_url ? (
@@ -64,6 +65,7 @@ export function ArtistCarousel({ artists, dict }: { artists: ArtistCardData[]; d
             </div>
           </Link>
         ))}
+      </div>
       </div>
       {artists.length > 1 && (
         <div className="mt-6 flex justify-center gap-2">
