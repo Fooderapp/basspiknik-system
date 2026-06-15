@@ -159,12 +159,19 @@ export function SellerApp({ events, dict }: Props) {
           </div>
         ) : (
           <div className="space-y-3">
-            <Label>{dict["seller.ticket_types"]}</Label>
+            <p className="text-xs font-bold uppercase tracking-[2px]" style={{ color: "#3C7A1E" }}>
+              {dict["event.select_tickets"]}
+            </p>
             {availableTickets.map((tt) => {
               const qty = getQty(tt.id);
               const available = tt.quantity - tt.sold;
+              const selected = qty > 0;
               return (
-                <div key={tt.id} className="flex items-center justify-between rounded-lg border bg-card p-4">
+                <div
+                  key={tt.id}
+                  className="flex items-center justify-between rounded-2xl border-2 bg-muted p-4 transition-colors"
+                  style={{ borderColor: selected ? "#9FE870" : "transparent" }}
+                >
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{tt.name}</span>
@@ -176,16 +183,16 @@ export function SellerApp({ events, dict }: Props) {
                       <span className="text-xs text-muted-foreground">{available} {dict["seller.left"]}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 rounded-full bg-white p-1 shadow-sm">
                     <Button
-                      type="button" variant="outline" size="icon" className="h-8 w-8"
+                      type="button" variant="ghost" size="icon" className="h-7 w-7 rounded-full hover:bg-muted"
                       onClick={() => setQty(tt, qty - 1)} disabled={qty === 0}
                     >
                       <Minus className="h-3 w-3" />
                     </Button>
-                    <span className="w-8 text-center font-mono font-bold">{qty}</span>
+                    <span className="w-8 text-center font-mono font-bold tabular-nums">{qty}</span>
                     <Button
-                      type="button" variant="outline" size="icon" className="h-8 w-8"
+                      type="button" variant="ghost" size="icon" className="h-7 w-7 rounded-full hover:bg-muted"
                       onClick={() => setQty(tt, qty + 1)} disabled={qty >= available}
                     >
                       <Plus className="h-3 w-3" />
@@ -239,9 +246,11 @@ export function SellerApp({ events, dict }: Props) {
                   </div>
                 ))}
                 <Separator />
-                <div className="flex justify-between font-bold">
-                  <span>{dict["seller.total"]} ({cartQty})</span>
-                  <span>{formatCurrency(cartTotal)}</span>
+                <div className="flex items-baseline justify-between">
+                  <span className="text-xs font-bold uppercase tracking-[2px] text-muted-foreground">
+                    {dict["ticket.total"]} ({cartQty} {cartQty === 1 ? dict["ticket.ticket_singular"] : dict["ticket.ticket_plural"]})
+                  </span>
+                  <span className="text-xl font-extrabold tabular-nums">{formatCurrency(cartTotal)}</span>
                 </div>
               </>
             )}
@@ -270,7 +279,7 @@ export function SellerApp({ events, dict }: Props) {
         <SlideToConfirm
           label={submitting ? dict["seller.processing"] : `${dict["seller.charge"]} ${formatCurrency(cartTotal)}`}
           confirmedLabel={dict["seller.sale_success"] ?? "Sold!"}
-          color="#22c55e"
+          color="#9FE870"
           disabled={cart.length === 0 || submitting || !selectedEventId}
           onConfirm={async () => {
             const ok = await handleSubmit();

@@ -14,7 +14,7 @@ import {
 import { formatCurrency } from "@/lib/utils";
 import { Minus, Plus, ScanLine, Sparkles, AlertTriangle, LogIn, Smartphone, Wallet, CheckCircle2 } from "lucide-react";
 import { SpinButton } from "@/components/credits/spin-button";
-import type { Dictionary } from "@/lib/i18n";
+import { t, type Dictionary } from "@/lib/i18n";
 import type { Currency } from "@/lib/settings";
 
 interface TicketType {
@@ -200,8 +200,14 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
     void handleCheckout({ name: guestName.trim(), email: guestEmail.trim() });
   };
 
+  const totalQty = Object.values(quantities).reduce((sum, q) => sum + q, 0);
+
   return (
     <div className="space-y-4">
+      <p className="text-xs font-bold uppercase tracking-[2px]" style={{ color: "#3C7A1E" }}>
+        {t(dict, "event.select_tickets")}
+      </p>
+
       {ticketTypes.map((ticket) => {
         const qty = quantities[ticket.id] ?? 0;
         const soon = !!ticket.comingSoon;
@@ -210,8 +216,8 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
         return (
           <div
             key={ticket.id}
-            className={`rounded-2xl p-4 transition-colors ${soon || soldOut ? "opacity-60 bg-muted" : "bg-muted"}`}
-            style={selected ? { background: "var(--pastel-green)" } : undefined}
+            className={`rounded-2xl border-2 bg-muted p-4 transition-colors ${soon || soldOut ? "opacity-60" : ""}`}
+            style={{ borderColor: selected ? "#9FE870" : "transparent" }}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1">
@@ -295,9 +301,11 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
       {/* Summary + checkout — floats above the bottom nav on mobile */}
       {hasItems && (
         <div className="sticky bottom-24 z-30 rounded-3xl bg-card p-4 space-y-3 shadow-[0_8px_28px_rgba(20,22,15,0.14)] md:bottom-4">
-          <div className="flex justify-between text-sm">
-            <span>{dict["ticket.subtotal"]}</span>
-            <span className={freeSpinToken ? "line-through text-muted-foreground" : ""}>{fmt(subtotal)}</span>
+          <div className="flex items-baseline justify-between">
+            <span className="text-xs font-bold uppercase tracking-[2px] text-muted-foreground">
+              {t(dict, "ticket.total")} ({totalQty} {totalQty === 1 ? t(dict, "ticket.ticket_singular") : t(dict, "ticket.ticket_plural")})
+            </span>
+            <span className={`text-xl font-extrabold tabular-nums ${freeSpinToken ? "line-through text-muted-foreground" : ""}`}>{fmt(subtotal)}</span>
           </div>
 
           {/* Credit redemption slider — logged-in, no promo, redemption enabled */}
