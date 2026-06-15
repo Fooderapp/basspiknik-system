@@ -298,9 +298,9 @@ export function TicketSelector({ eventId, ticketTypes, dict, currency, isLoggedI
         </a>
       )}
 
-      {/* Summary + checkout — floats above the bottom nav on mobile */}
+      {/* Summary + checkout — floats above the bottom nav dock */}
       {hasItems && (
-        <div className="sticky bottom-24 z-30 rounded-[2.25rem] p-4 space-y-3 shadow-[0_8px_28px_rgba(20,22,15,0.14)] md:bottom-4" style={{ background: "#E5E5E5" }}>
+        <div className="sticky bottom-24 z-30 rounded-[2.25rem] p-4 space-y-3 shadow-[0_8px_28px_rgba(20,22,15,0.14)]" style={{ background: "#E5E5E5" }}>
           <div className="flex items-baseline justify-between">
             <span className="text-xs font-bold uppercase tracking-[2px] text-muted-foreground">
               {t(dict, "ticket.total")} ({totalQty} {totalQty === 1 ? t(dict, "ticket.ticket_singular") : t(dict, "ticket.ticket_plural")})
