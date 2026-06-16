@@ -8,6 +8,8 @@ import { HeroTypewriter } from "@/components/public/hero-typewriter";
 import { EventCarousel } from "@/components/public/event-carousel";
 import { ArtistCarousel } from "@/components/public/artist-carousel";
 import { StickyFadeTitle } from "@/components/public/sticky-fade-title";
+import { VenueGlobe } from "@/components/public/venue-globe";
+import { BASS_PIKNIK_VENUE } from "@/lib/venue";
 import { Button } from "@/components/ui/button";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -130,6 +132,17 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
+      {/* ── Location ── */}
+      <div id="location" className="scroll-mt-20" />
+      <section className="relative z-[1] flex min-h-screen flex-col justify-center px-5 py-8">
+        <div className="mx-auto w-full max-w-6xl">
+          <StickyFadeTitle className="sticky top-24 z-0 mb-7 py-2 text-center text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{t(dict, "home.location")}</StickyFadeTitle>
+          <div className="relative z-10">
+            <VenueGlobe venue={BASS_PIKNIK_VENUE} dict={dict} lang={settings.language as "en" | "hu"} />
+          </div>
+        </div>
+      </section>
 
       {/* ── Footer ── */}
       <footer className="relative z-[1]" style={{ background: "#16170F" }}>
