@@ -19,7 +19,7 @@ interface Props { dict: Dictionary }
 export function SignInForm({ dict }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo") ?? "/dashboard";
+  const redirectTo = searchParams.get("redirectTo") ?? "/home";
   const [loading, setLoading] = useState(false);
 
   const schema = z.object({

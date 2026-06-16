@@ -19,8 +19,8 @@ interface Props { dict: Dictionary }
 export function SignUpForm({ dict }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo");
-  const signInHref = redirectTo ? `/sign-in?redirectTo=${encodeURIComponent(redirectTo)}` : "/sign-in";
+  const redirectTo = searchParams.get("redirectTo") ?? "/home";
+  const signInHref = `/sign-in?redirectTo=${encodeURIComponent(redirectTo)}`;
   const [loading, setLoading] = useState(false);
 
   const schema = z.object({
