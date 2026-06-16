@@ -85,7 +85,7 @@ export async function GET(req: Request) {
     const privateKey  = parsePrivateKey(SA_KEY_RAW);
     const classId     = `${ISSUER_ID}.${CLASS_SUFFIX}`;
     const objectId    = `${ISSUER_ID}.user_${user.id.replace(/-/g, "_")}`;
-    const displayName = profile.full_name ?? user.email ?? "Ticket Holder";
+    const displayName = profile?.full_name ?? user.email ?? "Ticket Holder";
 
     // ── Build Generic pass object ──────────────────────────────────────────
     // https://developers.google.com/wallet/generic/rest/v1/genericobject
