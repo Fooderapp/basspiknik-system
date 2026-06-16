@@ -12,8 +12,26 @@ const YELLOW = "#C7E04A";
 const LAND_MASK = "/venue/earth-land.png";
 
 /* ── Dotted continents (dots placed only on land via the mask) ─────────────── */
+// Soft circular sprite so each point renders as a round dot (not a square).
+function makeDotTexture() {
+  const c = document.createElement("canvas");
+  c.width = c.height = 64;
+  const ctx = c.getContext("2d")!;
+  const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  g.addColorStop(0, "rgba(255,255,255,1)");
+  g.addColorStop(0.6, "rgba(255,255,255,1)");
+  g.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(32, 32, 32, 0, Math.PI * 2);
+  ctx.fill();
+  const tex = new THREE.CanvasTexture(c);
+  return tex;
+}
+
 function DotGlobe() {
   const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null);
+  const dotTex = useMemo(makeDotTexture, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -69,7 +87,16 @@ function DotGlobe() {
   return (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     <points geometry={geometry as any}>
-      <pointsMaterial size={0.022} vertexColors sizeAttenuation transparent opacity={1} depthWrite={false} />
+      <pointsMaterial
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        map={dotTex as any}
+        size={0.026}
+        vertexColors
+        sizeAttenuation
+        transparent
+        alphaTest={0.45}
+        depthWrite={false}
+      />
     </points>
   );
 }

@@ -53,14 +53,15 @@ export function VenueMap({
     const map = mapRef.current;
     if (!map || !loadedRef.current || !flyReqRef.current || flownRef.current) return;
     flownRef.current = true;
+    const h = map.getContainer().clientHeight;
     map.flyTo({
       center: [venue.lng, venue.lat],
-      zoom: 12.5, // town level — lake, roads & context, pin still reads
+      zoom: 14, // close enough to read the lake, streets & the venue
       duration: 3000,
       curve: 1.5,
       essential: true,
-      // Keep the pin clear of the centred hero headline (push it lower).
-      padding: { top: Math.round(map.getContainer().clientHeight * 0.18), bottom: 0, left: 0, right: 0 },
+      // Push the pin up into the clear zone ABOVE the hero subheadline.
+      padding: { top: 0, bottom: Math.round(h * 0.5), left: 0, right: 0 },
     });
   }
 
@@ -105,7 +106,15 @@ export function VenueMap({
 
   return (
     <div className="absolute inset-0 h-full w-full">
-      <div ref={containerRef} className="h-full w-full" />
+      {/* Tint only the tile canvas toward brand green/dark — leaves the pin
+          marker (a sibling overlay) at its true colour. */}
+      <style>{`
+        .venue-map-tint .maplibregl-canvas {
+          filter: grayscale(0.35) sepia(0.55) hue-rotate(52deg) saturate(1.5) brightness(0.62) contrast(1.08);
+        }
+        .venue-map-tint .maplibregl-ctrl-attrib { opacity: 0.55; }
+      `}</style>
+      <div ref={containerRef} className="venue-map-tint h-full w-full" />
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg overflow-hidden rounded-3xl p-0">
