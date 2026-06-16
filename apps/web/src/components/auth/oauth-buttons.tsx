@@ -15,7 +15,8 @@ export function OAuthButtons({ dict, redirectTo = "/dashboard" }: Props) {
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [loadingApple, setLoadingApple]   = useState(false);
 
-  const callbackUrl = `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`;
+  const origin = process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin;
+  const callbackUrl = `${origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`;
 
   async function signInWith(provider: "google" | "apple", setLoading: (v: boolean) => void) {
     setLoading(true);
