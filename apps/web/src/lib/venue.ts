@@ -23,8 +23,8 @@ export const BASS_PIKNIK_VENUE: Venue = {
     "https://www.google.com/maps/place/T%C3%B3-Part+Panzi%C3%B3/@47.3975366,16.535894,17z",
   images: [],
   description: {
-    en: "Our lakeside home for Bass Piknik. Set on the calm shore of a Western-Hungarian lake near Szombathely, wrapped in forest and open sky. Camp by the water, dance under the stars.",
-    hu: "A Bass Piknik tóparti otthona. Egy nyugodt nyugat-magyarországi tó partján, Szombathely közelében, erdővel és nyílt éggel körülölelve. Sátorozz a víz mellett, táncolj a csillagok alatt.",
+    en: "Our lakeside home for Bass Piknik. Set on the calm shore of a lake just outside Kőszeg in Western Hungary, wrapped in forest and open sky. Camp by the water, dance under the stars.",
+    hu: "A Bass Piknik tóparti otthona. Egy nyugodt tó partján Kőszeg mellett, Nyugat-Magyarországon, erdővel és nyílt éggel körülölelve. Sátorozz a víz mellett, táncolj a csillagok alatt.",
   },
 };
 
