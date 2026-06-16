@@ -85,7 +85,6 @@ export async function GET(req: Request) {
     const privateKey  = parsePrivateKey(SA_KEY_RAW);
     const classId     = `${ISSUER_ID}.${CLASS_SUFFIX}`;
     const objectId    = `${ISSUER_ID}.user_${user.id.replace(/-/g, "_")}`;
-    const displayName = profile?.full_name ?? user.email ?? "Ticket Holder";
 
     // ── Build Generic pass object ──────────────────────────────────────────
     // https://developers.google.com/wallet/generic/rest/v1/genericobject
@@ -93,34 +92,15 @@ export async function GET(req: Request) {
       id: objectId,
       classId,
       genericType: "GENERIC_TYPE_UNSPECIFIED",
-      cardTitle: {
-        defaultValue: { language: "en-US", value: "BASSPIKNIK" },
-      },
-      subheader: {
-        defaultValue: { language: "en-US", value: "Event Ticket" },
-      },
-      header: {
-        defaultValue: { language: "en-US", value: displayName },
-      },
       barcode: {
         type: "QR_CODE",
         value: walletToken,
         alternateText: "",
       },
       heroImage: {
-        sourceUri: {
-          uri: `${APP_URL}/pass-hero.png`,
-        },
+        sourceUri: { uri: `${APP_URL}/pass-hero.png` },
         contentDescription: {
           defaultValue: { language: "en-US", value: "BASSPIKNIK" },
-        },
-      },
-      logo: {
-        sourceUri: {
-          uri: `${APP_URL}/pass-logo.png`,
-        },
-        contentDescription: {
-          defaultValue: { language: "en-US", value: "BASSPIKNIK logo" },
         },
       },
       hexBackgroundColor: "#3f6912",
