@@ -32,27 +32,9 @@ export function VenueMap({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const loadedRef = useRef(false);
-  const flyReqRef = useRef(false);
   const flownRef = useRef(false);
+  const [mapLoaded, setMapLoaded] = useState(false);
   const [open, setOpen] = useState(false);
-
-  // Fly down to the city — only once, and only after the map has loaded.
-  function doFly() {
-    const map = mapRef.current;
-    if (!map || !loadedRef.current || !flyReqRef.current || flownRef.current) return;
-    flownRef.current = true;
-    const h = map.getContainer().clientHeight;
-    map.flyTo({
-      center: [venue.lng, venue.lat],
-      zoom: 14, // close enough to read the lake, streets & the venue
-      duration: 3000,
-      curve: 1.5,
-      essential: true,
-      // Push the pin up into the clear zone ABOVE the hero subheadline.
-      padding: { top: 0, bottom: Math.round(h * 0.5), left: 0, right: 0 },
-    });
-  }
 
   // Mount the map once
   useEffect(() => {
@@ -61,12 +43,12 @@ export function VenueMap({
       container: containerRef.current,
       style: POSITRON_STYLE,
       center: [venue.lng, venue.lat],
-      zoom: 4.4, // country level — matches where the globe handed off
-      interactive: false, // hero backdrop: no scroll/drag trap
+      zoom: 4.4,
+      interactive: false,
       attributionControl: { compact: true },
     });
     mapRef.current = map;
-    map.once("load", () => { loadedRef.current = true; doFly(); });
+    map.once("load", () => setMapLoaded(true));
 
     // Brand pin marker
     const el = document.createElement("button");
@@ -86,12 +68,21 @@ export function VenueMap({
     return () => { map.remove(); mapRef.current = null; };
   }, [venue]);
 
-  // Fly in to the city when triggered
+  // Fly once both the map is loaded AND the handoff has been triggered.
   useEffect(() => {
-    flyReqRef.current = fly;
-    if (fly) doFly();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fly]);
+    const map = mapRef.current;
+    if (!fly || !mapLoaded || flownRef.current || !map) return;
+    flownRef.current = true;
+    const h = map.getContainer().clientHeight;
+    map.flyTo({
+      center: [venue.lng, venue.lat],
+      zoom: 14,
+      duration: 3000,
+      curve: 1.5,
+      essential: true,
+      padding: { top: 0, bottom: Math.round(h * 0.5), left: 0, right: 0 },
+    });
+  }, [fly, mapLoaded, venue]);
 
   return (
     <div className="absolute inset-0 h-full w-full">
