@@ -64,8 +64,14 @@ export async function GET(req: Request) {
       .eq("id", user.id)
       .single() as { data: { full_name: string | null; wallet_token: string | null } | null };
 
-    if (!profile?.wallet_token) {
-      return NextResponse.json({ error: "No wallet token — contact support" }, { status: 400 });
+    let walletToken = profile?.wallet_token;
+    if (!walletToken) {
+      // Migration 013 should have backfilled this, but auto-heal if missing.
+      walletToken = crypto.randomUUID();
+      await supabaseAdmin
+        .from("profiles")
+        .update({ wallet_token: walletToken })
+        .eq("id", user.id);
     }
 
     // ── Check env vars ─────────────────────────────────────────────────────
@@ -98,7 +104,7 @@ export async function GET(req: Request) {
       },
       barcode: {
         type: "QR_CODE",
-        value: profile.wallet_token,
+        value: walletToken,
         alternateText: "",
       },
       heroImage: {
