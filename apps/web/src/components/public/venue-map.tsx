@@ -14,20 +14,9 @@ import { Button } from "@/components/ui/button";
 import type { Venue } from "@/lib/venue";
 import type { Dictionary } from "@/lib/i18n";
 
-// Free OpenStreetMap raster tiles — no API key. Swap for a brand-styled vector
-// style (MapTiler / Mapbox) + key for production-grade tiles and theming.
-const OSM_STYLE: maplibregl.StyleSpecification = {
-  version: 8,
-  sources: {
-    osm: {
-      type: "raster",
-      tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-      tileSize: 256,
-      attribution: "© OpenStreetMap contributors",
-    },
-  },
-  layers: [{ id: "osm", type: "raster", source: "osm" }],
-};
+// OpenFreeMap Positron — free vector tiles, no API key, same clean aesthetic
+// as Mapbox Light. See https://openfreemap.org for terms.
+const POSITRON_STYLE = "https://tiles.openfreemap.org/styles/positron";
 
 export function VenueMap({
   venue,
@@ -70,7 +59,7 @@ export function VenueMap({
     if (!containerRef.current || mapRef.current) return;
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: OSM_STYLE,
+      style: POSITRON_STYLE,
       center: [venue.lng, venue.lat],
       zoom: 4.4, // country level — matches where the globe handed off
       interactive: false, // hero backdrop: no scroll/drag trap
@@ -106,15 +95,7 @@ export function VenueMap({
 
   return (
     <div className="absolute inset-0 h-full w-full">
-      {/* Tint only the tile canvas toward brand green/dark — leaves the pin
-          marker (a sibling overlay) at its true colour. */}
-      <style>{`
-        .venue-map-tint .maplibregl-canvas {
-          filter: grayscale(0.35) sepia(0.55) hue-rotate(52deg) saturate(1.5) brightness(0.62) contrast(1.08);
-        }
-        .venue-map-tint .maplibregl-ctrl-attrib { opacity: 0.55; }
-      `}</style>
-      <div ref={containerRef} className="venue-map-tint h-full w-full" />
+      <div ref={containerRef} className="h-full w-full" />
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg overflow-hidden rounded-3xl p-0">
