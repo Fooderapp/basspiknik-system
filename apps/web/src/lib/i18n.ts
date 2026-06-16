@@ -364,6 +364,9 @@ const en = {
   "auth.name_short":       "Name too short",
   "auth.pw_mismatch":      "Passwords don't match",
   "auth.pw_placeholder":   "Min 8 characters",
+  "auth.or":               "or",
+  "auth.google":           "Continue with Google",
+  "auth.apple":            "Continue with Apple",
 
   // Seller POS
   "seller.title":          "Seller Terminal",
@@ -857,6 +860,9 @@ const hu: typeof en = {
   "auth.name_short":       "A név túl rövid",
   "auth.pw_mismatch":      "A jelszavak nem egyeznek",
   "auth.pw_placeholder":   "Min. 8 karakter",
+  "auth.or":               "vagy",
+  "auth.google":           "Folytatás Google-lel",
+  "auth.apple":            "Folytatás Apple-lel",
 
   // Seller POS
   "seller.title":          "Értékesítői terminál",

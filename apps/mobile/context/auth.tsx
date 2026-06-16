@@ -1,13 +1,21 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { Platform } from "react-native";
+import * as WebBrowser from "expo-web-browser";
+import * as Linking from "expo-linking";
+import * as AppleAuthentication from "expo-apple-authentication";
 import { supabase } from "@/lib/supabase";
 import type { Profile } from "@/lib/types";
 import type { Session } from "@supabase/supabase-js";
+
+WebBrowser.maybeCompleteAuthSession();
 
 interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<string | null>;
+  signInWithGoogle: () => Promise<string | null>;
+  signInWithApple: () => Promise<string | null>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -17,6 +25,8 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   loading: true,
   signIn: async () => null,
+  signInWithGoogle: async () => null,
+  signInWithApple: async () => null,
   signOut: async () => {},
   refreshProfile: async () => {},
 });
@@ -81,6 +91,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return error?.message ?? null;
   }
 
+  async function signInWithGoogle(): Promise<string | null> {
+    const redirectUrl = Linking.createURL("/");
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: redirectUrl, skipBrowserRedirect: true },
+    });
+    if (error) return error.message;
+    if (!data.url) return "No auth URL returned";
+
+    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+    if (result.type !== "success") return null; // user cancelled
+
+    const fragment = result.url.split("#")[1];
+    if (!fragment) return "No session data in redirect";
+    const params = new URLSearchParams(fragment);
+    const accessToken  = params.get("access_token");
+    const refreshToken = params.get("refresh_token");
+    if (!accessToken || !refreshToken) return "Missing tokens in redirect";
+
+    const { error: sessionError } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+    return sessionError?.message ?? null;
+  }
+
+  async function signInWithApple(): Promise<string | null> {
+    if (Platform.OS !== "ios") return "Apple Sign-In is only available on iOS";
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: "apple",
+        token: credential.identityToken!,
+      });
+      return error?.message ?? null;
+    } catch (e: any) {
+      if (e.code === "ERR_REQUEST_CANCELED") return null;
+      return e.message;
+    }
+  }
+
   async function signOut() {
     await supabase.auth.signOut();
   }
@@ -90,7 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, profile, loading, signIn, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ session, profile, loading, signIn, signInWithGoogle, signInWithApple, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

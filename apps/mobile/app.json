@@ -23,7 +23,8 @@
         "NSBluetoothPeripheralUsageDescription": "Required by Stripe Terminal SDK."
       },
       "entitlements": {
-        "com.apple.developer.proximity-reader.payment.acceptance": true
+        "com.apple.developer.proximity-reader.payment.acceptance": true,
+        "com.apple.developer.applesignin": ["Default"]
       }
     },
     "android": {
@@ -42,6 +43,7 @@
       "expo-router",
       "expo-font",
       "expo-secure-store",
+      "expo-apple-authentication",
       [
         "expo-camera",
         {

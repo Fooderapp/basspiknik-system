@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import type { Dictionary } from "@/lib/i18n";
 
 interface Props { dict: Dictionary }
@@ -86,6 +87,10 @@ export function SignInForm({ dict }: Props) {
           {loading ? dict["auth.signing_in"] : dict["auth.sign_in"]}
         </Button>
       </form>
+
+      <div className="mt-4">
+        <OAuthButtons dict={dict} redirectTo={redirectTo} />
+      </div>
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         {dict["auth.no_account"]}{" "}
