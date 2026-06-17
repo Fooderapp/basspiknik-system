@@ -2,6 +2,7 @@
   "name": "eventos-mobile",
   "version": "1.0.0",
   "main": "expo-router/entry",
+  "packageManager": "pnpm@10.15.1",
   "dependencies": {
     "@react-native-async-storage/async-storage": "^3.1.1",
     "@rn-primitives/slot": "^1.4.0",
