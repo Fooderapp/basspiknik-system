@@ -92,7 +92,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signInWithGoogle(): Promise<string | null> {
-    const redirectUrl = Linking.createURL("/");
+    // Use the app's deep-link scheme so Supabase redirects back here, not to
+    // the web app. Add "eventos://" to Supabase → Auth → URL Configuration →
+    // Redirect URLs in the dashboard so this is accepted.
+    const redirectUrl = "eventos://";
+
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: redirectUrl, skipBrowserRedirect: true },
@@ -101,18 +105,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!data.url) return "No auth URL returned";
 
     const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
-    if (result.type !== "success") return null; // user cancelled
+    if (result.type !== "success") return null; // user cancelled / dismissed
 
     const url = result.url;
 
-    // PKCE flow: Supabase v2 returns ?code= in query params
+    // PKCE flow (Supabase v2 default): ?code= in query params
     const codeMatch = url.match(/[?&]code=([^&#]+)/);
     if (codeMatch) {
       const { error: exchError } = await supabase.auth.exchangeCodeForSession(codeMatch[1]);
       return exchError?.message ?? null;
     }
 
-    // Implicit flow fallback: tokens in hash fragment
+    // Implicit flow fallback: tokens in #hash fragment
     const fragment = url.split("#")[1];
     if (fragment) {
       const params = new URLSearchParams(fragment);

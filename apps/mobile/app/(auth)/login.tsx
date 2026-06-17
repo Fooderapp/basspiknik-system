@@ -6,6 +6,7 @@ import { useAuth } from "@/context/auth";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
+import { GoogleLogo } from "@/components/ui/BrandLogos";
 
 export default function LoginScreen() {
   const { signIn, signInWithGoogle, signInWithApple } = useAuth();
@@ -114,8 +115,7 @@ export default function LoginScreen() {
               loading={loadingGoogle}
               disabled={loadingGoogle}
             >
-              {/* Google G */}
-              <Text style={{ fontFamily: undefined, fontSize: 16 }}>G</Text>
+              <GoogleLogo size={18} />
               <Text>Continue with Google</Text>
             </Button>
 
