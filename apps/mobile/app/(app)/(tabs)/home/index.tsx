@@ -58,6 +58,7 @@ interface Act {
 function FlipCard({
   tk, idx, total, isLast,
 }: { tk: WTicket; idx: number; total: number; isLast: boolean }) {
+  const { dict } = useLanguage();
   const flip = useSharedValue(0);
   const flipped = useRef(false);
 
