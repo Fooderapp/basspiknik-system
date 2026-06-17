@@ -32,6 +32,7 @@ export function VenueMap({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const pinElRef = useRef<HTMLElement | null>(null);
   const flownRef = useRef(false);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [open, setOpen] = useState(false);
@@ -50,22 +51,38 @@ export function VenueMap({
     mapRef.current = map;
     map.once("load", () => setMapLoaded(true));
 
-    // Brand pin marker
-    const el = document.createElement("button");
-    el.setAttribute("aria-label", venue.name);
-    el.style.cssText =
-      "width:30px;height:42px;border:0;background:transparent;cursor:pointer;transform:translateY(-6px);filter:drop-shadow(0 3px 5px rgba(0,0,0,.35))";
-    el.innerHTML = `
-      <svg width="30" height="42" viewBox="0 0 30 42" xmlns="http://www.w3.org/2000/svg">
+    // Wrapper holds pulse ring + pin SVG
+    const wrapper = document.createElement("div");
+    wrapper.style.cssText = "position:relative;width:36px;height:50px;opacity:0;transform:translateY(20px) scale(0.4)";
+    pinElRef.current = wrapper;
+
+    // Pulsing ring behind the pin
+    const ring = document.createElement("div");
+    ring.style.cssText = [
+      "position:absolute;bottom:0;left:50%;",
+      "width:28px;height:28px;border-radius:50%;",
+      "background:rgba(199,224,74,0.35);",
+      "transform:translateX(-50%);",
+      "animation:pinPulse 2s ease-out 0.6s infinite",
+    ].join("");
+    wrapper.appendChild(ring);
+
+    const btn = document.createElement("button");
+    btn.setAttribute("aria-label", venue.name);
+    btn.style.cssText = "border:0;background:transparent;cursor:pointer;padding:0;display:block;filter:drop-shadow(0 4px 6px rgba(0,0,0,.4))";
+    btn.innerHTML = `
+      <svg width="36" height="50" viewBox="0 0 30 42" xmlns="http://www.w3.org/2000/svg">
         <path d="M15 0C6.7 0 0 6.7 0 15c0 10.5 15 27 15 27s15-16.5 15-27C30 6.7 23.3 0 15 0Z" fill="#C7E04A"/>
         <circle cx="15" cy="15" r="6.2" fill="#16170F"/>
       </svg>`;
-    el.addEventListener("click", () => setOpen(true));
-    new maplibregl.Marker({ element: el, anchor: "bottom" })
+    btn.addEventListener("click", () => setOpen(true));
+    wrapper.appendChild(btn);
+
+    new maplibregl.Marker({ element: wrapper, anchor: "bottom" })
       .setLngLat([venue.lng, venue.lat])
       .addTo(map);
 
-    return () => { map.remove(); mapRef.current = null; };
+    return () => { map.remove(); mapRef.current = null; pinElRef.current = null; };
   }, [venue]);
 
   // Fly once both the map is loaded AND the handoff has been triggered.
@@ -82,10 +99,24 @@ export function VenueMap({
       essential: true,
       padding: { top: 0, bottom: Math.round(h * 0.5), left: 0, right: 0 },
     });
+    // Bounce the pin in once the camera settles
+    map.once("moveend", () => {
+      const pin = pinElRef.current;
+      if (!pin) return;
+      pin.style.transition = "opacity 0.35s ease, transform 0.55s cubic-bezier(0.34,1.56,0.64,1)";
+      pin.style.opacity = "1";
+      pin.style.transform = "translateY(0) scale(1)";
+    });
   }, [fly, mapLoaded, venue]);
 
   return (
     <div className="absolute inset-0 h-full w-full">
+      <style>{`
+        @keyframes pinPulse {
+          0%   { transform: translateX(-50%) scale(1);   opacity: 0.6; }
+          100% { transform: translateX(-50%) scale(2.6); opacity: 0; }
+        }
+      `}</style>
       <div ref={containerRef} className="h-full w-full" />
 
       <Dialog open={open} onOpenChange={setOpen}>

@@ -32,6 +32,15 @@ function makeDotTexture() {
 function DotGlobe() {
   const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null);
   const dotTex = useMemo(makeDotTexture, []);
+  const matRef = useRef<THREE.PointsMaterial | null>(null);
+
+  // Shrink dots as camera zooms in so they stay crisp rather than blobbing out.
+  useFrame((state) => {
+    if (!matRef.current) return;
+    const z = state.camera.position.z;
+    const t = THREE.MathUtils.clamp((z - 2.7) / (7.6 - 2.7), 0, 1);
+    matRef.current.size = THREE.MathUtils.lerp(0.009, 0.026, t);
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -88,6 +97,8 @@ function DotGlobe() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     <points geometry={geometry as any}>
       <pointsMaterial
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ref={matRef as any}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         map={dotTex as any}
         size={0.026}

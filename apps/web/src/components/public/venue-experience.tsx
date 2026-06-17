@@ -62,25 +62,35 @@ export function VenueExperience({
       ref={rootRef}
       className="absolute inset-0 h-full w-full"
       style={{
-        maskImage: "linear-gradient(to bottom, black 74%, transparent 100%)",
-        WebkitMaskImage: "linear-gradient(to bottom, black 74%, transparent 100%)",
+        maskImage: "linear-gradient(to bottom, black 32%, transparent 56%)",
+        WebkitMaskImage: "linear-gradient(to bottom, black 32%, transparent 56%)",
       }}
     >
-      {/* Real map (under) — fades in during handoff */}
+      {/* Real map (under) — fades in + unblurs during handoff */}
       {handoff && (
         <div
-          className="absolute inset-0 transition-opacity duration-700"
-          style={{ opacity: 1 }}
+          className="absolute inset-0"
+          style={{
+            opacity: handoff ? 1 : 0,
+            transform: handoff ? "scale(1)" : "scale(1.05)",
+            filter: handoff ? "blur(0px)" : "blur(6px)",
+            transition: "opacity 0.9s ease, transform 1.1s ease, filter 0.9s ease",
+          }}
         >
           <VenueMap venue={venue} dict={dict} lang={lang} fly={handoff} />
         </div>
       )}
 
-      {/* Dotted globe (over) — fades out at handoff */}
+      {/* Dotted globe (over) — fades out + zooms in on handoff */}
       {!globeGone && (
         <div
-          className="absolute inset-0 transition-opacity duration-1000"
-          style={{ opacity: handoff ? 0 : 1 }}
+          className="absolute inset-0"
+          style={{
+            opacity: handoff ? 0 : 1,
+            transform: handoff ? "scale(1.12)" : "scale(1)",
+            transition: "opacity 1.1s ease, transform 1.3s ease",
+            pointerEvents: handoff ? "none" : "auto",
+          }}
         >
           <VenueGlobe venue={venue} active={active} onProgress={onGlobeProgress} />
         </div>
