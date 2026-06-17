@@ -95,6 +95,9 @@ export async function GET(req: Request) {
       cardTitle: {
         defaultValue: { language: "en-US", value: "Bass Piknik" },
       },
+      header: {
+        defaultValue: { language: "en-US", value: profile?.full_name ?? "Festival Pass" },
+      },
       barcode: {
         type: "QR_CODE",
         value: walletToken,
