@@ -51,10 +51,14 @@ export function VenueMap({
     mapRef.current = map;
     map.once("load", () => setMapLoaded(true));
 
-    // Wrapper holds pulse ring + pin SVG
+    // MapLibre owns `wrapper`'s transform for positioning — never touch it.
+    // Animate `inner` instead so the spring bounce doesn't override positioning.
     const wrapper = document.createElement("div");
-    wrapper.style.cssText = "position:relative;width:36px;height:50px;opacity:0;transform:translateY(20px) scale(0.4)";
-    pinElRef.current = wrapper;
+    wrapper.style.cssText = "position:relative;width:36px;height:50px;";
+
+    const inner = document.createElement("div");
+    inner.style.cssText = "opacity:0;transform:translateY(20px) scale(0.4);position:relative;width:36px;height:50px;";
+    pinElRef.current = inner;
 
     // Pulsing ring behind the pin
     const ring = document.createElement("div");
@@ -65,7 +69,7 @@ export function VenueMap({
       "transform:translateX(-50%);",
       "animation:pinPulse 2s ease-out 0.6s infinite",
     ].join("");
-    wrapper.appendChild(ring);
+    inner.appendChild(ring);
 
     const btn = document.createElement("button");
     btn.setAttribute("aria-label", venue.name);
@@ -76,7 +80,8 @@ export function VenueMap({
         <circle cx="15" cy="15" r="6.2" fill="#16170F"/>
       </svg>`;
     btn.addEventListener("click", () => setOpen(true));
-    wrapper.appendChild(btn);
+    inner.appendChild(btn);
+    wrapper.appendChild(inner);
 
     new maplibregl.Marker({ element: wrapper, anchor: "bottom" })
       .setLngLat([venue.lng, venue.lat])
@@ -90,14 +95,12 @@ export function VenueMap({
     const map = mapRef.current;
     if (!fly || !mapLoaded || flownRef.current || !map) return;
     flownRef.current = true;
-    const h = map.getContainer().clientHeight;
     map.flyTo({
-      center: [venue.lng, venue.lat],
+      center: [venue.lng, venue.lat - 0.010],
       zoom: 14,
       duration: 3000,
       curve: 1.5,
       essential: true,
-      padding: { top: 0, bottom: Math.round(h * 0.5), left: 0, right: 0 },
     });
     // Bounce the pin in once the camera settles
     map.once("moveend", () => {
