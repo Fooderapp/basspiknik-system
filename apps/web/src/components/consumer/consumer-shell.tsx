@@ -44,7 +44,20 @@ export function ConsumerShell({
     <div className="min-h-screen bg-background">
       {/* ── Main content ────────────────────────────────────────────────────── */}
       {/* extra bottom padding everywhere for the floating dock */}
-      <main className="pb-28">{children}</main>
+      <main className="pb-28">
+        {children}
+        <footer className="mt-10 pb-4 flex flex-wrap justify-center gap-x-5 gap-y-1 px-4">
+          <Link href="/adatvedelem" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            {t(dict, "footer.privacy")}
+          </Link>
+          <Link href="/aszf" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            {t(dict, "footer.aszf")}
+          </Link>
+          <Link href="/impresszum" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            {t(dict, "footer.impresszum")}
+          </Link>
+        </footer>
+      </main>
 
       {/* ── Bottom dock — pill, black-based, same on every breakpoint ───────── */}
       <nav className="fixed inset-x-0 bottom-0 z-50 pointer-events-none">
