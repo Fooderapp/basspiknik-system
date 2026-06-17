@@ -22,11 +22,14 @@
         "NSBluetoothAlwaysUsageDescription": "Required by Stripe Terminal SDK for connecting to card readers.",
         "NSBluetoothPeripheralUsageDescription": "Required by Stripe Terminal SDK for connecting to card readers.",
         "NSLocalNetworkUsageDescription": "Used to connect to Stripe Terminal card readers on the local network.",
-        "NFCReaderUsageDescription": "Used by Stripe Terminal to accept contactless (Tap to Pay) card payments."
+        "NFCReaderUsageDescription": "Used by Stripe Terminal to accept contactless (Tap to Pay) card payments.",
+        "ITSAppUsesNonExemptEncryption": false
       },
       "entitlements": {
         "com.apple.developer.proximity-reader.payment.acceptance": true,
-        "com.apple.developer.applesignin": ["Default"]
+        "com.apple.developer.applesignin": [
+          "Default"
+        ]
       }
     },
     "android": {
@@ -44,7 +47,9 @@
         "BLUETOOTH_CONNECT",
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
-        "NFC"
+        "NFC",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -79,6 +84,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ddbfd710-d185-4a02-9b2c-52551edc2850"
+      }
+    },
+    "owner": "basspiknik"
   }
 }
