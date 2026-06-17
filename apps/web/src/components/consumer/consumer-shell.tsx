@@ -6,6 +6,7 @@ import { Home, ShoppingCart, Wine, User, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Dictionary } from "@/lib/i18n";
 import { t } from "@/lib/i18n";
+import { CookieBanner } from "./cookie-banner";
 
 interface NavItem {
   href: string;
@@ -58,6 +59,8 @@ export function ConsumerShell({
           </Link>
         </footer>
       </main>
+
+      <CookieBanner dict={dict} />
 
       {/* ── Bottom dock — pill, black-based, same on every breakpoint ───────── */}
       <nav className="fixed inset-x-0 bottom-0 z-50 pointer-events-none">
