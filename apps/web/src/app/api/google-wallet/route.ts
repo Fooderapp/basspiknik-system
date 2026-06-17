@@ -96,7 +96,7 @@ export async function GET(req: Request) {
         defaultValue: { language: "en-US", value: "Bass Piknik" },
       },
       header: {
-        defaultValue: { language: "en-US", value: profile?.full_name ?? "Festival Pass" },
+        defaultValue: { language: "en-US", value: profile?.full_name ?? "Passport" },
       },
       barcode: {
         type: "QR_CODE",
