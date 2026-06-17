@@ -1,22 +1,27 @@
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Dimensions,
   FlatList,
   Image,
   RefreshControl,
   View,
 } from "react-native";
 import { router } from "expo-router";
-import { CalendarDays, MapPin, ShoppingBag, Tag } from "lucide-react-native";
+import { ShoppingBag } from "lucide-react-native";
 import { Screen } from "@/components/ui/Screen";
-import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/badge";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { Text } from "@/components/ui/text";
-import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/lib/supabase";
 import type { Event, TicketType } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
+
+const W = Dimensions.get("window").width;
+const CARD_H = (W - 40) * (5 / 4); // 4:5 aspect ratio matching web
+
+// Brand tokens
+const INK  = "#16170F";
+const LIME = "#C7E04A";
 
 type EventWithTickets = Event & { ticket_types: TicketType[] };
 
@@ -38,6 +43,76 @@ function formatPrice(p: number): string {
   }).format(p);
 }
 
+// ─── Web-style tall event card ────────────────────────────────────────────────
+function EventCard({ event, onPress }: { event: EventWithTickets; onPress: () => void }) {
+  const minPrice = lowestPrice(event.ticket_types ?? []);
+  const totalSold = (event.ticket_types ?? []).reduce((s, t) => s + t.sold, 0);
+  const totalQty  = (event.ticket_types ?? []).reduce((s, t) => s + t.quantity, 0);
+  const soldOut   = totalQty > 0 && totalSold >= totalQty;
+  const soon      = !soldOut && minPrice === null;
+  const badge     = soon || soldOut ? null : formatDate(event.start_date);
+
+  return (
+    <PressableScale
+      onPress={onPress}
+      pressedScale={0.97}
+      disabled={soldOut}
+      style={{ marginBottom: 16 }}
+    >
+      {/* Card shell — rounded-[2.25rem] matches web's 36px radius */}
+      <View style={{ height: CARD_H, borderRadius: 36, overflow: "hidden", backgroundColor: INK }}>
+        {/* Cover image */}
+        {event.cover_image_url
+          ? <Image source={{ uri: event.cover_image_url }} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} resizeMode="cover" />
+          : <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "#3C7A1E" }} />}
+
+        {/* Gradient overlay — dark at bottom, transparent at top */}
+        <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.18)" }} />
+        <View style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: CARD_H * 0.6, backgroundColor: "rgba(0,0,0,0.55)" }} />
+        <View style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: CARD_H * 0.38, backgroundColor: "rgba(0,0,0,0.3)" }} />
+
+        {/* Content pinned to bottom */}
+        <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: 32, alignItems: "center", gap: 16 }}>
+          {/* Date badge */}
+          {badge && (
+            <View style={{ backgroundColor: "rgba(255,255,255,0.12)", borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5 }}>
+              <Text style={{ color: "rgba(255,255,255,0.9)", fontSize: 10, fontWeight: "700", letterSpacing: 1, textTransform: "uppercase" }}>
+                {badge}
+              </Text>
+            </View>
+          )}
+
+          {/* Event name */}
+          <Text
+            style={{ color: "#fff", fontSize: 24, fontWeight: "900", letterSpacing: -0.8, textTransform: "uppercase", lineHeight: 28, textAlign: "center" }}
+            numberOfLines={2}
+          >
+            {event.name}
+          </Text>
+
+          {/* CTA pill */}
+          {soldOut ? (
+            <View style={{ backgroundColor: "rgba(255,255,255,0.18)", borderRadius: 999, paddingHorizontal: 24, paddingVertical: 12 }}>
+              <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, fontWeight: "600" }}>Sold out</Text>
+            </View>
+          ) : soon ? (
+            <View style={{ backgroundColor: "rgba(255,255,255,0.12)", borderRadius: 999, paddingHorizontal: 24, paddingVertical: 12 }}>
+              <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: "600" }}>Coming soon</Text>
+            </View>
+          ) : (
+            <View style={{ backgroundColor: "#fff", borderRadius: 999, paddingHorizontal: 24, paddingVertical: 12 }}>
+              <Text style={{ color: INK, fontSize: 14, fontWeight: "700" }}>
+                {minPrice != null ? `${formatPrice(minPrice)}-tól` : "Buy tickets"}
+              </Text>
+            </View>
+          )}
+        </View>
+      </View>
+    </PressableScale>
+  );
+}
+
+// ─── Screen ───────────────────────────────────────────────────────────────────
 export default function BuyTicketsScreen() {
   const [events, setEvents] = useState<EventWithTickets[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,15 +137,11 @@ export default function BuyTicketsScreen() {
     setRefreshing(false);
   }
 
-  function openEvent(id: string) {
-    router.push(`/(app)/buy/${id}` as never);
-  }
-
   if (loading) {
     return (
       <Screen title="Buy Tickets">
         <View className="flex-1 items-center justify-center py-20">
-          <ActivityIndicator size="large" color="#163300" />
+          <ActivityIndicator size="large" color={INK} />
         </View>
       </Screen>
     );
@@ -83,106 +154,27 @@ export default function BuyTicketsScreen() {
         keyExtractor={(e) => e.id}
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32, paddingTop: 8 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#163300" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={INK} />
         }
         ListEmptyComponent={
           <View className="items-center py-20">
-            <View className="w-14 h-14 rounded-2xl items-center justify-center mb-4 border border-border bg-muted">
-              <ShoppingBag size={24} color="#8f8f8f" strokeWidth={1.75} />
+            <View style={{ width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center", marginBottom: 16, backgroundColor: `${LIME}30` }}>
+              <ShoppingBag size={24} color={INK} strokeWidth={1.75} />
             </View>
-            <Text className="text-foreground font-semibold text-lg tracking-tight">
+            <Text style={{ color: INK, fontWeight: "800", fontSize: 18, letterSpacing: -0.5 }}>
               No upcoming events
             </Text>
-            <Text className="text-muted-foreground text-sm mt-1">
+            <Text style={{ color: "#6B6F63", fontSize: 14, marginTop: 4 }}>
               Check back soon for new events
             </Text>
           </View>
         }
-        renderItem={({ item: event }) => {
-          const minPrice = lowestPrice(event.ticket_types ?? []);
-          const totalSold = (event.ticket_types ?? []).reduce((s, t) => s + t.sold, 0);
-          const totalQty = (event.ticket_types ?? []).reduce((s, t) => s + t.quantity, 0);
-          const soldOut = totalQty > 0 && totalSold >= totalQty;
-          const ticketCount = (event.ticket_types ?? []).length;
-
-          return (
-            <PressableScale
-              onPress={() => openEvent(event.id)}
-              style={{ marginBottom: 12 }}
-              disabled={soldOut}
-              pressedScale={0.97}
-            >
-              <Card className="overflow-hidden p-0">
-                {/* Cover image */}
-                {event.cover_image_url ? (
-                  <Image
-                    source={{ uri: event.cover_image_url }}
-                    className="w-full"
-                    style={{ height: 160 }}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <View
-                    className="w-full bg-muted items-center justify-center"
-                    style={{ height: 100 }}
-                  >
-                    <ShoppingBag size={32} color="#3f3f3f" strokeWidth={1.5} />
-                  </View>
-                )}
-
-                <View className="p-4 gap-3">
-                  {/* Name + sold-out badge */}
-                  <View className="flex-row items-start justify-between gap-2">
-                    <Text
-                      className="text-foreground font-bold text-lg tracking-tight flex-1"
-                      numberOfLines={2}
-                    >
-                      {event.name}
-                    </Text>
-                    {soldOut && <Badge label="Sold out" variant="destructive" />}
-                  </View>
-
-                  {/* Date */}
-                  <View className="flex-row items-center gap-1.5">
-                    <CalendarDays size={14} color="#8f8f8f" strokeWidth={1.75} />
-                    <Text className="text-muted-foreground text-sm">
-                      {formatDate(event.start_date)}
-                      {event.end_date ? ` — ${formatDate(event.end_date)}` : ""}
-                    </Text>
-                  </View>
-
-                  {/* Venue */}
-                  {event.venue && (
-                    <View className="flex-row items-center gap-1.5">
-                      <MapPin size={14} color="#8f8f8f" strokeWidth={1.75} />
-                      <Text className="text-muted-foreground text-sm" numberOfLines={1}>
-                        {event.venue}
-                        {event.address ? `, ${event.address}` : ""}
-                      </Text>
-                    </View>
-                  )}
-
-                  <Separator />
-
-                  {/* Price + ticket count */}
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-row items-center gap-1.5">
-                      <Tag size={14} color="#8f8f8f" strokeWidth={1.75} />
-                      <Text className="text-muted-foreground text-sm">
-                        {ticketCount} ticket type{ticketCount !== 1 ? "s" : ""}
-                      </Text>
-                    </View>
-                    {minPrice != null && (
-                      <Text className="text-foreground font-semibold text-sm">
-                        from {formatPrice(minPrice)}
-                      </Text>
-                    )}
-                  </View>
-                </View>
-              </Card>
-            </PressableScale>
-          );
-        }}
+        renderItem={({ item: event }) => (
+          <EventCard
+            event={event}
+            onPress={() => router.push(`/(app)/buy/${event.id}` as never)}
+          />
+        )}
       />
     </Screen>
   );
