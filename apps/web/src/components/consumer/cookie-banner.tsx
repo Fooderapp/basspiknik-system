@@ -24,8 +24,8 @@ export function CookieBanner({ dict }: { dict: Dictionary }) {
   }
 
   return (
-    <div className="fixed inset-x-0 z-[60] pointer-events-none" style={{ bottom: "92px" }}>
-      <div className="pointer-events-auto mx-auto w-[calc(100%-1.5rem)] max-w-lg rounded-2xl border bg-card shadow-xl p-4 space-y-3">
+    <div className="fixed bottom-4 right-4 z-[60] pointer-events-none w-[min(320px,calc(100vw-2rem))]">
+      <div className="pointer-events-auto rounded-2xl border bg-card shadow-xl p-4 space-y-3">
         <div>
           <p className="text-sm font-semibold text-foreground mb-1">{dict["cookie.title"]}</p>
           <p className="text-xs text-muted-foreground leading-relaxed">

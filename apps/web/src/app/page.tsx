@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSettings } from "@/lib/settings";
 import { getDictionary, t } from "@/lib/i18n";
 import { SiteHeader } from "@/components/public/site-header";
+import { CookieBanner } from "@/components/consumer/cookie-banner";
 import { HeroTypewriter } from "@/components/public/hero-typewriter";
 import { EventCarousel } from "@/components/public/event-carousel";
 import { ArtistCarousel } from "@/components/public/artist-carousel";
@@ -46,6 +47,7 @@ export default async function HomePage() {
       <img src="/hero-bg.png" alt="" className="fixed inset-0 z-0 h-screen w-screen object-cover" />
 
       <SiteHeader dict={dict} loggedIn={!!user} />
+      <CookieBanner dict={dict} />
 
       {/* ── Hero ── */}
       <section className="relative z-0 flex h-screen flex-col items-center justify-center overflow-hidden px-5 py-24 text-center">
