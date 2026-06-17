@@ -54,7 +54,7 @@ export default function ProfileScreen() {
       {/* Title + credit chip */}
       <View className="flex-row items-center justify-between mb-6">
         <View>
-          <Text className="text-foreground text-2xl font-bold tracking-tight">{dict["profile.title"]}</Text>
+          <Text style={{ fontSize: 30, fontWeight: "800", letterSpacing: -0.9, color: "#14160F" }}>{dict["profile.title"]}</Text>
           <Text className="text-muted-foreground text-sm mt-1">{dict["profile.subtitle"]}</Text>
         </View>
         <PressableScale onPress={() => router.push("/(app)/buy" as never)} pressedScale={0.94}>
@@ -195,7 +195,7 @@ export default function ProfileScreen() {
 function Row({ icon: Icon, label, value, mono }: { icon: LucideIcon; label: string; value: string; mono?: boolean }) {
   return (
     <View className="flex-row items-center gap-3">
-      <View className="w-9 h-9 rounded-full bg-muted items-center justify-center">
+      <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#fff", alignItems: "center", justifyContent: "center" }}>
         <Icon size={16} color="#8f8f8f" strokeWidth={1.75} />
       </View>
       <View className="flex-1">

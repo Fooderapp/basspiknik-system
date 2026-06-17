@@ -132,7 +132,7 @@ function FlipCard({
                   <QRImage value={tk.qr_code} size={76} />
                 </View>
                 <View className="flex-1">
-                  <Badge label={tk.status === "USED" ? "Used" : "Valid"} variant={tk.status === "USED" ? "secondary" : "success"} />
+                  <Badge label={tk.status === "USED" ? dict["ticket.used_label"] : dict["ticket.valid"]} variant={tk.status === "USED" ? "secondary" : "success"} />
                   <Text className="text-foreground text-sm font-medium mt-1" numberOfLines={1}>
                     {tk.ticket_name ?? "Ticket"}
                   </Text>

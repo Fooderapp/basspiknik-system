@@ -68,6 +68,10 @@ export const en = {
   "event.slide_checkout":  "Slide to checkout · {price}",
   "event.success_title":   "🎉 Payment successful!",
   "event.success_body":    "Your tickets are on the way.\n\n⭐ You earned {n} credits!",
+  "event.free_claimed":      "🎉 Free tickets claimed!",
+  "event.free_claimed_body": "Your tickets are confirmed. Check My Tickets.",
+  "event.checkout_failed":   "Checkout failed",
+  "event.using_credits":     "Using credits",
 
   // ── Tickets ─────────────────────────────────────────────────────────────────
   "tickets.title":      "My Tickets",
@@ -346,6 +350,10 @@ export const hu: typeof en = {
   "event.slide_checkout":  "Húzd el a fizetéshez · {price}",
   "event.success_title":   "🎉 Sikeres fizetés!",
   "event.success_body":    "A jegyeid úton vannak.\n\n⭐ {n} kreditet szereztél!",
+  "event.free_claimed":      "🎉 Ingyenes jegyeket nyertél!",
+  "event.free_claimed_body": "A jegyeid megerősítve. Nézd meg a Jegyeim menüt.",
+  "event.checkout_failed":   "Sikertelen fizetés",
+  "event.using_credits":     "Kredit felhasználás",
 
   // ── Tickets ─────────────────────────────────────────────────────────────────
   "tickets.title":      "Jegyeim",
