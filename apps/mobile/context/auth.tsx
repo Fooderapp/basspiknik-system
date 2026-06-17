@@ -103,18 +103,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
     if (result.type !== "success") return null; // user cancelled
 
-    const fragment = result.url.split("#")[1];
-    if (!fragment) return "No session data in redirect";
-    const params = new URLSearchParams(fragment);
-    const accessToken  = params.get("access_token");
-    const refreshToken = params.get("refresh_token");
-    if (!accessToken || !refreshToken) return "Missing tokens in redirect";
+    const url = result.url;
 
-    const { error: sessionError } = await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
-    return sessionError?.message ?? null;
+    // PKCE flow: Supabase v2 returns ?code= in query params
+    const codeMatch = url.match(/[?&]code=([^&#]+)/);
+    if (codeMatch) {
+      const { error: exchError } = await supabase.auth.exchangeCodeForSession(codeMatch[1]);
+      return exchError?.message ?? null;
+    }
+
+    // Implicit flow fallback: tokens in hash fragment
+    const fragment = url.split("#")[1];
+    if (fragment) {
+      const params = new URLSearchParams(fragment);
+      const accessToken  = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+      if (accessToken && refreshToken) {
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        return sessionError?.message ?? null;
+      }
+    }
+
+    return "No session data in redirect";
   }
 
   async function signInWithApple(): Promise<string | null> {
