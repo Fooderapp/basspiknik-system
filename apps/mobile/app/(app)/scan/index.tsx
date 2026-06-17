@@ -7,6 +7,8 @@ import { ArrowLeft, Camera, ScanLine, Coins, CalendarDays, LinkIcon, MessageSqua
 import { supabase } from "@/lib/supabase";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/Button";
+import { useLanguage } from "@/context/language";
+import { t } from "@/lib/i18n";
 
 interface QrResult {
   ok?: boolean;
@@ -17,18 +19,13 @@ interface QrResult {
   eventSlug?: string | null;
   url?: string | null;
   message?: string | null;
+  label?: string;
   error?: string;
 }
 
-const ERR: Record<string, string> = {
-  auth: "Please sign in first.",
-  not_found: "This code isn't valid.",
-  exhausted: "This code has been fully used.",
-  already: "You've already used this code.",
-};
-
 export default function ScanScreen() {
   const insets = useSafeAreaInsets();
+  const { dict } = useLanguage();
   const [permission, requestPermission] = useCameraPermissions();
   const [result, setResult] = useState<QrResult | null>(null);
   const cooldown = useRef(false);
@@ -37,7 +34,6 @@ export default function ScanScreen() {
     if (cooldown.current) return;
     cooldown.current = true;
     Vibration.vibrate(50);
-    // QR may embed a URL (…?c=CODE or /r/CODE) or the bare code.
     let code = data.trim();
     const m = code.match(/[?&]c=([^&]+)/) ?? code.match(/\/r\/([^/?#]+)/);
     if (m) code = decodeURIComponent(m[1]);
@@ -68,11 +64,11 @@ export default function ScanScreen() {
         <View style={{ width: 64, height: 64, borderRadius: 32, alignItems: "center", justifyContent: "center", backgroundColor: "#DDF2C6" }}>
           <Camera size={28} color="#2C3A18" strokeWidth={1.75} />
         </View>
-        <Text style={{ color: "#14160F", fontSize: 20, fontWeight: "800", marginTop: 16 }}>Camera Access</Text>
+        <Text style={{ color: "#14160F", fontSize: 20, fontWeight: "800", marginTop: 16 }}>{dict["scan.camera_title"]}</Text>
         <Text style={{ color: "#6B6F63", fontSize: 14, textAlign: "center", marginTop: 8, marginBottom: 24 }}>
-          Allow the camera to scan QR codes for credits, events and more.
+          {dict["scan.camera_body"]}
         </Text>
-        <Button onPress={requestPermission}><Text>Grant Permission</Text></Button>
+        <Button onPress={requestPermission}><Text>{dict["scan.grant"]}</Text></Button>
       </View>
     );
   }
@@ -81,24 +77,31 @@ export default function ScanScreen() {
   const RESULT_ICON: Record<string, LucideIcon> = { ONE_TIME_CREDIT: Coins, OPEN_EVENT: CalendarDays, LINK: LinkIcon, MESSAGE: MessageSquare };
   const Icon = ok && result?.type ? RESULT_ICON[result.type] : XCircle;
 
+  const ERR: Record<string, string> = {
+    auth: dict["scan.sign_in"],
+    not_found: dict["scan.invalid"],
+    exhausted: dict["scan.fully_used"],
+    already: dict["scan.already_used"],
+  };
+
   function headline(): string {
     if (!result) return "";
-    if (!ok) return "Couldn't scan";
-    if (result.type === "ONE_TIME_CREDIT") return `+${result.credits} credits!`;
-    if (result.type === "OPEN_EVENT") return "Event found";
-    if (result.type === "LINK") return "Link ready";
-    return result.label ?? "Scanned";
+    if (!ok) return dict["scan.error"];
+    if (result.type === "ONE_TIME_CREDIT") return t(dict, "scan.credits_title", { n: result.credits ?? 0 });
+    if (result.type === "OPEN_EVENT") return dict["scan.event_found"];
+    if (result.type === "LINK") return dict["scan.link_ready"];
+    return result.label ?? dict["scan.done"];
   }
   function body(): string | null {
     if (!result) return null;
-    if (!ok) return ERR[result.error ?? ""] ?? "Try again.";
-    if (result.type === "ONE_TIME_CREDIT") return `Balance: ${result.balance} credits`;
+    if (!ok) return ERR[result.error ?? ""] ?? dict["common.retry"];
+    if (result.type === "ONE_TIME_CREDIT") return t(dict, "scan.credits_body", { n: result.balance ?? 0 });
     if (result.type === "MESSAGE") return result.message ?? null;
-    if (result.type === "OPEN_EVENT") return "Tap to view the event.";
-    if (result.type === "LINK") return "Tap to open.";
+    if (result.type === "OPEN_EVENT") return dict["scan.event_tap"];
+    if (result.type === "LINK") return dict["scan.link_tap"];
     return null;
   }
-  const actLabel = result?.type === "OPEN_EVENT" ? "View event" : result?.type === "LINK" ? "Open" : "Done";
+  const actLabel = result?.type === "OPEN_EVENT" ? dict["scan.view_event"] : result?.type === "LINK" ? dict["scan.open"] : dict["scan.done"];
 
   return (
     <View className="flex-1 bg-black">
@@ -113,7 +116,7 @@ export default function ScanScreen() {
         <Pressable onPress={() => router.back()} className="w-11 h-11 rounded-full items-center justify-center active:opacity-70" style={{ backgroundColor: "rgba(255,255,255,0.92)" }}>
           <ArrowLeft size={20} color="#111" strokeWidth={2.25} />
         </Pressable>
-        <Text className="text-white text-base font-semibold" style={{ textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 6 }}>Scan QR</Text>
+        <Text className="text-white text-base font-semibold" style={{ textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 6 }}>{dict["scan.title"]}</Text>
         <View className="w-11" />
       </View>
 
@@ -135,7 +138,7 @@ export default function ScanScreen() {
       <View className="absolute left-0 right-0 bottom-0" style={{ paddingBottom: insets.bottom + 16 }}>
         <View className="mx-4 rounded-3xl px-6 py-4 flex-row items-center justify-center gap-2" style={{ backgroundColor: "rgba(255,255,255,0.96)" }}>
           <ScanLine size={18} color="#163300" strokeWidth={2} />
-          <Text style={{ color: "#444", fontSize: 14, fontWeight: "600" }}>Point at a BassPiknik QR code</Text>
+          <Text style={{ color: "#444", fontSize: 14, fontWeight: "600" }}>{dict["scan.hint"]}</Text>
         </View>
       </View>
 

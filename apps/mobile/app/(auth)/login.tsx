@@ -3,6 +3,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { useAuth } from "@/context/auth";
+import { useLanguage } from "@/context/language";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
@@ -10,6 +11,7 @@ import { GoogleLogo } from "@/components/ui/BrandLogos";
 
 export default function LoginScreen() {
   const { signIn, signInWithGoogle, signInWithApple } = useAuth();
+  const { dict } = useLanguage();
   const [email, setEmail]         = useState("");
   const [password, setPassword]   = useState("");
   const [error, setError]         = useState<string | null>(null);
@@ -18,7 +20,7 @@ export default function LoginScreen() {
   const [loadingApple, setLoadingApple]   = useState(false);
 
   async function handleLogin() {
-    if (!email || !password) { setError("Fill in all fields"); return; }
+    if (!email || !password) { setError(dict["auth.fill_all_fields"]); return; }
     setLoading(true);
     setError(null);
     const err = await signIn(email.trim().toLowerCase(), password);
@@ -58,15 +60,15 @@ export default function LoginScreen() {
             <View className="w-16 h-16 rounded-2xl bg-primary items-center justify-center mb-4">
               <Text className="text-primary-foreground text-3xl font-bold">E</Text>
             </View>
-            <Text className="text-foreground text-3xl font-bold">EventOS</Text>
-            <Text className="text-muted-foreground text-sm mt-1">Sign in to continue</Text>
+            <Text className="text-foreground text-3xl font-bold">{dict["auth.title"]}</Text>
+            <Text className="text-muted-foreground text-sm mt-1">{dict["auth.subtitle"]}</Text>
           </View>
 
           {/* Email / password */}
           <View className="gap-4">
             <Input
-              label="Email"
-              placeholder="you@example.com"
+              label={dict["auth.email"]}
+              placeholder={dict["auth.email_placeholder"]}
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
@@ -74,8 +76,8 @@ export default function LoginScreen() {
               onChangeText={setEmail}
             />
             <Input
-              label="Password"
-              placeholder="••••••••"
+              label={dict["auth.password"]}
+              placeholder={dict["auth.password_placeholder"]}
               secureTextEntry
               autoComplete="password"
               value={password}
@@ -95,14 +97,14 @@ export default function LoginScreen() {
               loading={loading}
               disabled={loading}
             >
-              <Text>Sign In</Text>
+              <Text>{dict["auth.sign_in"]}</Text>
             </Button>
           </View>
 
           {/* Divider */}
           <View className="flex-row items-center my-6 gap-3">
             <View className="flex-1 h-px bg-border" />
-            <Text className="text-muted-foreground text-xs">or</Text>
+            <Text className="text-muted-foreground text-xs">{dict["auth.or"]}</Text>
             <View className="flex-1 h-px bg-border" />
           </View>
 
@@ -116,7 +118,7 @@ export default function LoginScreen() {
               disabled={loadingGoogle}
             >
               <GoogleLogo size={18} />
-              <Text>Continue with Google</Text>
+              <Text>{dict["auth.google"]}</Text>
             </Button>
 
             {Platform.OS === "ios" && (

@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { Separator } from "@/components/ui/separator";
+import { useLanguage } from "@/context/language";
 
 type Method = "choose" | "scan" | "type";
 interface Recipient { id: string; name: string; displayId: string }
@@ -19,6 +20,7 @@ interface Recipient { id: string; name: string; displayId: string }
 export default function TransferScreen() {
   const { ticketId } = useLocalSearchParams<{ ticketId: string }>();
   const insets = useSafeAreaInsets();
+  const { dict } = useLanguage();
 
   const [method, setMethod]         = useState<Method>("choose");
   const [typedId, setTypedId]       = useState("");
@@ -52,7 +54,6 @@ export default function TransferScreen() {
     if (!recipient || !ticketId || transferring) return;
     setTransferring(true);
     try {
-      // Try wallet_token first (QR scans give UUID), then display_id
       const { data, error } = await (supabase as any).rpc("transfer_ticket", {
         p_ticket_id:     ticketId,
         p_to_identifier: recipient.displayId,
@@ -62,7 +63,7 @@ export default function TransferScreen() {
       Alert.alert(
         "Transferred!",
         `Ticket sent to ${data.recipientName} (${data.displayId}).`,
-        [{ text: "Done", onPress: () => router.back() }],
+        [{ text: dict["common.done"], onPress: () => router.back() }],
       );
     } catch (e: any) {
       Alert.alert("Transfer failed", e.message);
@@ -77,7 +78,7 @@ export default function TransferScreen() {
 
       {/* Header */}
       <View className="flex-row items-center justify-between px-5 pt-4 pb-4">
-        <Text className="text-foreground text-xl font-bold tracking-tight">Transfer Ticket</Text>
+        <Text className="text-foreground text-xl font-bold tracking-tight">{dict["ticket.transfer"]}</Text>
         <Pressable onPress={() => router.back()} className="active:opacity-70 p-1">
           <X size={20} color="#8f8f8f" strokeWidth={1.75} />
         </Pressable>
@@ -110,10 +111,10 @@ export default function TransferScreen() {
               disabled={transferring}
               icon={<ArrowRight size={16} color="#14160F" strokeWidth={1.75} />}
             >
-              <Text>Confirm Transfer</Text>
+              <Text>{dict["ticket.confirm_transfer"]}</Text>
             </Button>
             <Text className="text-muted-foreground text-xs text-center mt-3">
-              This cannot be undone. The ticket will move to their account.
+              {dict["ticket.transfer_warning"]}
             </Text>
           </Card>
         )}
@@ -122,7 +123,7 @@ export default function TransferScreen() {
         {!recipient && method === "choose" && (
           <View className="gap-3">
             <Text className="text-muted-foreground text-sm mb-2">
-              Identify the person you want to transfer to:
+              {dict["ticket.identify"]}
             </Text>
             <Button
               variant="outline"
@@ -130,7 +131,7 @@ export default function TransferScreen() {
               onPress={() => { scanCooldown.current = false; setMethod("scan"); }}
               icon={<QrCode size={20} color="#14160F" strokeWidth={1.75} />}
             >
-              <Text className="text-base">Scan their Wallet / Profile QR</Text>
+              <Text className="text-base">{dict["ticket.scan_qr_method"]}</Text>
             </Button>
             <Button
               variant="outline"
@@ -138,7 +139,7 @@ export default function TransferScreen() {
               onPress={() => setMethod("type")}
               icon={<KeyboardIcon size={20} color="#14160F" strokeWidth={1.75} />}
             >
-              <Text className="text-base">Type Bass-ID</Text>
+              <Text className="text-base">{dict["ticket.type_bassid"]}</Text>
             </Button>
           </View>
         )}
@@ -147,7 +148,7 @@ export default function TransferScreen() {
         {!recipient && method === "type" && (
           <View className="gap-4">
             <Text className="text-muted-foreground text-sm">
-              Ask the recipient to share their Bass-ID (shown on their Profile page).
+              {dict["ticket.ask_bassid"]}
             </Text>
             <Input
               placeholder="Bass-A3F7K2"
@@ -162,10 +163,10 @@ export default function TransferScreen() {
               loading={resolving}
               disabled={resolving || typedId.trim().length < 4}
             >
-              <Text>Find Person</Text>
+              <Text>{dict["ticket.find_person"]}</Text>
             </Button>
             <Button variant="ghost" className="w-full" onPress={() => setMethod("choose")}>
-              <Text className="text-muted-foreground">Back</Text>
+              <Text className="text-muted-foreground">{dict["common.back"]}</Text>
             </Button>
           </View>
         )}
@@ -174,7 +175,7 @@ export default function TransferScreen() {
         {!recipient && method === "scan" && (
           <View>
             <Text className="text-muted-foreground text-sm mb-4">
-              Scan their Apple Wallet pass or the QR on their Profile page.
+              {dict["ticket.scan_wallet_hint"]}
             </Text>
             <View style={{ height: 280, borderRadius: 16, overflow: "hidden" }}>
               <CameraView
@@ -197,7 +198,7 @@ export default function TransferScreen() {
               )}
             </View>
             <Button variant="ghost" className="w-full mt-4" onPress={() => setMethod("choose")}>
-              <Text className="text-muted-foreground">Back</Text>
+              <Text className="text-muted-foreground">{dict["common.back"]}</Text>
             </Button>
           </View>
         )}

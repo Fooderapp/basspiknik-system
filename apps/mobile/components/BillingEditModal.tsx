@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { supabase } from "@/lib/supabase";
+import { useLanguage } from "@/context/language";
 
 export interface BillingData {
   billingName: string;
@@ -32,9 +33,10 @@ export function BillingEditModal({
   profileId,
   initialData,
   onSave,
-  title = "Billing details",
-  subtitle = "Required for your invoice.",
+  title,
+  subtitle,
 }: Props) {
+  const { dict } = useLanguage();
   const [saving, setSaving] = useState(false);
   const [billingName, setBillingName]   = useState(initialData?.billingName   ?? "");
   const [address,     setAddress]       = useState(initialData?.billingAddress ?? "");
@@ -42,9 +44,12 @@ export function BillingEditModal({
   const [postal,      setPostal]        = useState(initialData?.billingPostal  ?? "");
   const [country,     setCountry]       = useState(initialData?.billingCountry ?? "Magyarország");
 
+  const resolvedTitle    = title    ?? dict["billing.title"];
+  const resolvedSubtitle = subtitle ?? dict["billing.subtitle"];
+
   async function handleSave() {
     if (!billingName.trim() || !address.trim() || !city.trim() || !postal.trim() || !country.trim()) {
-      Alert.alert("Missing fields", "Please fill in all billing fields.");
+      Alert.alert(dict["billing.missing"], dict["billing.missing_body"]);
       return;
     }
     const data: BillingData = {
@@ -71,7 +76,7 @@ export function BillingEditModal({
           .eq("id", profileId);
         if (error) throw error;
       } catch (e: any) {
-        Alert.alert("Error", e.message ?? "Could not save billing details.");
+        Alert.alert(dict["common.error"], e.message ?? dict["billing.missing_body"]);
         setSaving(false);
         return;
       } finally {
@@ -92,7 +97,7 @@ export function BillingEditModal({
             <View className="w-9 h-9 rounded-xl items-center justify-center bg-primary">
               <MapPin size={16} color="#000" strokeWidth={2} />
             </View>
-            <Text className="text-foreground font-bold text-lg tracking-tight">{title}</Text>
+            <Text className="text-foreground font-bold text-lg tracking-tight">{resolvedTitle}</Text>
           </View>
           <Pressable onPress={onClose} className="active:opacity-60 p-1">
             <X size={22} color="#8f8f8f" strokeWidth={2} />
@@ -101,25 +106,25 @@ export function BillingEditModal({
 
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
           <ScrollView className="flex-1 px-5" contentContainerStyle={{ paddingBottom: 24 }}>
-            <Text className="text-muted-foreground text-sm mb-5">{subtitle}</Text>
+            <Text className="text-muted-foreground text-sm mb-5">{resolvedSubtitle}</Text>
             <View className="gap-4">
-              <Input label="Billing name" value={billingName} onChangeText={setBillingName} placeholder="Name on invoice" autoComplete="name" />
-              <Input label="Street address" value={address} onChangeText={setAddress} placeholder="Street and number" autoComplete="street-address" />
+              <Input label={dict["billing.name"]} value={billingName} onChangeText={setBillingName} placeholder={dict["billing.name_hint"]} autoComplete="name" />
+              <Input label={dict["billing.street"]} value={address} onChangeText={setAddress} placeholder={dict["billing.street_hint"]} autoComplete="street-address" />
               <View className="flex-row gap-3">
                 <View className="flex-1">
-                  <Input label="City" value={city} onChangeText={setCity} placeholder="City" autoComplete="address-level2" />
+                  <Input label={dict["billing.city"]} value={city} onChangeText={setCity} placeholder={dict["billing.city"]} autoComplete="address-level2" />
                 </View>
                 <View style={{ width: 120 }}>
-                  <Input label="Postal code" value={postal} onChangeText={setPostal} placeholder="0000" keyboardType="number-pad" autoComplete="postal-code" />
+                  <Input label={dict["billing.postal"]} value={postal} onChangeText={setPostal} placeholder={dict["billing.postal_hint"]} keyboardType="number-pad" autoComplete="postal-code" />
                 </View>
               </View>
-              <Input label="Country" value={country} onChangeText={setCountry} placeholder="Country" />
+              <Input label={dict["billing.country"]} value={country} onChangeText={setCountry} placeholder={dict["billing.country"]} />
             </View>
           </ScrollView>
 
           <View className="px-5 pb-8 pt-2 border-t border-border">
             <Button onPress={handleSave} loading={saving} icon={<Check size={18} color="#000" strokeWidth={2} />}>
-              <Text className="font-semibold">Save</Text>
+              <Text className="font-semibold">{dict["billing.save"]}</Text>
             </Button>
           </View>
         </KeyboardAvoidingView>

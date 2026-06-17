@@ -8,6 +8,8 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Camera, ChevronLeft, StickyNote, Check } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
+import { useLanguage } from "@/context/language";
+import { t } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/utils";
 import type { DrinkOrder, DrinkOrderItem, Drink } from "@/lib/types";
 import { Text } from "@/components/ui/text";
@@ -20,6 +22,7 @@ type OrderWithItems = DrinkOrder & { drink_order_items: ItemWithDrink[] };
 
 export default function BartenderScreen() {
   const insets = useSafeAreaInsets();
+  const { dict } = useLanguage();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanning, setScanning]       = useState(true);
   const [queue, setQueue]             = useState<DrinkOrder[]>([]);
@@ -63,27 +66,27 @@ export default function BartenderScreen() {
         .single();
 
       if (error || !order) {
-        Alert.alert("Not Found", "No order for this QR code.", [
-          { text: "OK", onPress: () => { cooldown.current = false; } },
+        Alert.alert(dict["bar.not_found"], dict["bar.no_order"], [
+          { text: dict["bar.ok"], onPress: () => { cooldown.current = false; } },
         ]);
         return;
       }
 
       if (order.status === "FULFILLED") {
-        Alert.alert("Already Fulfilled", "This order has been completed.", [
-          { text: "OK", onPress: () => { cooldown.current = false; } },
+        Alert.alert(dict["bar.already_done"], dict["bar.completed"], [
+          { text: dict["bar.ok"], onPress: () => { cooldown.current = false; } },
         ]);
         return;
       }
       if (order.status === "CANCELLED") {
-        Alert.alert("Cancelled", "This order was cancelled.", [
-          { text: "OK", onPress: () => { cooldown.current = false; } },
+        Alert.alert(dict["bar.cancelled"], dict["bar.order_cancel"], [
+          { text: dict["bar.ok"], onPress: () => { cooldown.current = false; } },
         ]);
         return;
       }
       if (order.status === "IN_PROGRESS" && !myOrderIds.current.has(order.id)) {
-        Alert.alert("In Progress", "This order is being processed on another device.", [
-          { text: "OK", onPress: () => { cooldown.current = false; } },
+        Alert.alert(dict["bar.in_progress"], dict["bar.other_device"], [
+          { text: dict["bar.ok"], onPress: () => { cooldown.current = false; } },
         ]);
         return;
       }
@@ -154,9 +157,9 @@ export default function BartenderScreen() {
         <View className="w-16 h-16 rounded-2xl items-center justify-center mb-4 border border-border bg-muted">
           <Camera size={28} color="#14160F" strokeWidth={1.75} />
         </View>
-        <Text className="text-foreground text-xl font-bold mb-2 tracking-tight">Camera Required</Text>
+        <Text className="text-foreground text-xl font-bold mb-2 tracking-tight">{dict["bar.camera_title"]}</Text>
         <Button onPress={requestPermission} className="mt-4">
-          <Text>Grant Permission</Text>
+          <Text>{dict["bar.grant"]}</Text>
         </Button>
       </View>
     );
@@ -166,16 +169,16 @@ export default function BartenderScreen() {
     <View className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
       {/* Header */}
       <View className="flex-row items-center justify-between px-5 pt-4 pb-2">
-        <Text className="text-white text-xl font-bold tracking-tight">Bartender</Text>
+        <Text className="text-white text-xl font-bold tracking-tight">{dict["bar.title"]}</Text>
         <View className="flex-row gap-2">
           {pending > 0 && (
             <View style={{ backgroundColor: "#F59E0B" }} className="px-2.5 py-1 rounded-lg">
-              <Text className="text-white text-xs font-bold">{pending} pending</Text>
+              <Text className="text-white text-xs font-bold">{t(dict, "bar.pending", { n: pending })}</Text>
             </View>
           )}
           {inProg > 0 && (
             <View style={{ backgroundColor: "#3B82F6" }} className="px-2.5 py-1 rounded-lg">
-              <Text className="text-white text-xs font-bold">{inProg} active</Text>
+              <Text className="text-white text-xs font-bold">{t(dict, "bar.active", { n: inProg })}</Text>
             </View>
           )}
         </View>
@@ -194,7 +197,7 @@ export default function BartenderScreen() {
           {/* Frame overlay */}
           <View className="absolute inset-0 items-center justify-center">
             <View className="w-56 h-56 border-2 border-white/60 rounded-2xl" />
-            <Text className="text-white/70 text-sm mt-4">Scan customer QR code</Text>
+            <Text className="text-white/70 text-sm mt-4">{dict["bar.scan_hint"]}</Text>
             {loading && <ActivityIndicator color="#fff" className="mt-3" />}
           </View>
 
@@ -237,7 +240,7 @@ export default function BartenderScreen() {
                 className="bg-white/10 px-3 py-2 rounded-xl active:opacity-60 flex-row items-center gap-1"
               >
                 <ChevronLeft size={15} color="#ffffff" strokeWidth={1.75} />
-                <Text className="text-white text-sm">Scan</Text>
+                <Text className="text-white text-sm">{dict["scan.title"]}</Text>
               </Pressable>
             </View>
 
@@ -290,8 +293,8 @@ export default function BartenderScreen() {
           <View className="absolute bottom-0 left-0 right-0 px-4 pb-8 pt-4 bg-black/90">
             {allDone ? (
               <SlideToConfirm
-                label="Slide to complete order"
-                confirmedLabel="Completed!"
+                label={dict["bar.fulfill_slide"]}
+                confirmedLabel={dict["bar.fulfilled"]}
                 color="#22c55e"
                 disabled={completing}
                 onConfirm={completeOrder}

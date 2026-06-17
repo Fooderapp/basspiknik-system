@@ -11,6 +11,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { ShoppingBag, AlertTriangle, Star, Plus, Minus } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
+import { useLanguage } from "@/context/language";
+import { t } from "@/lib/i18n";
 import type { Drink, DrinkCategoryRow } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
@@ -24,6 +26,7 @@ interface CartItem { drink: Drink; quantity: number }
 
 export default function MenuScreen() {
   const insets = useSafeAreaInsets();
+  const { dict } = useLanguage();
   const [drinks, setDrinks]         = useState<Drink[]>([]);
   const [categories, setCategories] = useState<DrinkCategoryRow[]>([]);
   const [loading, setLoading]       = useState(true);
@@ -112,8 +115,8 @@ export default function MenuScreen() {
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       {/* Header */}
       <View className="px-5 pt-4 pb-2">
-        <Text className="text-foreground text-2xl font-bold tracking-tight">Bar Menu</Text>
-        <Text className="text-muted-foreground text-sm">{drinks.length} items available</Text>
+        <Text className="text-foreground text-2xl font-bold tracking-tight">{dict["menu.title"]}</Text>
+        <Text className="text-muted-foreground text-sm">{t(dict, "menu.subtitle", { n: drinks.length })}</Text>
       </View>
 
       {/* Category tabs — plain, uniform (no per-category colour or emoji) */}
@@ -123,7 +126,7 @@ export default function MenuScreen() {
         style={{ marginBottom: 8 }}
         contentContainerStyle={{ gap: 8, paddingHorizontal: 20, paddingVertical: 4, alignItems: "center" }}
       >
-        {[{ id: "ALL", name: "All" }, ...categoryTabs].map((c) => {
+        {[{ id: "ALL", name: dict["menu.all"] }, ...categoryTabs].map((c) => {
           const active = activeCat === c.id;
           return (
             <Pressable
@@ -170,7 +173,7 @@ export default function MenuScreen() {
                   {drink.is_popular && (
                     <View className="flex-row items-center gap-1 mt-0.5">
                       <Star size={12} color="#14160F" strokeWidth={1.75} fill="#14160F" />
-                      <Text className="text-xs text-foreground">Popular</Text>
+                      <Text className="text-xs text-foreground">{dict["menu.popular"]}</Text>
                     </View>
                   )}
                 </View>
@@ -188,7 +191,7 @@ export default function MenuScreen() {
                     className="flex-row items-center gap-1.5 bg-gold rounded-xl px-4 py-2.5"
                   >
                     <Plus size={15} color="#323000" strokeWidth={2.25} />
-                    <Text className="text-gold-foreground font-semibold text-sm">Add</Text>
+                    <Text className="text-gold-foreground font-semibold text-sm">{dict["menu.add"]}</Text>
                   </PressableScale>
                 ) : (
                   <View className="flex-row items-center gap-4 bg-secondary border border-border rounded-xl px-4 py-2">
@@ -219,9 +222,9 @@ export default function MenuScreen() {
       <Modal visible={cartOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setCartOpen(false)}>
         <View className="flex-1 bg-background px-5 pt-6">
           <View className="flex-row items-center justify-between mb-6">
-            <Text className="text-foreground text-xl font-bold tracking-tight">Your Order</Text>
+            <Text className="text-foreground text-xl font-bold tracking-tight">{dict["menu.your_order"]}</Text>
             <Button variant="ghost" size="sm" onPress={() => setCartOpen(false)}>
-              <Text className="text-muted-foreground">Close</Text>
+              <Text className="text-muted-foreground">{dict["menu.close"]}</Text>
             </Button>
           </View>
 
@@ -249,8 +252,8 @@ export default function MenuScreen() {
             })}
 
             <View className="mt-5 gap-3">
-              <Input placeholder="Your name (optional)" value={guestName} onChangeText={setGuestName} />
-              <Input placeholder="Notes, e.g. no ice" value={notes} onChangeText={setNotes} multiline numberOfLines={2} />
+              <Input placeholder={dict["menu.name_hint"]} value={guestName} onChangeText={setGuestName} />
+              <Input placeholder={dict["menu.notes_hint"]} value={notes} onChangeText={setNotes} multiline numberOfLines={2} />
             </View>
           </ScrollView>
 
@@ -259,7 +262,7 @@ export default function MenuScreen() {
             {/* Checkout CTA — same as web: label left, count · total right */}
             <Button className="w-full" onPress={placeOrder} loading={placing} disabled={placing}>
               <View className="w-full flex-row items-center justify-between">
-                <Text>Place Order</Text>
+                <Text>{dict["menu.place_order"]}</Text>
                 <Text className="font-bold">{cartCount} · {formatCurrency(cartTotal)}</Text>
               </View>
             </Button>
@@ -334,7 +337,7 @@ function CartBar({
         </Animated.View>
         <View className="flex-row items-center gap-2 ml-3 flex-1">
           <ShoppingBag size={16} color="#0A0A0A" strokeWidth={2} />
-          <Text style={{ color: "#0A0A0A", fontWeight: "700", fontSize: 15 }}>View order</Text>
+          <Text style={{ color: "#0A0A0A", fontWeight: "700", fontSize: 15 }}>{dict["menu.view_order"]}</Text>
         </View>
         <Text style={{ color: "#0A0A0A", fontWeight: "800", fontSize: 16 }}>{total}</Text>
       </PressableScale>

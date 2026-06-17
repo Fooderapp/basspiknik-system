@@ -13,6 +13,8 @@ import { Screen } from "@/components/ui/Screen";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { Text } from "@/components/ui/text";
 import { supabase } from "@/lib/supabase";
+import { useLanguage } from "@/context/language";
+import { t } from "@/lib/i18n";
 import type { Event, TicketType } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
@@ -44,7 +46,7 @@ function formatPrice(p: number): string {
 }
 
 // ─── Web-style tall event card ────────────────────────────────────────────────
-function EventCard({ event, onPress }: { event: EventWithTickets; onPress: () => void }) {
+function EventCard({ event, onPress, dict }: { event: EventWithTickets; onPress: () => void; dict: import("@/lib/i18n").Dictionary }) {
   const minPrice = lowestPrice(event.ticket_types ?? []);
   const totalSold = (event.ticket_types ?? []).reduce((s, t) => s + t.sold, 0);
   const totalQty  = (event.ticket_types ?? []).reduce((s, t) => s + t.quantity, 0);
@@ -93,16 +95,16 @@ function EventCard({ event, onPress }: { event: EventWithTickets; onPress: () =>
           {/* CTA pill */}
           {soldOut ? (
             <View style={{ backgroundColor: "rgba(255,255,255,0.18)", borderRadius: 999, paddingHorizontal: 24, paddingVertical: 12 }}>
-              <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, fontWeight: "600" }}>Sold out</Text>
+              <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, fontWeight: "600" }}>{dict["buy.sold_out"]}</Text>
             </View>
           ) : soon ? (
             <View style={{ backgroundColor: "rgba(255,255,255,0.12)", borderRadius: 999, paddingHorizontal: 24, paddingVertical: 12 }}>
-              <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: "600" }}>Coming soon</Text>
+              <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: "600" }}>{dict["buy.coming_soon"]}</Text>
             </View>
           ) : (
             <View style={{ backgroundColor: "#fff", borderRadius: 999, paddingHorizontal: 24, paddingVertical: 12 }}>
               <Text style={{ color: INK, fontSize: 14, fontWeight: "700" }}>
-                {minPrice != null ? `${formatPrice(minPrice)}-tól` : "Buy tickets"}
+                {minPrice != null ? t(dict, "buy.from_price", { price: formatPrice(minPrice) }) : dict["buy.buy_tickets"]}
               </Text>
             </View>
           )}
@@ -114,6 +116,7 @@ function EventCard({ event, onPress }: { event: EventWithTickets; onPress: () =>
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 export default function BuyTicketsScreen() {
+  const { dict } = useLanguage();
   const [events, setEvents] = useState<EventWithTickets[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -139,7 +142,7 @@ export default function BuyTicketsScreen() {
 
   if (loading) {
     return (
-      <Screen title="Buy Tickets">
+      <Screen title={dict["buy.title"]}>
         <View className="flex-1 items-center justify-center py-20">
           <ActivityIndicator size="large" color={INK} />
         </View>
@@ -148,7 +151,7 @@ export default function BuyTicketsScreen() {
   }
 
   return (
-    <Screen title="Buy Tickets" subtitle="Upcoming events" scroll={false} padded={false}>
+    <Screen title={dict["buy.title"]} subtitle={dict["buy.subtitle"]} scroll={false} padded={false}>
       <FlatList
         data={events}
         keyExtractor={(e) => e.id}
@@ -162,16 +165,17 @@ export default function BuyTicketsScreen() {
               <ShoppingBag size={24} color={INK} strokeWidth={1.75} />
             </View>
             <Text style={{ color: INK, fontWeight: "800", fontSize: 18, letterSpacing: -0.5 }}>
-              No upcoming events
+              {dict["buy.no_events"]}
             </Text>
             <Text style={{ color: "#6B6F63", fontSize: 14, marginTop: 4 }}>
-              Check back soon for new events
+              {dict["buy.no_events_sub"]}
             </Text>
           </View>
         }
         renderItem={({ item: event }) => (
           <EventCard
             event={event}
+            dict={dict}
             onPress={() => router.push(`/(app)/buy/${event.id}` as never)}
           />
         )}

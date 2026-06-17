@@ -7,6 +7,7 @@ import {
 import { Text } from "@/components/ui/text";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { useAuth } from "@/context/auth";
+import { useLanguage } from "@/context/language";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -20,6 +21,7 @@ const ICON: Record<string, LucideIcon> = { instagram: Instagram, facebook: Faceb
 
 export function TaskList() {
   const { session } = useAuth();
+  const { dict } = useLanguage();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -68,7 +70,7 @@ export function TaskList() {
     <View className="px-5 mt-10">
       <View className="flex-row items-center gap-2 mb-3">
         <Gift size={18} color="#163300" strokeWidth={2.25} />
-        <Text style={{ color: "#14160F", fontSize: 18, fontWeight: "800", letterSpacing: -0.4 }}>Earn credits</Text>
+        <Text style={{ color: "#14160F", fontSize: 18, fontWeight: "800", letterSpacing: -0.4 }}>{dict["tasks.earn"]}</Text>
       </View>
 
       <View className="gap-2.5">
@@ -97,17 +99,17 @@ export function TaskList() {
               {done ? (
                 <View className="flex-row items-center gap-1">
                   <Check size={16} color="#3E7B12" strokeWidth={2.5} />
-                  <Text style={{ color: "#3E7B12", fontSize: 12, fontWeight: "600" }}>Done</Text>
+                  <Text style={{ color: "#3E7B12", fontSize: 12, fontWeight: "600" }}>{dict["tasks.done"]}</Text>
                 </View>
               ) : pending ? (
                 <View className="flex-row items-center gap-1">
                   <Hourglass size={14} color="#9CA093" strokeWidth={2} />
-                  <Text style={{ color: "#6B6F63", fontSize: 12 }}>In review</Text>
+                  <Text style={{ color: "#6B6F63", fontSize: 12 }}>{dict["tasks.review"]}</Text>
                 </View>
               ) : cooldown ? (
                 <View className="flex-row items-center gap-1">
                   <Clock size={14} color="#9CA093" strokeWidth={2} />
-                  <Text style={{ color: "#6B6F63", fontSize: 12 }}>Later</Text>
+                  <Text style={{ color: "#6B6F63", fontSize: 12 }}>{dict["tasks.later"]}</Text>
                 </View>
               ) : (
                 <PressableScale pressedScale={0.96} onPress={() => onCta(t)} disabled={busy === t.id}>
@@ -121,7 +123,7 @@ export function TaskList() {
                       <>
                         {t.url && !armed[t.id] && <ExternalLink size={13} color="#fff" strokeWidth={2} />}
                         <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>
-                          {armed[t.id] ? "I did it" : t.ctaLabel}
+                          {armed[t.id] ? dict["tasks.did_it"] : t.ctaLabel}
                         </Text>
                       </>
                     )}

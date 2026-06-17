@@ -13,6 +13,7 @@ import { Text } from "@/components/ui/text";
 import { Separator } from "@/components/ui/separator";
 import { QRImage } from "@/components/ui/QRImage";
 import { TiltCard } from "@/components/ui/TiltCard";
+import { useLanguage } from "@/context/language";
 
 const STATUS_VARIANT: Record<string, "success" | "muted" | "destructive" | "secondary"> = {
   VALID:     "success",
@@ -24,6 +25,7 @@ const STATUS_VARIANT: Record<string, "success" | "muted" | "destructive" | "seco
 export default function TicketDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets  = useSafeAreaInsets();
+  const { dict } = useLanguage();
   const [ticket, setTicket]     = useState<Ticket | null>(null);
   const [loading, setLoading]   = useState(true);
 
@@ -47,10 +49,10 @@ export default function TicketDetailScreen() {
   if (!ticket) {
     return (
       <View className="flex-1 bg-background items-center justify-center px-6 gap-4">
-        <Text className="text-foreground text-lg">Ticket not found</Text>
+        <Text className="text-foreground text-lg">{dict["ticket.not_found"]}</Text>
         <Pressable onPress={() => router.back()} className="active:opacity-60 flex-row items-center gap-1">
           <ChevronLeft size={16} color="#14160F" strokeWidth={1.75} />
-          <Text className="text-foreground">Go back</Text>
+          <Text className="text-foreground">{dict["ticket.go_back"]}</Text>
         </Pressable>
       </View>
     );
@@ -64,7 +66,7 @@ export default function TicketDetailScreen() {
       <View className="flex-row items-center px-5 py-4 gap-3">
         <Pressable onPress={() => router.back()} className="active:opacity-60 flex-row items-center gap-0.5">
           <ChevronLeft size={18} color="#14160F" strokeWidth={1.75} />
-          <Text className="text-foreground text-base">Back</Text>
+          <Text className="text-foreground text-base">{dict["common.back"]}</Text>
         </Pressable>
         <Text className="text-foreground font-bold text-lg flex-1 tracking-tight" numberOfLines={1}>
           {ticket.ticket_name ?? "Ticket"}
@@ -100,24 +102,24 @@ export default function TicketDetailScreen() {
 
             <View className="flex-row items-center justify-between mt-5">
               <View className="flex-1 mr-3">
-                <Text className="text-muted-foreground text-[10px] tracking-wider">TICKET</Text>
+                <Text className="text-muted-foreground text-[10px] tracking-wider">{dict["ticket.label"]}</Text>
                 <Text className="text-foreground font-semibold" numberOfLines={1}>
                   {ticket.ticket_name ?? "Ticket"}
                 </Text>
               </View>
-              <Text className="text-muted-foreground text-[10px]">Scan at entry</Text>
+              <Text className="text-muted-foreground text-[10px]">{dict["ticket.scan_entry"]}</Text>
             </View>
           </View>
         </TiltCard>
 
         {/* Details */}
         <Card className="gap-3">
-          {ticket.holder_name && <Row label="Name" value={ticket.holder_name} />}
-          {ticket.holder_email && <Row label="Email" value={ticket.holder_email} />}
-          <Row label="Tier" value={ticket.tier} />
-          <Row label="Issued" value={formatDate(ticket.created_at)} />
-          {ticket.used_at && <Row label="Used" value={formatDate(ticket.used_at)} />}
-          {ticket.transferred_to_user_id && <Row label="Transferred" value="Yes" />}
+          {ticket.holder_name && <Row label={dict["ticket.name"]} value={ticket.holder_name} />}
+          {ticket.holder_email && <Row label={dict["ticket.email"]} value={ticket.holder_email} />}
+          <Row label={dict["ticket.tier"]} value={ticket.tier} />
+          <Row label={dict["ticket.issued"]} value={formatDate(ticket.created_at)} />
+          {ticket.used_at && <Row label={dict["ticket.used"]} value={formatDate(ticket.used_at)} />}
+          {ticket.transferred_to_user_id && <Row label={dict["ticket.transferred"]} value="Yes" />}
           <Separator />
           <Text className="text-muted-foreground text-xs font-mono" numberOfLines={1}>
             {ticket.qr_code}
@@ -132,7 +134,7 @@ export default function TicketDetailScreen() {
             onPress={() => router.push(`/(app)/tickets/transfer?ticketId=${ticket.id}` as never)}
             icon={<ArrowRightLeft size={16} color="#14160F" strokeWidth={1.75} />}
           >
-            <Text>Transfer Ticket</Text>
+            <Text>{dict["ticket.transfer"]}</Text>
           </Button>
         )}
       </ScrollView>

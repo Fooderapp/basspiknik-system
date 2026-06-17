@@ -22,6 +22,8 @@ import { Text } from "@/components/ui/text";
 import type { TicketType, Event } from "@/lib/types";
 import { runtimeConfig } from "@/lib/runtime-config";
 import { BillingEditModal, type BillingData } from "@/components/BillingEditModal";
+import { useLanguage } from "@/context/language";
+import { t } from "@/lib/i18n";
 
 interface CartItem { ticketType: TicketType; quantity: number }
 interface ResolvedProfile { id: string; name: string; email: string; hasBilling: boolean }
@@ -33,6 +35,7 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
 
 export default function SellerScreen() {
   const insets = useSafeAreaInsets();
+  const { dict } = useLanguage();
 
   // ── Data state ──
   const [events, setEvents]               = useState<Event[]>([]);
@@ -444,8 +447,8 @@ export default function SellerScreen() {
     return (
       <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
         <View className="px-5 pt-4 pb-3">
-          <Text className="text-foreground text-2xl font-bold tracking-tight">Sell Tickets</Text>
-          <Text className="text-muted-foreground text-sm">Select an event</Text>
+          <Text className="text-foreground text-2xl font-bold tracking-tight">{dict["seller.title"]}</Text>
+          <Text className="text-muted-foreground text-sm">{dict["seller.subtitle"]}</Text>
         </View>
         <FlatList
           data={events}
@@ -456,7 +459,7 @@ export default function SellerScreen() {
               <View className="w-14 h-14 rounded-2xl items-center justify-center mb-4 border border-border bg-muted">
                 <Tent size={24} color="#8f8f8f" strokeWidth={1.75} />
               </View>
-              <Text className="text-muted-foreground">No published events</Text>
+              <Text className="text-muted-foreground">{dict["seller.no_events"]}</Text>
             </View>
           }
           renderItem={({ item }) => (
@@ -492,7 +495,7 @@ export default function SellerScreen() {
       <View className="flex-row items-center justify-between px-5 pt-4 pb-3">
         <View className="flex-1 mr-3">
           <Button variant="ghost" size="sm" className="self-start px-0" onPress={() => setSelectedEvent(null)} icon={<ChevronLeft size={15} color="#14160F" strokeWidth={1.75} />}>
-            <Text className="text-foreground text-sm">Events</Text>
+            <Text className="text-foreground text-sm">{dict["seller.events_back"]}</Text>
           </Button>
           <Text className="text-foreground font-bold text-lg tracking-tight" numberOfLines={1}>
             {selectedEvent.name}
@@ -544,7 +547,7 @@ export default function SellerScreen() {
                   <CardTitle>{tt.name}</CardTitle>
                   {tt.description && <CardDescription numberOfLines={2}>{tt.description}</CardDescription>}
                   <Text className="text-muted-foreground text-xs mt-1">
-                    {available} available · {tt.tier}
+                    {t(dict, "seller.available", { n: available })} · {tt.tier}
                   </Text>
                 </View>
                 <View className="items-end">
@@ -565,10 +568,10 @@ export default function SellerScreen() {
                     {available > 0 ? (
                       <View className="flex-row items-center gap-1.5">
                         <Plus size={15} color="#000000" strokeWidth={2.25} />
-                        <Text>Add</Text>
+                        <Text>{dict["common.add"]}</Text>
                       </View>
                     ) : (
-                      <Text>Sold out</Text>
+                      <Text>{dict["buy.sold_out"]}</Text>
                     )}
                   </Button>
                 ) : (
@@ -597,9 +600,9 @@ export default function SellerScreen() {
       <Modal visible={confirmOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setConfirmOpen(false)}>
         <View className="flex-1 bg-background px-5 pt-6">
           <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-foreground text-xl font-bold tracking-tight">Confirm Sale</Text>
+            <Text className="text-foreground text-xl font-bold tracking-tight">{dict["seller.confirm_sale"]}</Text>
             <Button variant="ghost" size="sm" onPress={() => setConfirmOpen(false)}>
-              <Text className="text-muted-foreground">Cancel</Text>
+              <Text className="text-muted-foreground">{dict["seller.cancel"]}</Text>
             </Button>
           </View>
 
@@ -617,13 +620,13 @@ export default function SellerScreen() {
             })}
 
             <View className="flex-row justify-between py-4 mb-4">
-              <Text className="text-foreground font-bold text-lg">Total</Text>
+              <Text className="text-foreground font-bold text-lg">{dict["seller.total"]}</Text>
               <Text className="text-foreground font-bold text-lg">{formatCurrency(cartTotal)}</Text>
             </View>
 
             {/* Buyer type */}
             <Text className="text-muted-foreground text-xs font-semibold mb-2 uppercase tracking-wide">
-              Buyer
+              {dict["seller.buyer"]}
             </Text>
             <View className="flex-row gap-2 mb-4">
               <Pressable
@@ -634,7 +637,7 @@ export default function SellerScreen() {
               >
                 <User size={15} color={buyerMode === "guest" ? "#000000" : "#14160F"} strokeWidth={1.75} />
                 <Text className={`font-semibold text-sm ${buyerMode === "guest" ? "text-primary-foreground" : "text-foreground"}`}>
-                  Guest
+                  {dict["seller.guest"]}
                 </Text>
               </Pressable>
               <Pressable
@@ -645,16 +648,16 @@ export default function SellerScreen() {
               >
                 <QrCode size={15} color={buyerMode === "registered" ? "#000000" : "#14160F"} strokeWidth={1.75} />
                 <Text className={`font-semibold text-sm ${buyerMode === "registered" ? "text-primary-foreground" : "text-foreground"}`}>
-                  Registered
+                  {dict["seller.registered"]}
                 </Text>
               </Pressable>
             </View>
 
             {buyerMode === "guest" ? (
               <View className="gap-3 mb-4">
-                <Input placeholder="Buyer name (optional)" value={buyerName} onChangeText={setBuyerName} />
+                <Input placeholder={dict["seller.buyer_name"]} value={buyerName} onChangeText={setBuyerName} />
                 <Input
-                  placeholder="Buyer email (for invoice)"
+                  placeholder={dict["seller.buyer_email"]}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   value={buyerEmail}
@@ -663,10 +666,10 @@ export default function SellerScreen() {
                 {/* Billing address for Billingo invoice */}
                 <View className="flex-row items-center justify-between pt-1">
                   <Text className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
-                    Billing address {billingData ? "✓" : "(optional)"}
+                    {dict["seller.billing"]} {billingData ? "✓" : ""}
                   </Text>
                   <Button variant="ghost" size="sm" onPress={() => { setBillingUserId(null); setBillingOpen(true); }}>
-                    <Text className="text-muted-foreground text-xs">{billingData ? "Edit" : "Add"}</Text>
+                    <Text className="text-muted-foreground text-xs">{billingData ? dict["common.edit"] : dict["common.add"]}</Text>
                   </Button>
                 </View>
                 {billingData && (
@@ -727,15 +730,15 @@ export default function SellerScreen() {
                     loading={resolving}
                     icon={<QrCode size={16} color="#14160F" strokeWidth={1.75} />}
                   >
-                    <Text>Scan Customer QR</Text>
+                    <Text>{dict["seller.scan_customer"]}</Text>
                   </Button>
                 )}
                 {/* Billing warning for registered user with missing billing */}
                 {registeredProfile && !registeredProfile.hasBilling && !billingData && (
                   <View className="flex-row items-center justify-between px-3 py-2 rounded-xl border border-amber-500/30 bg-amber-500/5 mt-2">
-                    <Text className="text-amber-400 text-xs flex-1">Billing address missing — invoice may be incomplete</Text>
+                    <Text className="text-amber-400 text-xs flex-1">{dict["seller.billing_warn"]}</Text>
                     <Button variant="ghost" size="sm" onPress={() => { setBillingUserId(registeredProfile.id); setBillingOpen(true); }}>
-                      <Text className="text-amber-400 text-xs font-semibold">Add</Text>
+                      <Text className="text-amber-400 text-xs font-semibold">{dict["common.add"]}</Text>
                     </Button>
                   </View>
                 )}
@@ -744,7 +747,7 @@ export default function SellerScreen() {
 
             {/* Payment method selector */}
             <Text className="text-muted-foreground text-xs font-semibold mb-2 uppercase tracking-wide">
-              Payment Method
+              {dict["seller.payment"]}
             </Text>
             <View className="flex-row gap-2 mb-4">
               <Pressable
@@ -757,7 +760,7 @@ export default function SellerScreen() {
               >
                 <Banknote size={16} color={paymentMethod === "cash" ? "#000000" : "#14160F"} strokeWidth={1.75} />
                 <Text className={`font-semibold ${paymentMethod === "cash" ? "text-primary-foreground" : "text-foreground"}`}>
-                  Cash
+                  {dict["seller.cash"]}
                 </Text>
               </Pressable>
               <Pressable
@@ -773,7 +776,7 @@ export default function SellerScreen() {
               >
                 <Smartphone size={16} color={paymentMethod === "tap" ? "#000000" : "#14160F"} strokeWidth={1.75} />
                 <Text className={`font-semibold ${paymentMethod === "tap" ? "text-primary-foreground" : "text-foreground"}`}>
-                  Tap to Pay
+                  {dict["seller.tap_to_pay"]}
                 </Text>
               </Pressable>
             </View>
@@ -797,8 +800,8 @@ export default function SellerScreen() {
           <View className="py-4 gap-3">
             {paymentMethod === "cash" ? (
               <SlideToConfirm
-                label={`Slide to collect ${formatCurrency(cartTotal)}`}
-                confirmedLabel="Sold!"
+                label={t(dict, "seller.slide_cash", { price: formatCurrency(cartTotal) })}
+                confirmedLabel={dict["seller.success"]}
                 color="#22c55e"
                 disabled={selling || cart.length === 0}
                 onConfirm={sellCash}
@@ -806,8 +809,8 @@ export default function SellerScreen() {
               />
             ) : (
               <SlideToConfirm
-                label={`Slide to charge ${formatCurrency(cartTotal)}`}
-                confirmedLabel="Charged!"
+                label={t(dict, "seller.slide_tap", { price: formatCurrency(cartTotal) })}
+                confirmedLabel={dict["seller.charged"]}
                 color="#22c55e"
                 disabled={selling || tapState !== "ready" || cart.length === 0}
                 onConfirm={sellTap}
@@ -844,15 +847,17 @@ export default function SellerScreen() {
             <View className="w-20 h-20 rounded-3xl items-center justify-center mb-5 border border-border bg-muted">
               <PartyPopper size={36} color="#14160F" strokeWidth={1.5} />
             </View>
-            <Text className="text-foreground text-2xl font-bold mb-1 tracking-tight">Sold!</Text>
+            <Text className="text-foreground text-2xl font-bold mb-1 tracking-tight">{dict["seller.success"]}</Text>
             <Text className="text-muted-foreground text-sm mb-6">
-              {successInfo?.ticketCount} ticket{(successInfo?.ticketCount ?? 0) > 1 ? "s" : ""} issued
+              {(successInfo?.ticketCount ?? 0) > 1
+                ? t(dict, "seller.tickets_issued_p", { n: successInfo?.ticketCount ?? 0 })
+                : t(dict, "seller.tickets_issued", { n: successInfo?.ticketCount ?? 0 })}
             </Text>
             <Text className="text-foreground font-bold text-2xl mb-8">
               {formatCurrency(successInfo?.total ?? 0)}
             </Text>
             <Button className="w-full" onPress={() => { setSuccessInfo(null); setTapState(tapState === "success" ? "ready" : tapState); }}>
-              <Text>Next Customer</Text>
+              <Text>{dict["seller.next_customer"]}</Text>
             </Button>
           </Card>
         </View>

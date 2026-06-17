@@ -10,6 +10,7 @@ import { PressableScale } from "@/components/ui/PressableScale";
 import { Text } from "@/components/ui/text";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth";
+import { useLanguage } from "@/context/language";
 import type { Ticket } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
@@ -25,6 +26,7 @@ const STRIPE: Record<string, string> = {
 
 export default function TicketsScreen() {
   const { session } = useAuth();
+  const { dict } = useLanguage();
   const [tickets, setTickets]       = useState<Ticket[]>([]);
   const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -50,9 +52,13 @@ export default function TicketsScreen() {
     setRefreshing(false);
   }
 
+  const subtitle = tickets.length === 1
+    ? dict["tickets.subtitle"].replace("{n}", String(tickets.length))
+    : dict["tickets.subtitle_p"].replace("{n}", String(tickets.length));
+
   if (loading) {
     return (
-      <Screen title="My Tickets">
+      <Screen title={dict["tickets.title"]}>
         <View className="flex-1 items-center justify-center py-20">
           <ActivityIndicator size="large" color="#163300" />
         </View>
@@ -62,8 +68,8 @@ export default function TicketsScreen() {
 
   return (
     <Screen
-      title="My Tickets"
-      subtitle={`${tickets.length} ticket${tickets.length !== 1 ? "s" : ""}`}
+      title={dict["tickets.title"]}
+      subtitle={subtitle}
       scroll={false}
       padded={false}
     >
@@ -77,10 +83,10 @@ export default function TicketsScreen() {
             <View className="w-14 h-14 rounded-2xl items-center justify-center mb-4 border border-border bg-muted">
               <TicketIcon size={24} color="#8f8f8f" strokeWidth={1.75} />
             </View>
-            <Text className="text-foreground font-semibold text-lg tracking-tight">No tickets yet</Text>
-            <Text className="text-muted-foreground text-sm mt-1 mb-5">Your purchased tickets appear here</Text>
+            <Text className="text-foreground font-semibold text-lg tracking-tight">{dict["tickets.no_tickets"]}</Text>
+            <Text className="text-muted-foreground text-sm mt-1 mb-5">{dict["tickets.no_sub"]}</Text>
             <Button onPress={() => router.push("/(app)/buy" as never)}>
-              <Text>Browse events</Text>
+              <Text>{dict["tickets.browse"]}</Text>
             </Button>
           </View>
         ) : (

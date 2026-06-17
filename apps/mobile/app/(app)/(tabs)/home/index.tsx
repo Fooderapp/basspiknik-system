@@ -23,6 +23,8 @@ import { TiltCard } from "@/components/ui/TiltCard";
 import { IconButton } from "@/components/ui/IconButton";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth";
+import { useLanguage } from "@/context/language";
+import { t } from "@/lib/i18n";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 const W = Dimensions.get("window").width;
@@ -136,7 +138,7 @@ function FlipCard({
                   <Text className="text-muted-foreground text-xs">{idx} / {total}</Text>
                   <View className="flex-row items-center gap-1 mt-2">
                     <QrCode size={12} color="#9a9a9a" strokeWidth={1.75} />
-                    <Text className="text-muted-foreground text-[11px]">Tap to show QR</Text>
+                    <Text className="text-muted-foreground text-[11px]">{dict["home.tap_qr"]}</Text>
                   </View>
                 </View>
               </View>
@@ -170,6 +172,7 @@ function FlipCard({
 // ─── Main screen ──────────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const { session, profile } = useAuth();
+  const { dict } = useLanguage();
   const insets = useSafeAreaInsets();
   const [tickets, setTickets] = useState<WTicket[]>([]);
   const [counts, setCounts] = useState<Record<string, { total: number }>>({});
@@ -221,14 +224,14 @@ export default function HomeScreen() {
     const list: Act[] = [];
     for (const o of orders ?? []) {
       const free = (o.total ?? 0) <= 0;
-      list.push({ id: `o-${o.id}`, kind: free ? "won" : "buy", label: free ? "Free tickets won" : "Tickets purchased", sub: o.events?.name ?? null, amount: free ? null : fmt(o.total), positive: false, at: new Date(o.created_at).getTime() });
+      list.push({ id: `o-${o.id}`, kind: free ? "won" : "buy", label: free ? dict["home.act_free"] : dict["home.act_buy"], sub: o.events?.name ?? null, amount: free ? null : fmt(o.total), positive: false, at: new Date(o.created_at).getTime() });
     }
     for (const d of drinks ?? []) {
-      list.push({ id: `d-${d.id}`, kind: "bar", label: "Bar order", sub: null, amount: d.total ? fmt(d.total) : null, positive: false, at: new Date(d.created_at).getTime() });
+      list.push({ id: `d-${d.id}`, kind: "bar", label: dict["home.act_bar"], sub: null, amount: d.total ? fmt(d.total) : null, positive: false, at: new Date(d.created_at).getTime() });
     }
     for (const c of creds ?? []) {
       const pos = c.amount >= 0;
-      list.push({ id: `c-${c.id}`, kind: "credit", label: pos ? "Credits earned" : "Credits spent", sub: null, amount: `${pos ? "+" : ""}${c.amount} credits`, positive: pos, at: new Date(c.created_at).getTime() });
+      list.push({ id: `c-${c.id}`, kind: "credit", label: pos ? dict["home.act_credit_earn"] : dict["home.act_credit_spend"], sub: null, amount: `${pos ? "+" : ""}${c.amount} credits`, positive: pos, at: new Date(c.created_at).getTime() });
     }
     list.sort((a, b) => b.at - a.at);
     setActs(list.slice(0, 5));
@@ -265,7 +268,7 @@ export default function HomeScreen() {
         <View className="px-5 mb-5 flex-row items-center justify-between">
           <View className="flex-1 pr-3 justify-center">
             <Text style={{ color: INK, fontSize: 32, lineHeight: 40, fontWeight: "800", letterSpacing: -1 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
-              Hi {firstName} 👋
+              {t(dict, "home.greeting", { name: firstName })}
             </Text>
           </View>
           <View className="flex-row items-center gap-2 mt-1">
@@ -286,11 +289,11 @@ export default function HomeScreen() {
               <View style={{ width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center", backgroundColor: `${LIME}40` }}>
                 <ShoppingBag size={26} color={GREEN} strokeWidth={1.75} />
               </View>
-              <Text style={{ color: INK, fontWeight: "700", marginTop: 12 }}>No tickets yet</Text>
-              <Text style={{ color: "#6B6F63", fontSize: 13, marginTop: 4 }}>Grab a ticket and it'll show up here.</Text>
+              <Text style={{ color: INK, fontWeight: "700", marginTop: 12 }}>{dict["home.no_tickets"]}</Text>
+              <Text style={{ color: "#6B6F63", fontSize: 13, marginTop: 4 }}>{dict["home.no_tickets_sub"]}</Text>
               <PressableScale pressedScale={0.97} onPress={() => router.push("/(app)/buy" as never)} style={{ marginTop: 16 }}>
                 <View style={{ backgroundColor: INK, borderRadius: 999, paddingHorizontal: 24, paddingVertical: 12 }}>
-                  <Text style={{ color: LIME, fontWeight: "800", fontSize: 14, letterSpacing: -0.3 }}>Browse events</Text>
+                  <Text style={{ color: LIME, fontWeight: "800", fontSize: 14, letterSpacing: -0.3 }}>{dict["home.browse_events"]}</Text>
                 </View>
               </PressableScale>
             </View>
@@ -330,10 +333,10 @@ export default function HomeScreen() {
                     <TicketIcon size={24} color={INK} strokeWidth={1.75} />
                   </View>
                   <Text style={{ color: INK, fontWeight: "700" }}>
-                    {tickets.length > MAX_CARDS ? `All ${tickets.length} tickets` : "My Tickets"}
+                    {tickets.length > MAX_CARDS ? t(dict, "home.all_tickets", { n: tickets.length }) : dict["home.my_tickets"]}
                   </Text>
                   <View className="flex-row items-center gap-1">
-                    <Text style={{ color: "#9a9a9a", fontSize: 14 }}>View all</Text>
+                    <Text style={{ color: "#9a9a9a", fontSize: 14 }}>{dict["home.view_all"]}</Text>
                     <ChevronRight size={16} color="#9a9a9a" strokeWidth={1.75} />
                   </View>
                 </View>
@@ -365,7 +368,7 @@ export default function HomeScreen() {
                     style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 999, paddingVertical: 14, backgroundColor: INK }}
                   >
                     <AppleLogo size={18} color="#fff" />
-                    <Text style={{ fontSize: 13, fontWeight: "700", color: "#fff" }}>Add to Apple Wallet</Text>
+                    <Text style={{ fontSize: 13, fontWeight: "700", color: "#fff" }}>{dict["home.apple_wallet"]}</Text>
                   </PressableScale>
                 )}
                 <PressableScale
@@ -378,7 +381,7 @@ export default function HomeScreen() {
                   style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderWidth: 1, borderColor: "#E2E0D4", borderRadius: 999, paddingVertical: 14, backgroundColor: "#fff" }}
                 >
                   <GoogleLogo size={18} />
-                  <Text style={{ fontSize: 13, fontWeight: "700", color: INK }}>Add to Google Wallet</Text>
+                  <Text style={{ fontSize: 13, fontWeight: "700", color: INK }}>{dict["home.google_wallet"]}</Text>
                 </PressableScale>
               </View>
             )}
@@ -391,7 +394,7 @@ export default function HomeScreen() {
         {/* Recent activity */}
         {acts.length > 0 && (
           <View className="px-5 mt-10">
-            <Text style={{ color: INK, fontSize: 18, fontWeight: "800", letterSpacing: -0.4, marginBottom: 12 }}>Recent activity</Text>
+            <Text style={{ color: INK, fontSize: 18, fontWeight: "800", letterSpacing: -0.4, marginBottom: 12 }}>{dict["home.recent_activity"]}</Text>
             <View style={{ backgroundColor: "#fff", borderRadius: 24, overflow: "hidden", shadowColor: INK, shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } }}>
               {acts.map((a, i) => {
                 const Icon = actIcon[a.kind];

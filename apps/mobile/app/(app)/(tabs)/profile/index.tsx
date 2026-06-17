@@ -4,6 +4,7 @@ import { router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { User, Mail, Hash, Star, ScanLine, Beer, CreditCard, ChevronRight, MapPin, Pencil, type LucideIcon } from "lucide-react-native";
 import { useAuth } from "@/context/auth";
+import { useLanguage } from "@/context/language";
 import { supabase } from "@/lib/supabase";
 import { QRImage } from "@/components/ui/QRImage";
 import { TiltCard } from "@/components/ui/TiltCard";
@@ -15,15 +16,16 @@ import { Text } from "@/components/ui/text";
 import { Separator } from "@/components/ui/separator";
 import { BillingEditModal } from "@/components/BillingEditModal";
 
-interface StaffTool { icon: LucideIcon; label: string; sub: string; route: string; roles: string[] }
+interface StaffTool { icon: LucideIcon; labelKey: string; subKey: string; route: string; roles: string[] }
 const STAFF_TOOLS: StaffTool[] = [
-  { icon: ScanLine,   label: "Check-In",      sub: "Scan ticket QR codes",  route: "/(app)/checkin",   roles: ["ADMIN","EDITOR","STAFF","SELLER","BARTENDER"] },
-  { icon: Beer,       label: "Bartender POS", sub: "Process drink orders",  route: "/(app)/bartender", roles: ["ADMIN","EDITOR","BARTENDER"] },
-  { icon: CreditCard, label: "Sell Tickets",  sub: "POS ticket selling",    route: "/(app)/seller",    roles: ["ADMIN","EDITOR","SELLER"] },
+  { icon: ScanLine,   labelKey: "profile.checkin",   subKey: "profile.checkin_sub",   route: "/(app)/checkin",   roles: ["ADMIN","EDITOR","STAFF","SELLER","BARTENDER"] },
+  { icon: Beer,       labelKey: "profile.bartender",  subKey: "profile.bartender_sub", route: "/(app)/bartender", roles: ["ADMIN","EDITOR","BARTENDER"] },
+  { icon: CreditCard, labelKey: "profile.sell",       subKey: "profile.sell_sub",      route: "/(app)/seller",    roles: ["ADMIN","EDITOR","SELLER"] },
 ];
 
 export default function ProfileScreen() {
   const { profile, session, signOut, refreshProfile } = useAuth();
+  const { dict } = useLanguage();
   const insets = useSafeAreaInsets();
   const [credits, setCredits] = useState<number | null>(null);
   const [billingOpen, setBillingOpen] = useState(false);
@@ -52,14 +54,14 @@ export default function ProfileScreen() {
       {/* Title + credit chip */}
       <View className="flex-row items-center justify-between mb-6">
         <View>
-          <Text className="text-foreground text-2xl font-bold tracking-tight">My Profile</Text>
-          <Text className="text-muted-foreground text-sm mt-1">Account & entry pass</Text>
+          <Text className="text-foreground text-2xl font-bold tracking-tight">{dict["profile.title"]}</Text>
+          <Text className="text-muted-foreground text-sm mt-1">{dict["profile.subtitle"]}</Text>
         </View>
         <PressableScale onPress={() => router.push("/(app)/buy" as never)} pressedScale={0.94}>
           <View className="flex-row items-center gap-1.5 rounded-full px-3.5 py-2" style={{ backgroundColor: "#fff", shadowColor: "#14160F", shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } }}>
             <Star size={13} color="#163300" strokeWidth={2.5} fill="#9FE870" />
             <Text className="font-semibold text-sm" style={{ color: "#14160F" }}>{credits ?? "—"}</Text>
-            <Text className="text-xs" style={{ color: "#6B6F63" }}>credits</Text>
+            <Text className="text-xs" style={{ color: "#6B6F63" }}>{dict["profile.credits"]}</Text>
           </View>
         </PressableScale>
       </View>
@@ -70,7 +72,7 @@ export default function ProfileScreen() {
           <TiltCard maxTilt={10} radius={28} surface="#FFFFFF" holo="shimmer">
             <View style={{ borderRadius: 28, padding: 22, borderWidth: 1, borderColor: "#E6E4D8" }}>
               <View className="mb-5">
-                <Text className="text-muted-foreground text-[11px] font-semibold tracking-[2px]">ENTRY PASS</Text>
+                <Text className="text-muted-foreground text-[11px] font-semibold tracking-[2px]">{dict["profile.entry_pass"]}</Text>
               </View>
               <Text className="text-foreground text-2xl font-bold tracking-tight" numberOfLines={1}>{profile.name}</Text>
               <Text className="text-muted-foreground text-xs mb-5" numberOfLines={1}>{profile.email}</Text>
@@ -81,15 +83,15 @@ export default function ProfileScreen() {
               </View>
               <View className="flex-row items-center justify-between mt-5">
                 <View>
-                  <Text className="text-muted-foreground text-[10px] tracking-wider">BASS-ID</Text>
+                  <Text className="text-muted-foreground text-[10px] tracking-wider">{dict["profile.bass_id"]}</Text>
                   <Text className="text-foreground font-mono font-semibold">{profile.display_id ?? "—"}</Text>
                 </View>
-                <Text className="text-muted-foreground text-[10px]">Scan at check-in</Text>
+                <Text className="text-muted-foreground text-[10px]">{dict["profile.scan_checkin"]}</Text>
               </View>
             </View>
           </TiltCard>
           <Text className="text-muted-foreground text-xs text-center px-6 mt-3">
-            Same code as your Apple Wallet pass. Share your Bass-ID to receive ticket transfers.
+            {dict["profile.wallet_pass_info"]}
           </Text>
         </View>
       )}
@@ -97,7 +99,7 @@ export default function ProfileScreen() {
       {/* Staff tools */}
       {tools.length > 0 && (
         <View className="mb-6">
-          <Text className="text-muted-foreground text-xs font-semibold tracking-wider mb-3">STAFF TOOLS</Text>
+          <Text className="text-muted-foreground text-xs font-semibold tracking-wider mb-3">{dict["profile.staff_tools"]}</Text>
           <View className="gap-3">
             {tools.map(tool => {
               const Icon = tool.icon;
@@ -108,8 +110,8 @@ export default function ProfileScreen() {
                       <Icon size={18} color="#14160F" strokeWidth={1.75} />
                     </View>
                     <View className="flex-1">
-                      <Text className="text-foreground font-semibold text-base tracking-tight">{tool.label}</Text>
-                      <Text className="text-muted-foreground text-xs mt-0.5">{tool.sub}</Text>
+                      <Text className="text-foreground font-semibold text-base tracking-tight">{dict[tool.labelKey as keyof typeof dict]}</Text>
+                      <Text className="text-muted-foreground text-xs mt-0.5">{dict[tool.subKey as keyof typeof dict]}</Text>
                     </View>
                     <ChevronRight size={18} color="#8f8f8f" strokeWidth={1.75} />
                   </Card>
@@ -122,13 +124,13 @@ export default function ProfileScreen() {
 
       {/* Account info */}
       <Card className="mb-4 gap-3">
-        <Row icon={User}   label="Name"  value={profile.name} />
+        <Row icon={User}   label={dict["profile.name"]}  value={profile.name} />
         <Separator />
-        <Row icon={Mail}   label="Email" value={profile.email} />
+        <Row icon={Mail}   label={dict["profile.email"]} value={profile.email} />
         {profile.display_id && (
           <>
             <Separator />
-            <Row icon={Hash} label="Bass-ID" value={profile.display_id} mono />
+            <Row icon={Hash} label={dict["profile.bass_id"]} value={profile.display_id} mono />
           </>
         )}
       </Card>
@@ -141,9 +143,9 @@ export default function ProfileScreen() {
               <MapPin size={16} color="#8f8f8f" strokeWidth={1.75} />
             </View>
             <View>
-              <Text className="text-muted-foreground text-xs">Billing address</Text>
+              <Text className="text-muted-foreground text-xs">{dict["profile.billing"]}</Text>
               {!hasBilling && (
-                <Text className="text-amber-400 text-xs font-medium">Required for invoicing</Text>
+                <Text className="text-amber-400 text-xs font-medium">{dict["profile.billing_req"]}</Text>
               )}
             </View>
           </View>
@@ -153,7 +155,7 @@ export default function ProfileScreen() {
             onPress={() => setBillingOpen(true)}
             icon={<Pencil size={14} color="#8f8f8f" strokeWidth={1.75} />}
           >
-            <Text className="text-muted-foreground text-sm">{hasBilling ? "Edit" : "Add"}</Text>
+            <Text className="text-muted-foreground text-sm">{hasBilling ? dict["profile.billing_edit"] : dict["profile.billing_add"]}</Text>
           </Button>
         </View>
 
@@ -165,12 +167,12 @@ export default function ProfileScreen() {
             {profile.billing_country ? <Text className="text-muted-foreground text-sm">{profile.billing_country}</Text> : null}
           </View>
         ) : (
-          <Text className="text-muted-foreground text-sm pl-11">Not set — needed for Billingo invoices</Text>
+          <Text className="text-muted-foreground text-sm pl-11">{dict["profile.billing_empty"]}</Text>
         )}
       </Card>
 
       <Button variant="outline" className="w-full" onPress={signOut}>
-        <Text>Sign out</Text>
+        <Text>{dict["profile.sign_out"]}</Text>
       </Button>
 
       <BillingEditModal

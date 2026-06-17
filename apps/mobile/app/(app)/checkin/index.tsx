@@ -6,6 +6,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Calendar, Camera, CheckCircle2, XCircle, RefreshCw, Ticket, ShoppingCart, ArrowLeft, X, SwitchCamera, Flashlight, FlashlightOff, ScanLine } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth";
+import { useLanguage } from "@/context/language";
+import { t } from "@/lib/i18n";
 import type { Event } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import { Text } from "@/components/ui/text";
@@ -19,9 +21,7 @@ interface ScanResult {
   ticketName?: string | null;
   tier?: string | null;
   usedAt?: string | null;
-  // wallet pass + single-entry: how many more tickets this user has at this event
   remaining?: number | null;
-  // multi-entry ticket: how many entry slots remain on this specific ticket
   entriesLeft?: number | null;
   isMultiEntry?: boolean;
   message?: string;
@@ -30,6 +30,7 @@ interface ScanResult {
 export default function CheckInScreen() {
   const { profile } = useAuth();
   const insets = useSafeAreaInsets();
+  const { dict } = useLanguage();
   const [permission, requestPermission] = useCameraPermissions();
   const [events, setEvents] = useState<Event[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
@@ -39,9 +40,6 @@ export default function CheckInScreen() {
   const [torch, setTorch] = useState(false);
   const cooldown = useRef(false);
 
-  // Blue  = multi-entry ticket
-  // Green = single-entry (admitted, or has more tickets remaining)
-  // Red   = error
   function accentColor(): string {
     if (!result) return "rgba(255,255,255,0.6)";
     if (!result.success) return "#EF4444";
@@ -49,7 +47,6 @@ export default function CheckInScreen() {
     return "#22C55E";
   }
 
-  // Icon: RefreshCw for multi-entry, Ticket for "has more tickets", CheckCircle2 otherwise
   function ResultIcon({ size = 52 }: { size?: number }) {
     if (!result?.success) return <XCircle size={size} color="#fff" strokeWidth={2} />;
     if (result.isMultiEntry) return <RefreshCw size={size} color="#fff" strokeWidth={2} />;
@@ -58,13 +55,14 @@ export default function CheckInScreen() {
   }
 
   function headline(): string {
-    if (!result?.success) return "Rejected";
+    if (!result?.success) return dict["checkin.rejected"];
     if (result.isMultiEntry) {
       const left = result.entriesLeft ?? 0;
-      return left > 0 ? `Entry used — ${left} left` : "Last entry used";
+      return left > 0
+        ? t(dict, "checkin.entries_left", { n: left })
+        : dict["checkin.last_entry"];
     }
-    if (result.remaining != null && result.remaining > 0) return "Checked In!";
-    return "Checked In!";
+    return dict["checkin.success"];
   }
 
   useEffect(() => {
@@ -104,12 +102,12 @@ export default function CheckInScreen() {
       <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
         <View className="px-5 py-4 flex-row items-start justify-between">
           <View>
-            <Text className="text-foreground text-2xl font-bold tracking-tight">Check-In</Text>
-            <Text className="text-muted-foreground text-sm mt-1">Pick the event for this door</Text>
+            <Text className="text-foreground text-2xl font-bold tracking-tight">{dict["checkin.title"]}</Text>
+            <Text className="text-muted-foreground text-sm mt-1">{dict["checkin.subtitle"]}</Text>
           </View>
           <Pressable onPress={() => router.push("/(app)/seller" as never)} className="active:opacity-60 flex-row items-center gap-1.5 bg-primary rounded-xl px-3 py-2 mt-1">
             <ShoppingCart size={14} color="#fff" strokeWidth={1.75} />
-            <Text className="text-primary-foreground text-sm font-medium">Seller POS</Text>
+            <Text className="text-primary-foreground text-sm font-medium">{dict["checkin.seller"]}</Text>
           </Pressable>
         </View>
 
@@ -127,7 +125,7 @@ export default function CheckInScreen() {
                 <View className="w-14 h-14 rounded-2xl items-center justify-center mb-4 border border-border bg-muted">
                   <Calendar size={24} color="#8f8f8f" strokeWidth={1.75} />
                 </View>
-                <Text className="text-foreground font-semibold text-lg tracking-tight">No published events</Text>
+                <Text className="text-foreground font-semibold text-lg tracking-tight">{dict["checkin.no_events"]}</Text>
               </View>
             }
             renderItem={({ item }) => (
@@ -157,12 +155,12 @@ export default function CheckInScreen() {
         <View className="w-16 h-16 rounded-2xl items-center justify-center mb-4 border border-border bg-muted">
           <Camera size={28} color="#14160F" strokeWidth={1.75} />
         </View>
-        <Text className="text-foreground text-xl font-bold mb-2 tracking-tight">Camera Access</Text>
+        <Text className="text-foreground text-xl font-bold mb-2 tracking-tight">{dict["checkin.camera_title"]}</Text>
         <Text className="text-muted-foreground text-sm text-center mb-6">
-          Camera is needed to scan Wallet passes and ticket QRs
+          {dict["checkin.camera_body"]}
         </Text>
         <Button onPress={requestPermission}>
-          <Text>Grant Permission</Text>
+          <Text>{dict["checkin.grant"]}</Text>
         </Button>
       </View>
     );
@@ -170,12 +168,10 @@ export default function CheckInScreen() {
 
   // ── Scanner ───────────────────────────────────────────────────────────────────
   const accent = accentColor();
-
   const frameColor = result ? accent : "#ffffff";
 
   return (
     <View className="flex-1 bg-black">
-      {/* Camera fills the screen */}
       <CameraView
         style={{ flex: 1 }}
         facing={facing}
@@ -184,7 +180,7 @@ export default function CheckInScreen() {
         onBarcodeScanned={({ data }) => handleScan(data)}
       />
 
-      {/* Top bar — circular back / title / close */}
+      {/* Top bar */}
       <View className="absolute left-0 right-0 z-10 flex-row items-center justify-between px-5" style={{ top: insets.top + 8 }}>
         <Pressable
           onPress={() => setEvent(null)}
@@ -207,7 +203,7 @@ export default function CheckInScreen() {
         </Pressable>
       </View>
 
-      {/* Corner-bracket scan frame + scan line */}
+      {/* Corner-bracket scan frame */}
       <View className="absolute inset-0 items-center justify-center" pointerEvents="none">
         <View style={{ width: 264, height: 264 }}>
           {[
@@ -222,11 +218,11 @@ export default function CheckInScreen() {
         </View>
       </View>
 
-      {/* Bottom control card — matches the scanner mock */}
+      {/* Bottom control card */}
       <View className="absolute left-0 right-0 bottom-0" style={{ paddingBottom: insets.bottom + 14 }}>
         <View className="mx-4 rounded-3xl px-6 pt-4 pb-5" style={{ backgroundColor: "rgba(255,255,255,0.96)" }}>
           <Text className="text-center text-sm font-medium mb-4" style={{ color: "#444" }}>
-            Point at a ticket QR or Wallet pass
+            {dict["checkin.hint"]}
           </Text>
           <View className="flex-row items-center justify-between">
             <Pressable
@@ -252,16 +248,14 @@ export default function CheckInScreen() {
         </View>
       </View>
 
-      {/* Result bottom sheet — matches the web check-in styling */}
+      {/* Result bottom sheet */}
       <Modal visible={!!result} transparent animationType="slide" onRequestClose={dismiss}>
         <Pressable className="flex-1 justify-end" onPress={dismiss}>
-          {/* Inner press stops backdrop dismiss when tapping the sheet itself */}
           <Pressable onPress={() => {}}>
             <View
               className="rounded-t-3xl px-5 pt-3"
               style={{ backgroundColor: "#171717", borderTopWidth: 1, borderColor: "rgba(255,255,255,0.1)", paddingBottom: insets.bottom + 20 }}
             >
-              {/* grab handle */}
               <View className="self-center mb-4 h-1.5 w-10 rounded-full" style={{ backgroundColor: accent }} />
 
               <View className="flex-row items-center gap-3">
@@ -286,15 +280,14 @@ export default function CheckInScreen() {
                 ) : null}
               </View>
 
-              {/* Meta rows */}
               {result?.success && (
                 <View className="mt-4 gap-1.5">
-                  {result.usedAt && <Row label="Time" value={formatDate(result.usedAt)} />}
+                  {result.usedAt && <Row label={dict["checkin.time"]} value={formatDate(result.usedAt)} />}
                   {!result.isMultiEntry && result.remaining != null && result.remaining > 0 && (
-                    <Row label="More tickets" value={`${result.remaining} remaining`} />
+                    <Row label={dict["checkin.more_tickets"]} value={`${result.remaining} remaining`} />
                   )}
                   {result.isMultiEntry && result.entriesLeft != null && (
-                    <Row label="Entries left" value={String(result.entriesLeft)} />
+                    <Row label={dict["checkin.entries"]} value={String(result.entriesLeft)} />
                   )}
                 </View>
               )}
@@ -304,7 +297,7 @@ export default function CheckInScreen() {
                 className="mt-5 rounded-xl py-3.5 items-center active:opacity-80"
                 style={{ backgroundColor: accent }}
               >
-                <Text className="font-bold" style={{ color: "#0A0A0A" }}>Scan Next</Text>
+                <Text className="font-bold" style={{ color: "#0A0A0A" }}>{dict["checkin.scan_next"]}</Text>
               </Pressable>
             </View>
           </Pressable>

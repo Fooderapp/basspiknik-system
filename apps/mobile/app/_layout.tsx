@@ -7,6 +7,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StripeTerminalProvider } from "@stripe/stripe-terminal-react-native";
 import { StripeProvider } from "@stripe/stripe-react-native";
 import { AuthProvider } from "@/context/auth";
+import { LanguageProvider } from "@/context/language";
 import { fetchConnectionToken } from "@/lib/stripe-terminal";
 import { applyPublicConfig, runtimeConfig } from "@/lib/runtime-config";
 
@@ -38,12 +39,14 @@ export default function RootLayout() {
             tokenProvider={fetchConnectionToken}
           >
             <AuthProvider>
+            <LanguageProvider>
             <StatusBar style="light" />
             <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#000000" } }}>
               <Stack.Screen name="index" />
               <Stack.Screen name="(auth)" />
               <Stack.Screen name="(app)" />
               </Stack>
+            </LanguageProvider>
             </AuthProvider>
           </StripeTerminalProvider>
         </StripeProvider>
