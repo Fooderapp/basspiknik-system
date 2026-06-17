@@ -15,10 +15,6 @@ export function SiteHeader({ dict, loggedIn }: { dict: Dictionary; loggedIn: boo
       { label: t(dict, "nav.about"), href: "/#about" },
       { label: t(dict, "nav.events"), href: "/#events" },
       { label: t(dict, "nav.artists"), href: "/#lineup" },
-      {
-        label: loggedIn ? t(dict, "nav.my_tickets") : t(dict, "nav.sign_in"),
-        href: loggedIn ? "/my-tickets" : "/sign-in",
-      },
     ],
     cta: {
       label: loggedIn ? t(dict, "nav.dashboard") : t(dict, "nav.sign_in"),

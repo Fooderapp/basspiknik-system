@@ -169,6 +169,11 @@ export default async function HomePage() {
             <Link href="/menu">{t(dict, "nav.bar_menu")}</Link>
             <Link href="/my-tickets">{t(dict, "nav.my_tickets")}</Link>
           </div>
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-white/30">
+            <Link href="/adatvedelem" className="hover:text-white/60 transition-colors">{t(dict, "footer.privacy")}</Link>
+            <Link href="/aszf" className="hover:text-white/60 transition-colors">{t(dict, "footer.aszf")}</Link>
+            <Link href="/impresszum" className="hover:text-white/60 transition-colors">{t(dict, "footer.impresszum")}</Link>
+          </div>
           <p className="text-xs text-white/40">© {new Date().getFullYear()} Bass Piknik</p>
         </div>
       </footer>
