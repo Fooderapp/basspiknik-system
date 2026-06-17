@@ -88,6 +88,26 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── Who We Are ── */}
+      <section className="relative z-[1] flex min-h-screen flex-col justify-center px-5 py-24">
+        <div className="mx-auto w-full max-w-3xl">
+          <StickyFadeTitle
+            className="sticky top-24 z-0 py-2 text-center text-5xl font-extrabold uppercase tracking-tight sm:text-7xl"
+            style={{ letterSpacing: "-0.03em" }}
+          >
+            {t(dict, "who.title")}
+          </StickyFadeTitle>
+          <div className="relative z-10 mt-10">
+            <p className="mb-5 text-base font-bold leading-relaxed" style={{ color: "#16170F" }}>
+              {t(dict, "who.greeting")}
+            </p>
+            <p className="whitespace-pre-line text-base font-medium leading-relaxed text-muted-foreground">
+              {t(dict, "who.body")}
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* ── Lineup / Artists ── */}
       {artists && artists.length > 0 && (
         <>
