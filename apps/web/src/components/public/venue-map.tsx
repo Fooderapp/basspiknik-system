@@ -95,12 +95,17 @@ export function VenueMap({
     const map = mapRef.current;
     if (!fly || !mapLoaded || flownRef.current || !map) return;
     flownRef.current = true;
+    // padding.bottom = 50% of container height → MapLibre places the focal
+    // point (venue pin) at the centre of the top half = ~25% from top,
+    // which is above the hero fade line on every screen size.
+    const h = map.getContainer().clientHeight;
     map.flyTo({
-      center: [venue.lng, venue.lat - 0.010],
+      center: [venue.lng, venue.lat],
       zoom: 14,
       duration: 3000,
       curve: 1.5,
       essential: true,
+      padding: { top: 0, bottom: Math.round(h * 0.5), left: 0, right: 0 },
     });
     // Bounce the pin in once the camera settles
     map.once("moveend", () => {

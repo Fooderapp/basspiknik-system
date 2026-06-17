@@ -92,6 +92,9 @@ export async function GET(req: Request) {
       id: objectId,
       classId,
       genericType: "GENERIC_TYPE_UNSPECIFIED",
+      cardTitle: {
+        defaultValue: { language: "en-US", value: "Bass Piknik" },
+      },
       barcode: {
         type: "QR_CODE",
         value: walletToken,

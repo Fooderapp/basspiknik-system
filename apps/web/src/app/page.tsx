@@ -56,7 +56,7 @@ export default async function HomePage() {
             <HeroTypewriter words={[t(dict, "home.hero_word_1"), t(dict, "home.hero_word_2"), t(dict, "home.hero_word_3")]} />
           </div>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
-            <Button asChild variant="brand" size="pill"><Link href="/events">{ctaLabel}</Link></Button>
+            <Button asChild variant="brand" size="pill"><Link href="#events">{ctaLabel}</Link></Button>
             <Button asChild variant="brandOutline" size="pill"><Link href="#lineup">{t(dict, "nav.artists")}</Link></Button>
           </div>
         </div>
