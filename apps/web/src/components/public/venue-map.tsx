@@ -289,7 +289,16 @@ export function VenueMap({
                   {/* fade to black */}
                   <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-black to-transparent" />
                 </div>
-                <div className="p-4">
+                <div className="flex flex-col gap-2 p-4">
+                  {activeVenue.eventSlug && (
+                    <a
+                      href={`/events/${activeVenue.eventSlug}`}
+                      className="flex w-full items-center justify-center rounded-full py-3 text-base font-bold text-[#16170F] transition-opacity hover:opacity-90"
+                      style={{ background: "#fff" }}
+                    >
+                      {dict["home.buy_tickets"]}
+                    </a>
+                  )}
                   <a
                     href={activeVenue.mapsUrl}
                     target="_blank"

@@ -24,7 +24,10 @@ interface MapVenue {
   images: string[];
   active: boolean;
   sort_order: number;
+  event_id: string | null;
 }
+
+interface EventOption { id: string; name: string; }
 
 const EMPTY: Omit<MapVenue, "id" | "sort_order"> = {
   name: "",
@@ -35,6 +38,7 @@ const EMPTY: Omit<MapVenue, "id" | "sort_order"> = {
   description_en: "",
   images: [],
   active: true,
+  event_id: null,
 };
 
 /** Strip-style multi-image manager — thumbnails + "add another" uploader */
@@ -90,6 +94,7 @@ function ImagesField({
 
 export function VenuesManager() {
   const [venues, setVenues] = useState<MapVenue[]>([]);
+  const [events, setEvents] = useState<EventOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState({ ...EMPTY });
@@ -99,8 +104,14 @@ export function VenuesManager() {
 
   async function load() {
     try {
-      const d = await (await fetch("/api/admin/venues")).json();
-      setVenues(d.venues ?? []);
+      const [venueRes, eventRes] = await Promise.all([
+        fetch("/api/admin/venues"),
+        fetch("/api/admin/events"),
+      ]);
+      const vd = await venueRes.json();
+      const ed = await eventRes.json();
+      setVenues(vd.venues ?? []);
+      setEvents((ed.events ?? []).map((e: any) => ({ id: e.id, name: e.name })));
     } finally { setLoading(false); }
   }
   useEffect(() => { void load(); }, []);
@@ -139,7 +150,7 @@ export function VenuesManager() {
   }
 
   function startEdit(v: MapVenue) {
-    setEditDrafts((d) => ({ ...d, [v.id]: { name: v.name, lat: v.lat, lng: v.lng, maps_url: v.maps_url, description_hu: v.description_hu, description_en: v.description_en, images: [...v.images] } }));
+    setEditDrafts((d) => ({ ...d, [v.id]: { name: v.name, lat: v.lat, lng: v.lng, maps_url: v.maps_url, description_hu: v.description_hu, description_en: v.description_en, images: [...v.images], event_id: v.event_id ?? null } }));
     setExpanded(v.id);
   }
 
@@ -181,6 +192,19 @@ export function VenuesManager() {
                 <Label>Google Maps URL</Label>
                 <Input value={draft.maps_url} onChange={(e) => setDraft((d) => ({ ...d, maps_url: e.target.value }))} placeholder="https://maps.google.com/..." />
               </div>
+              {events.length > 0 && (
+                <div className="col-span-2 space-y-1">
+                  <Label>Linked Event (for "Buy Tickets" CTA)</Label>
+                  <select
+                    className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
+                    value={draft.event_id ?? ""}
+                    onChange={(e) => setDraft((d) => ({ ...d, event_id: e.target.value || null }))}
+                  >
+                    <option value="">— None —</option>
+                    {events.map((ev) => <option key={ev.id} value={ev.id}>{ev.name}</option>)}
+                  </select>
+                </div>
+              )}
               <div className="col-span-2 space-y-1">
                 <Label>Description (Hungarian)</Label>
                 <Textarea rows={3} value={draft.description_hu} onChange={(e) => setDraft((d) => ({ ...d, description_hu: e.target.value }))} />
@@ -247,6 +271,19 @@ export function VenuesManager() {
                           <Label>Google Maps URL</Label>
                           <Input value={(ed.maps_url ?? v.maps_url) as string} onChange={(e) => patchEdit(v.id, "maps_url", e.target.value)} />
                         </div>
+                        {events.length > 0 && (
+                          <div className="col-span-2 space-y-1">
+                            <Label>Linked Event (for "Buy Tickets" CTA)</Label>
+                            <select
+                              className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
+                              value={(ed.event_id ?? v.event_id) ?? ""}
+                              onChange={(e) => patchEdit(v.id, "event_id", e.target.value || null)}
+                            >
+                              <option value="">— None —</option>
+                              {events.map((ev) => <option key={ev.id} value={ev.id}>{ev.name}</option>)}
+                            </select>
+                          </div>
+                        )}
                         <div className="col-span-2 space-y-1">
                           <Label>Description (Hungarian)</Label>
                           <Textarea rows={3} value={(ed.description_hu ?? v.description_hu) as string} onChange={(e) => patchEdit(v.id, "description_hu", e.target.value)} />

@@ -16,6 +16,7 @@ const schema = z.object({
   featured: z.boolean().optional(),
   sortOrder: z.coerce.number().int().min(0).max(10000).optional(),
   active: z.boolean().optional(),
+  eventIds: z.array(z.string().uuid()).optional(),
 });
 
 async function requireAdmin() {
@@ -28,6 +29,7 @@ function toRow(d: z.infer<typeof schema>) {
     name: d.name, slug: d.slug, genre: d.genre || null, bio: d.bio || null,
     photo_url: d.photoUrl || null, socials: d.socials ?? {},
     featured: d.featured ?? false, sort_order: d.sortOrder ?? 0, active: d.active ?? true,
+    event_ids: d.eventIds ?? [],
   };
 }
 

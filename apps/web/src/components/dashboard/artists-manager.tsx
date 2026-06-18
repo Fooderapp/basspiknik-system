@@ -14,23 +14,32 @@ import { ImageUpload } from "@/components/dashboard/image-upload";
 interface Artist {
   id: string; slug: string; name: string; genre: string | null; bio: string | null;
   photo_url: string | null; socials: Record<string, string>; featured: boolean; sort_order: number; active: boolean;
+  event_ids: string[];
 }
+
+interface EventOption { id: string; name: string; slug: string; }
 
 const SOCIAL_KEYS = ["instagram", "soundcloud", "spotify", "facebook", "website"];
 const slugify = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-const empty = (): Partial<Artist> => ({ name: "", slug: "", genre: "", bio: "", photo_url: null, socials: {}, featured: false, sort_order: 0, active: true });
+const empty = (): Partial<Artist> => ({ name: "", slug: "", genre: "", bio: "", photo_url: null, socials: {}, featured: false, sort_order: 0, active: true, event_ids: [] });
 
 export function ArtistsManager() {
   const [artists, setArtists] = useState<Artist[]>([]);
+  const [events, setEvents] = useState<EventOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Partial<Artist> | null>(null);
   const [saving, setSaving] = useState(false);
 
   async function load() {
     try {
-      const r = await fetch("/api/admin/artists");
-      const d = await r.json();
-      setArtists(d.artists ?? []);
+      const [artistRes, eventRes] = await Promise.all([
+        fetch("/api/admin/artists"),
+        fetch("/api/admin/events"),
+      ]);
+      const ad = await artistRes.json();
+      const ed = await eventRes.json();
+      setArtists(ad.artists ?? []);
+      setEvents((ed.events ?? []).map((e: any) => ({ id: e.id, name: e.name, slug: e.slug })));
     } finally { setLoading(false); }
   }
   useEffect(() => { void load(); }, []);
@@ -50,6 +59,7 @@ export function ArtistsManager() {
         featured: !!editing.featured,
         sortOrder: editing.sort_order ?? 0,
         active: editing.active ?? true,
+        eventIds: editing.event_ids ?? [],
       };
       const r = await fetch("/api/admin/artists", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const d = await r.json();
@@ -98,6 +108,33 @@ export function ArtistsManager() {
                   </div>
                 ))}
               </div>
+              {events.length > 0 && (
+                <div className="space-y-1.5">
+                  <Label>Linked Events</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {events.map((ev) => {
+                      const selected = (editing.event_ids ?? []).includes(ev.id);
+                      return (
+                        <button
+                          key={ev.id}
+                          type="button"
+                          onClick={() => setEditing((p) => {
+                            const ids = p!.event_ids ?? [];
+                            return { ...p!, event_ids: selected ? ids.filter((id) => id !== ev.id) : [...ids, ev.id] };
+                          })}
+                          className="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
+                          style={{
+                            background: selected ? "#9FE870" : "rgba(0,0,0,0.08)",
+                            color: selected ? "#16170F" : "#555",
+                          }}
+                        >
+                          {ev.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               <div className="flex flex-wrap items-center gap-4 pt-1">
                 <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="h-4 w-4" style={{ accentColor: "#163300" }} checked={!!editing.featured} onChange={(e) => setEditing((p) => ({ ...p!, featured: e.target.checked }))} />Featured</label>
                 <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="h-4 w-4" style={{ accentColor: "#163300" }} checked={editing.active ?? true} onChange={(e) => setEditing((p) => ({ ...p!, active: e.target.checked }))} />Active</label>

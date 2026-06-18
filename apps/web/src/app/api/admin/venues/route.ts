@@ -15,6 +15,7 @@ const schema = z.object({
   images: z.array(z.string().url()).optional().default([]),
   active: z.boolean().optional().default(true),
   sort_order: z.number().int().optional().default(0),
+  event_id: z.string().uuid().optional().nullable(),
 });
 
 async function requireEditor() {

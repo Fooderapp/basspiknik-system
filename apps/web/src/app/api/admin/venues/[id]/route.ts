@@ -15,6 +15,7 @@ const patchSchema = z.object({
   images: z.array(z.string()).optional(),
   active: z.boolean().optional(),
   sort_order: z.number().int().optional(),
+  event_id: z.string().uuid().optional().nullable(),
 });
 
 async function requireEditor() {

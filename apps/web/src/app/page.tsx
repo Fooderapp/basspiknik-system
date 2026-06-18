@@ -24,7 +24,7 @@ export default async function HomePage() {
     supabase.from("artists").select("*").eq("active", true).order("sort_order").order("name"),
     supabase.from("events").select("*, ticket_types(quantity, sold, is_visible, sale_enabled, sale_price, price)").eq("status", "PUBLISHED").order("start_date"),
     supabase.from("gallery_images").select("*").order("sort_order").limit(12),
-    supabase.from("map_venues").select("*").eq("active", true).order("sort_order"),
+    supabase.from("map_venues").select("*, events!map_venues_event_id_fkey(slug, name)").eq("active", true).order("sort_order"),
   ]);
 
   const dict = getDictionary(settings.language);
@@ -37,6 +37,8 @@ export default async function HomePage() {
     mapsUrl: v.maps_url,
     images: v.images ?? [],
     description: { en: v.description_en, hu: v.description_hu },
+    eventSlug: v.events?.slug ?? undefined,
+    eventName: v.events?.name ?? undefined,
   }));
   const heroSubtitle = c.hero_subtitle || t(dict, "home.hero_subtitle");
   const ctaLabel = c.hero_cta_label || t(dict, "home.browse_events");
@@ -71,6 +73,20 @@ export default async function HomePage() {
             <Button asChild variant="brand" size="pill"><Link href="#events">{ctaLabel}</Link></Button>
             <Button asChild variant="brandOutline" size="pill"><Link href="#lineup">{t(dict, "nav.artists")}</Link></Button>
           </div>
+          {(socials.instagram || socials.facebook) && (
+            <div className="mt-4 flex justify-center gap-3">
+              {socials.instagram && (
+                <a href={socials.instagram} target="_blank" rel="noopener" className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white/80 transition-colors hover:text-white" style={{ background: "rgba(255,255,255,0.12)" }}>
+                  <Instagram className="h-4 w-4" />Instagram
+                </a>
+              )}
+              {socials.facebook && (
+                <a href={socials.facebook} target="_blank" rel="noopener" className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white/80 transition-colors hover:text-white" style={{ background: "rgba(255,255,255,0.12)" }}>
+                  <Facebook className="h-4 w-4" />Facebook
+                </a>
+              )}
+            </div>
+          )}
         </div>
       </section>
 

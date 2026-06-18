@@ -13,6 +13,10 @@ export interface Venue {
    *  photos in /public/venue/ and list them here; empty falls back to a banner. */
   images: string[];
   description: { en: string; hu: string };
+  /** Linked event slug — renders a "Buy Tickets" CTA in the popup */
+  eventSlug?: string;
+  /** Linked event display name */
+  eventName?: string;
 }
 
 export const BASS_PIKNIK_VENUE: Venue = {
