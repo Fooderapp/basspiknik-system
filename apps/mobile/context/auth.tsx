@@ -4,6 +4,7 @@ import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
 import * as AppleAuthentication from "expo-apple-authentication";
 import * as Notifications from "expo-notifications";
+import Constants from "expo-constants";
 import { supabase } from "@/lib/supabase";
 import type { Profile } from "@/lib/types";
 import type { Session } from "@supabase/supabase-js";
@@ -41,7 +42,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { status } = await Notifications.requestPermissionsAsync();
       if (status !== "granted") return;
-      const tokenData = await Notifications.getExpoPushTokenAsync();
+      const projectId = Constants.expoConfig?.extra?.eas?.projectId as string | undefined;
+      const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
       await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/push/register`, {
         method: "POST",
         headers: {
