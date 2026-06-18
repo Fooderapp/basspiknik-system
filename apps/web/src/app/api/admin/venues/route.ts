@@ -24,7 +24,7 @@ async function requireEditor() {
 
 export async function GET() {
   if (!(await requireEditor())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
   const { data, error } = await admin.from("map_venues").select("*").order("sort_order").order("created_at");
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ venues: data ?? [] });
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
   if (!(await requireEditor())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Bad request", issues: parsed.error.issues }, { status: 400 });
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
   const { data, error } = await admin.from("map_venues").insert(parsed.data).select("*").single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ venue: data });

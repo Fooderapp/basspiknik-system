@@ -50,7 +50,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const parsed = ticketTypeSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
   const d = parsed.data;
   const { data, error } = await admin.from("ticket_types").insert({
     event_id: id,

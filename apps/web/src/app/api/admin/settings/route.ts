@@ -26,7 +26,7 @@ export async function GET() {
   if (!profile || profile.role !== "ADMIN")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const supabase = await createAdminClient() as any;
+  const supabase = createAdminClient() as any;
   const { data, error } = await supabase
     .from("app_settings")
     .select("currency, language, credits_enabled, credits_per_ticket, credits_per_drink, spin_cost, spin_win_rate, invoice_pos_cash, credit_redeem_enabled, credit_value_huf, credit_max_apply, credit_max_pct, credit_min_redeem, updated_at")
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
   if (d.creditMaxPct     !== undefined) update.credit_max_pct     = d.creditMaxPct;
   if (d.creditMinRedeem  !== undefined) update.credit_min_redeem  = d.creditMinRedeem;
 
-  const supabase = await createAdminClient() as any;
+  const supabase = createAdminClient() as any;
   const { error } = await supabase
     .from("app_settings")
     .update(update)

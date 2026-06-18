@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
   const { error } = await admin
     .from("profiles")
     .update({ ...parsed.data })

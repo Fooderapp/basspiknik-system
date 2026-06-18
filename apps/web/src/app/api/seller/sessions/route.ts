@@ -90,7 +90,7 @@ export async function POST(req: Request) {
     buyerUserId, stripePaymentIntentId,
   } = parsed.data;
 
-  const supabase = await createAdminClient() as any;
+  const supabase = createAdminClient() as any;
   const settings = await getSettings();
 
   const totalAmount = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
@@ -269,7 +269,7 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const eventId = searchParams.get("eventId");
 
-  const supabase = await createAdminClient() as any;
+  const supabase = createAdminClient() as any;
   let query = supabase
     .from("seller_sessions")
     .select("*, events(name), profiles(name, email)")

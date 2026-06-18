@@ -11,7 +11,7 @@ export async function GET(req: Request) {
   const id = new URL(req.url).searchParams.get("id");
   if (!id) return NextResponse.json({ valid: false }, { status: 400 });
 
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
   const { data } = await admin
     .from("promo_codes")
     .select("id, event_id, discount_type, discount_value, usage_limit, used_count, expires_at")

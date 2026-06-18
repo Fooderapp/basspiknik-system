@@ -75,7 +75,7 @@ export async function PATCH(
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const adminSupabase = await createAdminClient() as any;
+  const adminSupabase = createAdminClient() as any;
 
   // Fetch the order
   const { data: order } = await adminSupabase
@@ -204,7 +204,7 @@ export async function DELETE(
   const { user, profile } = await getAuth();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const adminSupabase = await createAdminClient() as any;
+  const adminSupabase = createAdminClient() as any;
   const { data: order } = await adminSupabase.from("drink_orders").select("user_id, status").eq("id", id).single();
   if (!order) return NextResponse.json({ error: "Not found" }, { status: 404 });
 

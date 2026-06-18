@@ -129,7 +129,7 @@ export async function POST(req: Request) {
   let creditDiscount = 0;
   if (creditsToApply && creditsToApply > 0) {
     if (!user) return NextResponse.json({ error: "Sign in to use credits" }, { status: 401 });
-    const adminCredit = await createAdminClient() as any;
+    const adminCredit = createAdminClient() as any;
     const r = await computeRedemption(adminCredit, user.id, subtotal, creditsToApply);
     creditsApplied = r.credits;
     creditDiscount = r.discount;
@@ -138,7 +138,7 @@ export async function POST(req: Request) {
   let profileEmail = guestEmail;
   if (user && !promoCode) {
     // Admin read so it works for both cookie (web) and Bearer (mobile) sessions.
-    const adminRead = await createAdminClient() as any;
+    const adminRead = createAdminClient() as any;
     const { data: profileData } = await adminRead.from("profiles").select("*").eq("id", user.id).single();
     const profile = profileData as Profile | null;
     if (profile?.loyalty_discount) discountAmount = subtotal * 0.1;
@@ -151,7 +151,7 @@ export async function POST(req: Request) {
   if (freeSpinToken) {
     if (!user) return NextResponse.json({ error: "Sign in to claim a free spin" }, { status: 401 });
 
-    const admin = await createAdminClient() as any;
+    const admin = createAdminClient() as any;
 
     // Atomic single-use redemption via service role.
     // Done here (not via the SECURITY DEFINER RPC) because mobile authenticates

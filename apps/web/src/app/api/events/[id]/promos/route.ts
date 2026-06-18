@@ -27,7 +27,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (!profile || !["ADMIN", "EDITOR"].includes(profile.role)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
-  const supabase = await createAdminClient() as any;
+  const supabase = createAdminClient() as any;
   const { data, error } = await supabase
     .from("promo_codes")
     .select("*")
@@ -48,7 +48,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const supabase = await createAdminClient() as any;
+  const supabase = createAdminClient() as any;
 
   // Check uniqueness
   const { data: existing } = await supabase
@@ -78,7 +78,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
   const { promoId } = await req.json();
-  const supabase = await createAdminClient() as any;
+  const supabase = createAdminClient() as any;
   const { error } = await supabase.from("promo_codes").delete().eq("id", promoId);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });

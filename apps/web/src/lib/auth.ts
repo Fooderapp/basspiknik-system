@@ -23,7 +23,7 @@ export async function requireRole(allowedRoles: UserRole[]): Promise<Profile> {
 }
 
 export async function upsertProfile(id: string, email: string, name = "") {
-  const supabase = await createAdminClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("profiles")
     .upsert({ id, email, name: name || email.split("@")[0] })

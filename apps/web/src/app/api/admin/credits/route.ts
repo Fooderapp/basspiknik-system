@@ -21,7 +21,7 @@ const grantSchema = z.object({
 export async function GET() {
   const admin_profile = await requireAdmin();
   if (!admin_profile) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
 
   const { data, error } = await admin
     .from("credit_transactions")
@@ -38,7 +38,7 @@ export async function GET() {
 export async function POST(req: Request) {
   const admin_profile = await requireAdmin();
   if (!admin_profile) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
 
   const parsed = grantSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Bad request" }, { status: 400 });

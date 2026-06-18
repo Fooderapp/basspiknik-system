@@ -22,7 +22,7 @@ async function requireAdmin() {
 
 export async function GET() {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
   const { data } = await admin.from("site_content").select("*").eq("id", "home").single();
   return NextResponse.json({ content: data ?? {} });
 }
@@ -32,7 +32,7 @@ export async function PUT(req: Request) {
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Bad request" }, { status: 400 });
   const d = parsed.data;
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
   const { error } = await admin.from("site_content").update({
     hero_title: d.heroTitle ?? null,
     hero_subtitle: d.heroSubtitle ?? null,

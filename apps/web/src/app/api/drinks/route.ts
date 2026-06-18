@@ -43,7 +43,7 @@ export async function POST(req: Request) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
   const d = parsed.data;
-  const supabase = await createAdminClient() as any;
+  const supabase = createAdminClient() as any;
   const { data, error } = await supabase.from("drinks").insert({
     name:        d.name,
     description: d.description ?? null,

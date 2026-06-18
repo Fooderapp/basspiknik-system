@@ -21,7 +21,7 @@ export async function POST(req: Request) {
   const { qrCode } = await req.json();
   if (!qrCode) return NextResponse.json({ error: "QR code required" }, { status: 400 });
 
-  const supabase = await createAdminClient() as any;
+  const supabase = createAdminClient() as any;
 
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   let ticket: any = null;

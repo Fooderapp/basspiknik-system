@@ -31,7 +31,7 @@ function randomCode(): string {
 
 export async function GET() {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
   const { data, error } = await admin
     .from("qr_codes")
     .select("*, events(name)")
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
   if (d.type === "MESSAGE" && !d.message)
     return NextResponse.json({ error: "Message required" }, { status: 400 });
 
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
   const row = {
     code: randomCode(),
     type: d.type,
@@ -79,7 +79,7 @@ export async function DELETE(req: Request) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const id = new URL(req.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
   const { error } = await admin.from("qr_codes").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });

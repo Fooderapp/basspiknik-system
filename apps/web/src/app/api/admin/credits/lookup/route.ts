@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   if (!parsed.success) return NextResponse.json({ error: "Bad request" }, { status: 400 });
 
   const { lookupType, lookup } = parsed.data;
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
 
   let userId: string | null = null;
   let userName = "";

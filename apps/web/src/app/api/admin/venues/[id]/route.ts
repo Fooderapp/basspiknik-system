@@ -27,7 +27,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const { id } = await params;
   const parsed = patchSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Bad request" }, { status: 400 });
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
   const { data, error } = await admin.from("map_venues").update(parsed.data).eq("id", id).select("*").single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ venue: data });
@@ -36,7 +36,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!(await requireEditor())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const { id } = await params;
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
   const { error } = await admin.from("map_venues").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });

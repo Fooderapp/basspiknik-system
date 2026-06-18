@@ -41,7 +41,7 @@ export async function POST(req: Request) {
   const settings = await getSettings();
   const currency = settings.currency;
 
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
 
   const { data: eventData } = await admin
     .from("events").select("*, ticket_types(*)").eq("id", eventId).eq("status", "PUBLISHED").single();

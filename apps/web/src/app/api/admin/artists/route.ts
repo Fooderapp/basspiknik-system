@@ -33,7 +33,7 @@ function toRow(d: z.infer<typeof schema>) {
 
 export async function GET() {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
   const { data, error } = await admin.from("artists").select("*").order("sort_order").order("name");
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ artists: data ?? [] });
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Bad request" }, { status: 400 });
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
   const row = toRow(parsed.data);
   const q = parsed.data.id
     ? admin.from("artists").update(row).eq("id", parsed.data.id).select("*").single()
@@ -57,7 +57,7 @@ export async function DELETE(req: Request) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const id = new URL(req.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
   const { error } = await admin.from("artists").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });

@@ -15,7 +15,7 @@ const DEFAULTS: AppSettings = { currency: "HUF", language: "hu" };
 export async function getSettings(): Promise<AppSettings> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const supabase = await createAdminClient() as any;
+    const supabase = createAdminClient() as any;
     const { data } = await supabase
       .from("app_settings")
       .select("currency, language")

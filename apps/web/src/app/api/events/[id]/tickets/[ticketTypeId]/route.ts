@@ -52,7 +52,7 @@ export async function PATCH(
           saleStartsAt, saleEndsAt, isBundle, bundleSize, isDoorTicket, saleEnabled, salePrice,
           isVisible, visibleFrom, visibleUntil } = parsed.data;
 
-  const supabase = await createAdminClient() as any;
+  const supabase = createAdminClient() as any;
   const { data, error } = await supabase
     .from("ticket_types")
     .update({
@@ -93,7 +93,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  const supabase = await createAdminClient() as any;
+  const supabase = createAdminClient() as any;
 
   // Check if any tickets sold — don't allow deletion if sold > 0
   const { data: tt } = await supabase

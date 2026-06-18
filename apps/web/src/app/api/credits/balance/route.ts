@@ -27,7 +27,7 @@ export async function GET(req: Request) {
   const user = await resolveUser(req);
   if (!user) return NextResponse.json({ balance: 0, enabled: false });
 
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
   const [{ data: balance }, { data: settings }] = await Promise.all([
     admin.rpc("get_credit_balance", { p_user_id: user.id }),
     admin

@@ -41,7 +41,7 @@ export async function POST(req: Request) {
   const key = await getConfig("BILLINGO_API_KEY");
   if (!key) return NextResponse.json({ error: "BILLINGO_API_KEY not set" }, { status: 400 });
 
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
   const url = new URL(req.url);
   const orderId = url.searchParams.get("orderId");
 

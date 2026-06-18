@@ -53,7 +53,7 @@ export interface FulfillResult {
  *  the confirmation email for a paid ticket purchase. Shared by both the Stripe
  *  Checkout webhook (web) and the PaymentIntent webhook (mobile native). */
 export async function fulfillTicketOrder(input: FulfillInput): Promise<FulfillResult> {
-  const supabase = await createAdminClient() as any;
+  const supabase = createAdminClient() as any;
 
   const { data: dbEvent, error: eventError } = await supabase
     .from("events")

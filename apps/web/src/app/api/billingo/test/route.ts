@@ -109,7 +109,7 @@ export async function GET(req: Request) {
   // whether it issued a real Billingo number or the INV-<ts> fallback.
   let recentOrders: any = undefined;
   try {
-    const admin = await createAdminClient() as any;
+    const admin = createAdminClient() as any;
     const { data: orders } = await admin
       .from("orders")
       .select("id, total, status, payment_method, created_at, stripe_payment_intent_id, invoices(number, pdf_url)")

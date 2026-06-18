@@ -37,7 +37,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
   const d = parsed.data;
-  const supabase = await createAdminClient() as any;
+  const supabase = createAdminClient() as any;
   const { data, error } = await supabase.from("drinks").update({
     ...(d.name !== undefined        && { name: d.name }),
     ...(d.description !== undefined && { description: d.description }),
@@ -61,7 +61,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   if (!profile || !["ADMIN", "EDITOR"].includes(profile.role)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
-  const supabase = await createAdminClient() as any;
+  const supabase = createAdminClient() as any;
   const { error } = await supabase.from("drinks").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });

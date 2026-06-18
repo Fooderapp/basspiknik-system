@@ -19,7 +19,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (!profile || !["ADMIN", "EDITOR"].includes(profile.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
-  const supabase = await createAdminClient() as any;
+  const supabase = createAdminClient() as any;
   const { data } = await supabase.from("event_spin_config").select("*").eq("event_id", id).single();
   return NextResponse.json(data ?? {
     event_id: id, enabled: false, allowed_ticket_type_ids: [],
@@ -38,7 +38,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
   const d = parsed.data;
-  const supabase = await createAdminClient() as any;
+  const supabase = createAdminClient() as any;
   const { error } = await supabase.from("event_spin_config").upsert({
     event_id: id,
     enabled: d.enabled,

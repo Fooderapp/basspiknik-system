@@ -51,7 +51,7 @@ export async function POST(req: Request) {
 
   const { name, description, coverImageUrl, bannerImageUrl, homeCoverImageUrl, startDate, endDate, venue, address, capacity, status, taxRate } = parsed.data;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supabase = await createAdminClient() as any;
+  const supabase = createAdminClient() as any;
   const baseSlug = slugify(name);
   let slug = baseSlug;
   let counter = 1;

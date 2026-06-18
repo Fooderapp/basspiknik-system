@@ -41,7 +41,7 @@ export async function POST(req: Request) {
   if (!parsed.success) return no("invalid_request");
   const { eventId, items } = parsed.data;
 
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
   const [{ data: balanceRaw }, { data: settings }, { data: cfg }] = await Promise.all([
     admin.rpc("get_credit_balance", { p_user_id: user.id }),
     admin.from("app_settings").select("credits_enabled, spin_cost").eq("id", "global").single(),

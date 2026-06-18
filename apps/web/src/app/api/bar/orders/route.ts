@@ -96,7 +96,7 @@ export async function POST(req: Request) {
     if (!drink.available) return NextResponse.json({ error: `"${drink.name}" is currently unavailable` }, { status: 400 });
   }
 
-  const adminSupabase = await createAdminClient() as any;
+  const adminSupabase = createAdminClient() as any;
   let isVip = false;
   const { data: { user } } = await (await createClient()).auth.getUser();
   if (user) {

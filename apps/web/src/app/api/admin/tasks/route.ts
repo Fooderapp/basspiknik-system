@@ -42,7 +42,7 @@ function toRow(d: z.infer<typeof taskSchema>) {
 
 export async function GET() {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
   const [{ data: tasks }, { data: pending }] = await Promise.all([
     admin.from("credit_tasks").select("*").order("sort_order").order("created_at"),
     admin
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const parsed = taskSchema.safeParse(await req.json());
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
   const { data, error } = await admin.from("credit_tasks").insert(toRow(parsed.data)).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
@@ -70,7 +70,7 @@ export async function PATCH(req: Request) {
   if (!body.id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
   const parsed = taskSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
   const { data, error } = await admin.from("credit_tasks").update(toRow(parsed.data)).eq("id", body.id).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
@@ -80,7 +80,7 @@ export async function DELETE(req: Request) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const { id } = await req.json();
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
-  const admin = await createAdminClient() as any;
+  const admin = createAdminClient() as any;
   const { error } = await admin.from("credit_tasks").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
