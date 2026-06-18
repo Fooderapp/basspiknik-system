@@ -38,6 +38,8 @@ export function SpinButton({ context, eventId, items = [], dict, onWin, disabled
   const [open, setOpen] = useState(false);
   const [phase, setPhase] = useState<Phase>("idle");
   const [faces, setFaces] = useState<[number, number]>([WIN_FACE, WIN_FACE]);
+  // null = still checking, false = hide, true = show
+  const [eligible, setEligible] = useState<boolean | null>(null);
 
   const loadBalance = () => {
     fetch("/api/credits/balance")
@@ -52,6 +54,31 @@ export function SpinButton({ context, eventId, items = [], dict, onWin, disabled
 
   useEffect(loadBalance, []);
 
+  // For TICKET context: re-check full server eligibility whenever the cart changes.
+  // Hides the CTA entirely when any condition is unmet (wrong ticket type, bundle
+  // requirement, event config disabled, insufficient credits, empty cart, etc.).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const itemsKey = JSON.stringify(items);
+  useEffect(() => {
+    if (context !== "TICKET" || !eventId) return;
+    const cartItems = items.filter((i) => i.quantity > 0);
+    if (cartItems.length === 0) { setEligible(false); return; }
+
+    let cancelled = false;
+    fetch("/api/credits/spin-eligibility", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ eventId, items: cartItems }),
+    })
+      .then((r) => r.json())
+      .then((d) => { if (!cancelled) setEligible(!!d.eligible); })
+      .catch(() => { if (!cancelled) setEligible(false); });
+
+    return () => { cancelled = true; };
+  // itemsKey is the stable serialization of items
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [context, eventId, itemsKey]);
+
   // Cycle faces rapidly while the dice tumble
   useEffect(() => {
     if (phase !== "spinning") return;
@@ -59,10 +86,10 @@ export function SpinButton({ context, eventId, items = [], dict, onWin, disabled
     return () => clearInterval(iv);
   }, [phase]);
 
-  // Show the banner whenever the credit feature is enabled (logged-in user).
-  // When the balance is short, it renders disabled with a "need credits" hint
-  // rather than disappearing — keeps the Lucky Roll discoverable.
-  if (!enabled) return null;
+  // TICKET: hide until eligibility confirmed by server
+  if (context === "TICKET" && !eligible) return null;
+  // DRINK / other: hide if credits feature is off
+  if (context !== "TICKET" && !enabled) return null;
 
   const canSpin = balance >= spinCost && !disabled;
 
