@@ -28,8 +28,11 @@ const PIP_UV: Record<number, [number, number][]> = {
 const FACE_VALUES = [3, 4, 1, 6, 2, 5];
 
 /* ─── Texture generation ────────────────────────────────────────────────────── */
-const TEX = 128;
-const PIP_R = TEX * 0.11;
+const TEX = 256;
+const PIP_R = TEX * 0.10;
+// pip offset scale — without this, ±O maps exactly to texture edges (pixel 0/TEX),
+// clipping every corner pip. SCALE pulls centres inward so pips are fully visible.
+const PIP_SCALE = 0.68;
 
 function hexToRgb(hex: number) {
   return { r: (hex >> 16) & 0xff, g: (hex >> 8) & 0xff, b: hex & 0xff };
@@ -49,8 +52,8 @@ function makeFaceTex(value: number, bg: number, pip: number): DataTexture {
 
   const uvPips = PIP_UV[value] ?? [[0, 0]];
   for (const [u, v] of uvPips) {
-    const cx = (u / (O * 2) + 0.5) * TEX;
-    const cy = (1 - (v / (O * 2) + 0.5)) * TEX;
+    const cx = (u / (O * 2) * PIP_SCALE + 0.5) * TEX;
+    const cy = (1 - (v / (O * 2) * PIP_SCALE + 0.5)) * TEX;
     const rOuter = PIP_R;
     const rInner = PIP_R - 1.5;
     const x0 = Math.max(0, Math.floor(cx - rOuter - 1));

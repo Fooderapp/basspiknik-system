@@ -35,8 +35,11 @@ const PIP_UV: Record<number, [number, number][]> = {
 const FACE_VALUES = [3, 4, 1, 6, 2, 5];
 
 /* ─── Texture generation ────────────────────────────────────────────────────── */
-const TEX = 128; // texture resolution (power of 2)
-const PIP_R = TEX * 0.11; // pip radius in px
+const TEX = 256; // texture resolution (power of 2)
+const PIP_R = TEX * 0.10; // pip radius in px
+// pip offset scale — without this, ±O maps exactly to texture edges (pixel 0/TEX),
+// clipping every corner pip. SCALE pulls centres inward so pips are fully visible.
+const PIP_SCALE = 0.68;
 
 function hexToRgb(hex: number) {
   return { r: (hex >> 16) & 0xff, g: (hex >> 8) & 0xff, b: hex & 0xff };
@@ -63,8 +66,8 @@ function makeFaceTex(value: number, bg: number, pip: number): DataTexture {
   // Pip centres in pixel space. UV range is ~[-0.62, 0.62] → [0, TEX]
   const uvPips = PIP_UV[value] ?? [[0, 0]];
   for (const [u, v] of uvPips) {
-    const cx = ((u / (O * 2)) + 0.5) * TEX;
-    const cy = (1 - (v / (O * 2) + 0.5)) * TEX; // flip Y for texture coords
+    const cx = (u / (O * 2) * PIP_SCALE + 0.5) * TEX;
+    const cy = (1 - (v / (O * 2) * PIP_SCALE + 0.5)) * TEX; // flip Y for texture coords
 
     // Draw anti-aliased filled circle
     const rOuter = PIP_R;
