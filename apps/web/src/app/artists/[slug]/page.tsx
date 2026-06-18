@@ -70,20 +70,6 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
           ) : <div className="absolute inset-0" style={{ background: "linear-gradient(135deg,#2E2350,#16170F)" }} />}
         </div>
 
-        {linkedEvents.length > 0 && (
-          <div className="mt-4 flex flex-wrap justify-center gap-2">
-            {linkedEvents.map((ev) => (
-              <span
-                key={ev.id}
-                className="inline-flex items-center rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-widest"
-                style={{ background: "#9FE870", color: "#16170F" }}
-              >
-                {formatDate(ev.start_date)}
-              </span>
-            ))}
-          </div>
-        )}
-
         <div className="mt-6 text-center">
           {artist.genre && <p className="mb-2 text-sm font-bold uppercase tracking-[3px]" style={{ color: "#3C7A1E" }}>{artist.genre}</p>}
           <h1 className="text-4xl font-extrabold uppercase tracking-tight sm:text-6xl" style={{ letterSpacing: "-0.03em", color: "#16170F" }}>{artist.name}</h1>
