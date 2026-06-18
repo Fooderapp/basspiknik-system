@@ -32,12 +32,32 @@ export function VenueMap({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  // ref to each pin inner element, keyed by venue index
   const pinElsRef = useRef<(HTMLElement | null)[]>([]);
   const flownRef = useRef(false);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const imgIdxRef = useRef(0);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [activeVenue, setActiveVenue] = useState<Venue | null>(null);
   const [imgIndex, setImgIndex] = useState(0);
+
+  // keep ref in sync so interval closure always sees current index
+  useEffect(() => { imgIdxRef.current = imgIndex; }, [imgIndex]);
+
+  // scroll carousel to slide 0 whenever a new venue opens
+  useEffect(() => {
+    if (!activeVenue) return;
+    carouselRef.current?.scrollTo({ left: 0, behavior: "instant" });
+  }, [activeVenue]);
+
+  // auto-advance every 3 s when there are multiple images
+  useEffect(() => {
+    if (!activeVenue || activeVenue.images.length <= 1) return;
+    const id = setInterval(() => {
+      const next = (imgIdxRef.current + 1) % activeVenue.images.length;
+      carouselRef.current?.scrollTo({ left: next * (carouselRef.current.clientWidth || 1), behavior: "smooth" });
+    }, 3000);
+    return () => clearInterval(id);
+  }, [activeVenue]);
 
   const primary = venues[0];
 
@@ -184,20 +204,38 @@ export function VenueMap({
                 <div className="relative h-full overflow-hidden rounded-[27px] bg-[#262626]">
                   {activeVenue.images.length > 0 ? (
                     <>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        key={imgIndex}
-                        src={activeVenue.images[imgIndex]}
-                        alt={activeVenue.name}
-                        className="absolute inset-0 h-[115%] w-full max-w-none -top-[7.5%] object-cover transition-opacity duration-300"
-                      />
-                      {/* dots — only when multiple images */}
+                      {/* scroll-snap strip — swipe / scroll / auto-advance */}
+                      <div
+                        ref={carouselRef}
+                        className="flex h-full"
+                        style={{ overflowX: "auto", scrollSnapType: "x mandatory", scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+                        onScroll={(e) => {
+                          const el = e.currentTarget;
+                          const idx = Math.round(el.scrollLeft / (el.clientWidth || 1));
+                          setImgIndex(idx);
+                        }}
+                      >
+                        {activeVenue.images.map((src, i) => (
+                          <div key={i} className="relative flex-none w-full h-full overflow-hidden" style={{ scrollSnapAlign: "start" }}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={src}
+                              alt={activeVenue.name}
+                              className="absolute w-full max-w-none object-cover"
+                              style={{ top: "-7.5%", height: "115%" }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      {/* dots */}
                       {activeVenue.images.length > 1 && (
                         <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
                           {activeVenue.images.map((_, i) => (
                             <button
                               key={i}
-                              onClick={() => setImgIndex(i)}
+                              onClick={() => {
+                                carouselRef.current?.scrollTo({ left: i * (carouselRef.current.clientWidth || 1), behavior: "smooth" });
+                              }}
                               className="h-1.5 rounded-full transition-all"
                               style={{
                                 width: i === imgIndex ? 16 : 6,
