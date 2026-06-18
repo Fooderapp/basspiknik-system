@@ -78,17 +78,35 @@ export function VenueMap({
     venues.forEach((venue, idx) => {
       // MapLibre owns `wrapper`'s transform for positioning — never touch it.
       // Animate `inner` instead so the spring bounce doesn't override positioning.
+      const PILL_H = 26;
+      const PIN_W = 80;
+      const PIN_H = 95;
+
       const wrapper = document.createElement("div");
-      wrapper.style.cssText = "position:relative;width:63px;height:75px;";
+      wrapper.style.cssText = `position:relative;width:${PIN_W}px;height:${PIN_H + PILL_H + 4}px;`;
 
       const inner = document.createElement("div");
-      inner.style.cssText = "opacity:0;transform:translateY(20px) scale(0.4);position:relative;width:63px;height:75px;";
+      inner.style.cssText = `opacity:0;transform:translateY(20px) scale(0.4);position:relative;width:${PIN_W}px;height:${PIN_H + PILL_H + 4}px;display:flex;flex-direction:column;align-items:center;`;
       pinElsRef.current[idx] = inner;
+
+      // pill label above the pin
+      const pill = document.createElement("div");
+      pill.textContent = dict["location.click_pin"];
+      pill.style.cssText = [
+        "background:rgba(255,255,255,0.92);",
+        "color:#16170F;",
+        "font-size:11px;font-weight:700;letter-spacing:0.02em;",
+        "padding:3px 10px;border-radius:999px;",
+        "white-space:nowrap;margin-bottom:4px;",
+        "box-shadow:0 2px 8px rgba(0,0,0,0.18);",
+        "pointer-events:none;",
+      ].join("");
+      inner.appendChild(pill);
 
       const btn = document.createElement("button");
       btn.setAttribute("aria-label", venue.name);
       btn.style.cssText = "border:0;background:transparent;cursor:pointer;padding:0;display:block;animation:pinBob 2.2s ease-in-out 1.2s infinite;transform-origin:bottom center;";
-      btn.innerHTML = `<svg width="63" height="75" viewBox="0 0 63 75" fill="none" xmlns="http://www.w3.org/2000/svg">
+      btn.innerHTML = `<svg width="80" height="95" viewBox="0 0 63 75" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g filter="url(#filter0_d_185_69)">
 <path d="M32.2165 8.9005C36.3398 8.9324 40.4117 10.4594 43.9294 13.6534C45.1646 14.7699 46.2031 16.0501 47.0534 17.4376C49.9212 22.1349 50.5393 28.1245 49.28 34.1935C48.0366 40.1908 44.948 46.2842 40.3796 51.2687V51.2804C38.1375 53.7247 35.5263 55.9142 32.5944 57.6847C32.2334 57.9479 31.7436 57.9799 31.3425 57.7247C27.0106 54.9852 23.3722 51.6951 20.5124 48.1183C16.5658 43.1978 14.0835 37.7428 13.2331 32.4874C12.3667 27.16 13.1771 22.0314 15.8444 17.8644C16.8953 16.2176 18.2383 14.7179 19.8747 13.422C23.6369 10.4433 27.9329 8.8687 32.2165 8.9005Z" fill="#FFF000"/>
 </g>
