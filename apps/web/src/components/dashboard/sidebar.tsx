@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, CalendarDays, Users, BarChart3,
   Ticket, Wine, ScanLine, UserCheck, Gift,
-  LogOut, ChevronLeft, Menu, User, Settings, QrCode, Music, Home, Image as ImageIcon, FileText, MapPin,
+  LogOut, ChevronLeft, Menu, User, Settings, QrCode, Music, Home, Image as ImageIcon, FileText, MapPin, Coins,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -37,6 +37,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Artists",  href: "/dashboard/artists",  icon: Music,     roles: ["ADMIN", "EDITOR"] },
   { label: "Gallery",  href: "/dashboard/gallery",  icon: ImageIcon, roles: ["ADMIN", "EDITOR"] },
   { label: "Map Pins", href: "/dashboard/venues",   icon: MapPin,    roles: ["ADMIN", "EDITOR"] },
+  { label: "Credits",  href: "/dashboard/credits",  icon: Coins,     roles: ["ADMIN"] },
   { label: "Legal",    href: "/dashboard/legal",    icon: FileText,  roles: ["ADMIN"] },
   { label: "Settings", href: "/dashboard/settings", icon: Settings,  roles: ["ADMIN"] },
 ];
