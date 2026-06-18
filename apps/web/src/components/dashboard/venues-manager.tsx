@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Trash2, Plus, GripVertical, ChevronDown, ChevronUp } from "lucide-react";
+import { Trash2, Plus, GripVertical, ChevronDown, ChevronUp, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { ImageUpload } from "@/components/dashboard/image-upload";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -35,6 +36,57 @@ const EMPTY: Omit<MapVenue, "id" | "sort_order"> = {
   images: [],
   active: true,
 };
+
+/** Strip-style multi-image manager — thumbnails + "add another" uploader */
+function ImagesField({
+  images,
+  onChange,
+}: {
+  images: string[];
+  onChange: (imgs: string[]) => void;
+}) {
+  const [uploadKey, setUploadKey] = useState(0);
+
+  function addImage(url: string | null) {
+    if (!url) return;
+    onChange([...images, url]);
+    setUploadKey((k) => k + 1); // reset uploader so user can add more
+  }
+
+  function removeImage(idx: number) {
+    onChange(images.filter((_, i) => i !== idx));
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label>Images</Label>
+      {images.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {images.map((url, idx) => (
+            <div key={url + idx} className="group relative h-20 w-20 overflow-hidden rounded-xl border bg-muted">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={url} alt="" className="h-full w-full object-cover" />
+              <button
+                type="button"
+                onClick={() => removeImage(idx)}
+                className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-white opacity-0 transition-opacity group-hover:opacity-100"
+              >
+                <X className="h-3 w-3" />
+              </button>
+              {idx === 0 && (
+                <span className="absolute bottom-0 left-0 right-0 bg-black/50 py-0.5 text-center text-[9px] text-white">cover</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="max-w-[80px]">
+        <ImageUpload key={uploadKey} aspect="1/1" value={null} onChange={addImage} />
+        <p className="mt-1 text-[10px] text-muted-foreground">Add photo</p>
+      </div>
+    </div>
+  );
+}
 
 export function VenuesManager() {
   const [venues, setVenues] = useState<MapVenue[]>([]);
@@ -87,7 +139,7 @@ export function VenuesManager() {
   }
 
   function startEdit(v: MapVenue) {
-    setEditDrafts((d) => ({ ...d, [v.id]: { name: v.name, lat: v.lat, lng: v.lng, maps_url: v.maps_url, description_hu: v.description_hu, description_en: v.description_en } }));
+    setEditDrafts((d) => ({ ...d, [v.id]: { name: v.name, lat: v.lat, lng: v.lng, maps_url: v.maps_url, description_hu: v.description_hu, description_en: v.description_en, images: [...v.images] } }));
     setExpanded(v.id);
   }
 
@@ -137,6 +189,9 @@ export function VenuesManager() {
                 <Label>Description (English)</Label>
                 <Textarea rows={3} value={draft.description_en} onChange={(e) => setDraft((d) => ({ ...d, description_en: e.target.value }))} />
               </div>
+              <div className="col-span-2">
+                <ImagesField images={draft.images} onChange={(imgs) => setDraft((d) => ({ ...d, images: imgs }))} />
+              </div>
             </div>
             <div className="flex gap-2">
               <Button onClick={create} disabled={saving}>Save</Button>
@@ -154,6 +209,7 @@ export function VenuesManager() {
           {venues.map((v) => {
             const isOpen = expanded === v.id;
             const ed = editDrafts[v.id] ?? {};
+            const edImages = (ed.images ?? v.images) as string[];
             return (
               <Card key={v.id}>
                 <CardContent className="p-4">
@@ -161,7 +217,7 @@ export function VenuesManager() {
                     <GripVertical className="h-4 w-4 text-muted-foreground flex-none" />
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold truncate">{v.name}</p>
-                      <p className="text-xs text-muted-foreground">{v.lat}, {v.lng}</p>
+                      <p className="text-xs text-muted-foreground">{v.lat}, {v.lng} · {v.images.length} image{v.images.length !== 1 ? "s" : ""}</p>
                     </div>
                     <Switch checked={v.active} onCheckedChange={() => toggleActive(v)} />
                     <Button size="sm" variant="ghost" onClick={() => isOpen ? setExpanded(null) : startEdit(v)}>
@@ -198,6 +254,9 @@ export function VenuesManager() {
                         <div className="col-span-2 space-y-1">
                           <Label>Description (English)</Label>
                           <Textarea rows={3} value={(ed.description_en ?? v.description_en) as string} onChange={(e) => patchEdit(v.id, "description_en", e.target.value)} />
+                        </div>
+                        <div className="col-span-2">
+                          <ImagesField images={edImages} onChange={(imgs) => patchEdit(v.id, "images", imgs)} />
                         </div>
                       </div>
                       <div className="flex gap-2">

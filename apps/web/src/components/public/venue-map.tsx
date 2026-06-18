@@ -37,6 +37,7 @@ export function VenueMap({
   const flownRef = useRef(false);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [activeVenue, setActiveVenue] = useState<Venue | null>(null);
+  const [imgIndex, setImgIndex] = useState(0);
 
   const primary = venues[0];
 
@@ -83,7 +84,7 @@ export function VenueMap({
           <path d="M15 0C6.7 0 0 6.7 0 15c0 10.5 15 27 15 27s15-16.5 15-27C30 6.7 23.3 0 15 0Z" fill="#C7E04A"/>
           <circle cx="15" cy="15" r="6.2" fill="#16170F"/>
         </svg>`;
-      btn.addEventListener("click", () => setActiveVenue(venue));
+      btn.addEventListener("click", () => { setImgIndex(0); setActiveVenue(venue); });
       inner.appendChild(btn);
       wrapper.appendChild(inner);
 
@@ -134,7 +135,7 @@ export function VenueMap({
       `}</style>
       <div ref={containerRef} className="h-full w-full" />
 
-      <Dialog open={!!activeVenue} onOpenChange={(o) => { if (!o) setActiveVenue(null); }}>
+      <Dialog open={!!activeVenue} onOpenChange={(o) => { if (!o) { setActiveVenue(null); setImgIndex(0); } }}>
         {activeVenue && (
           <DialogContent
             className="max-w-2xl overflow-hidden border-0 p-0"
@@ -155,16 +156,36 @@ export function VenueMap({
             </button>
 
             <div className="grid h-[480px] grid-cols-2">
-              {/* ── Left: photo ── */}
+              {/* ── Left: photo / carousel ── */}
               <div className="p-2">
                 <div className="relative h-full overflow-hidden rounded-[27px] bg-[#262626]">
                   {activeVenue.images.length > 0 ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={activeVenue.images[0]}
-                      alt={activeVenue.name}
-                      className="absolute inset-0 h-[115%] w-full max-w-none -top-[7.5%] object-cover"
-                    />
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        key={imgIndex}
+                        src={activeVenue.images[imgIndex]}
+                        alt={activeVenue.name}
+                        className="absolute inset-0 h-[115%] w-full max-w-none -top-[7.5%] object-cover transition-opacity duration-300"
+                      />
+                      {/* dots — only when multiple images */}
+                      {activeVenue.images.length > 1 && (
+                        <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+                          {activeVenue.images.map((_, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setImgIndex(i)}
+                              className="h-1.5 rounded-full transition-all"
+                              style={{
+                                width: i === imgIndex ? 16 : 6,
+                                background: i === imgIndex ? "#fff" : "rgba(255,255,255,0.35)",
+                              }}
+                              aria-label={`Image ${i + 1}`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <>
                       <div
