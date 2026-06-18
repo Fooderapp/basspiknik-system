@@ -22,11 +22,9 @@
         "NSBluetoothAlwaysUsageDescription": "Required by Stripe Terminal SDK for connecting to card readers.",
         "NSBluetoothPeripheralUsageDescription": "Required by Stripe Terminal SDK for connecting to card readers.",
         "NSLocalNetworkUsageDescription": "Used to connect to Stripe Terminal card readers on the local network.",
-        "NFCReaderUsageDescription": "Used by Stripe Terminal to accept contactless (Tap to Pay) card payments.",
         "ITSAppUsesNonExemptEncryption": false
       },
       "entitlements": {
-        "com.apple.developer.proximity-reader.payment.acceptance": true,
         "com.apple.developer.applesignin": [
           "Default"
         ]
