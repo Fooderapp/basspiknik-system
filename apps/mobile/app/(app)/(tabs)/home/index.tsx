@@ -10,7 +10,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   CalendarDays, MapPin, Star, ShoppingBag, Wine, Sparkles, QrCode, ScanLine,
-  Ticket as TicketIcon, ChevronRight, type LucideIcon,
+  Ticket as TicketIcon, ChevronRight, House, type LucideIcon,
 } from "lucide-react-native";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/badge";
@@ -279,6 +279,7 @@ export default function HomeScreen() {
                 <Text style={{ color: INK, fontWeight: "800", fontSize: 14 }}>{credits}</Text>
               </View>
             </PressableScale>
+            <IconButton icon={House} variant="white" size={40} onPress={() => Linking.openURL("https://basspiknik.com")} />
             <IconButton icon={ScanLine} variant="white" size={40} onPress={() => router.push("/(app)/scan" as never)} />
           </View>
         </View>
