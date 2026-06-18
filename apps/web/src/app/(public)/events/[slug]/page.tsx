@@ -19,13 +19,16 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   const supabase = await createClient() as any;
 
   const [{ data }, settings, { data: { user } }] = await Promise.all([
-    supabase.from("events").select("*, ticket_types(*)").eq("slug", slug).in("status", ["PUBLISHED", "PREORDER"]).single(),
+    supabase.from("events").select("*, ticket_types(*)").eq("slug", slug).single(),
     getSettings(),
     supabase.auth.getUser(),
   ]);
 
   const event = data as EventWithTickets | null;
   if (!event) notFound();
+  // Gate: only PUBLISHED and PREORDER events are publicly visible
+  const status = (event as any).status as string;
+  if (status !== "PUBLISHED" && status !== "PREORDER") notFound();
 
   const dict = getDictionary(settings.language);
   // Public purchase flow: hide door tickets (POS-only), hidden types, and any
@@ -77,7 +80,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
         )}
       </div>
 
-      {(event as any).status === "PREORDER" ? (
+      {status === "PREORDER" ? (
         <>
           <div className="mb-4 inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-widest" style={{ background: "#9FE870", color: "#16170F" }}>
             {t(dict, "preorder.badge")}

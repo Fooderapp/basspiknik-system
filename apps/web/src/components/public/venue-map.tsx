@@ -220,9 +220,9 @@ export function VenueMap({
               <X className="h-4 w-4" />
             </button>
 
-            <div className="grid h-[480px] grid-cols-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 sm:h-[480px]">
               {/* ── Left: photo / carousel ── */}
-              <div className="p-2">
+              <div className="p-2 h-[260px] sm:h-auto">
                 <div className="relative h-full overflow-hidden rounded-[27px] bg-[#262626]">
                   {activeVenue.images.length > 0 ? (
                     <>
