@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Trash2, Plus, GripVertical, ChevronDown, ChevronUp, X } from "lucide-react";
+import { Trash2, Plus, GripVertical, ChevronDown, ChevronUp, X, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,8 +10,60 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { ImageUpload } from "@/components/dashboard/image-upload";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
+const POSITRON = "https://tiles.openfreemap.org/styles/positron";
+
+/** Small interactive map — click anywhere to set lat/lng */
+function LocationPickerMap({ lat, lng, onChange }: { lat: number; lng: number; onChange: (lat: number, lng: number) => void }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<maplibregl.Map | null>(null);
+  const markerRef = useRef<maplibregl.Marker | null>(null);
+
+  useEffect(() => {
+    if (!containerRef.current || mapRef.current) return;
+    const map = new maplibregl.Map({
+      container: containerRef.current,
+      style: POSITRON,
+      center: [lng, lat],
+      zoom: 12,
+      attributionControl: { compact: true },
+    });
+    mapRef.current = map;
+
+    const marker = new maplibregl.Marker({ color: "#163300", draggable: true })
+      .setLngLat([lng, lat])
+      .addTo(map);
+    markerRef.current = marker;
+
+    marker.on("dragend", () => {
+      const { lat: lt, lng: ln } = marker.getLngLat();
+      onChange(Math.round(lt * 1e7) / 1e7, Math.round(ln * 1e7) / 1e7);
+    });
+
+    map.on("click", (e) => {
+      const lt = Math.round(e.lngLat.lat * 1e7) / 1e7;
+      const ln = Math.round(e.lngLat.lng * 1e7) / 1e7;
+      marker.setLngLat([ln, lt]);
+      onChange(lt, ln);
+    });
+
+    return () => { map.remove(); mapRef.current = null; markerRef.current = null; };
+  // only mount once
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // keep marker in sync when lat/lng change from the inputs
+  useEffect(() => {
+    markerRef.current?.setLngLat([lng, lat]);
+    mapRef.current?.setCenter([lng, lat]);
+  }, [lat, lng]);
+
+  return <div ref={containerRef} style={{ height: 240, borderRadius: 16, overflow: "hidden" }} />;
+}
 
 interface MapVenue {
   id: string;
@@ -240,6 +292,11 @@ export function VenuesManager() {
                 <Label>Longitude</Label>
                 <Input type="number" step="any" value={draft.lng} onChange={(e) => setDraft((d) => ({ ...d, lng: parseFloat(e.target.value) || 0 }))} />
               </div>
+              <div className="col-span-2 space-y-1.5">
+                <Label className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />Place on map</Label>
+                <p className="text-xs text-muted-foreground">Click or drag the pin to set the position.</p>
+                <LocationPickerMap lat={draft.lat} lng={draft.lng} onChange={(lt, ln) => setDraft((d) => ({ ...d, lat: lt, lng: ln }))} />
+              </div>
               <div className="col-span-2 space-y-1">
                 <Label>Google Maps URL</Label>
                 <Input value={draft.maps_url} onChange={(e) => setDraft((d) => ({ ...d, maps_url: e.target.value }))} placeholder="https://maps.google.com/..." />
@@ -321,6 +378,15 @@ export function VenuesManager() {
                         <div className="space-y-1">
                           <Label>Longitude</Label>
                           <Input type="number" step="any" value={(ed.lng ?? v.lng) as number} onChange={(e) => patchEdit(v.id, "lng", parseFloat(e.target.value) || 0)} />
+                        </div>
+                        <div className="col-span-2 space-y-1.5">
+                          <Label className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />Place on map</Label>
+                          <p className="text-xs text-muted-foreground">Click or drag the pin to set the position.</p>
+                          <LocationPickerMap
+                            lat={(ed.lat ?? v.lat) as number}
+                            lng={(ed.lng ?? v.lng) as number}
+                            onChange={(lt, ln) => { patchEdit(v.id, "lat", lt); patchEdit(v.id, "lng", ln); }}
+                          />
                         </div>
                         <div className="col-span-2 space-y-1">
                           <Label>Google Maps URL</Label>

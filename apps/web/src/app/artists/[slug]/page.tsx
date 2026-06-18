@@ -6,6 +6,8 @@ import { getSettings } from "@/lib/settings";
 import { getDictionary, t } from "@/lib/i18n";
 import { SiteHeader } from "@/components/public/site-header";
 import { Button } from "@/components/ui/button";
+import { EventCarousel } from "@/components/public/event-carousel";
+import { formatDate } from "@/lib/utils";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -33,17 +35,23 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
   const socials: Record<string, string> = artist.socials ?? {};
   const eventIds: string[] = artist.event_ids ?? [];
 
-  // fetch future events linked to this artist
-  let linkedEvents: { id: string; name: string; slug: string; start_date: string }[] = [];
+  // fetch future events linked to this artist (with cover + ticket types for card)
+  let linkedEvents: any[] = [];
   if (eventIds.length > 0) {
     const now = new Date().toISOString();
     const { data: evData } = await supabase
       .from("events")
-      .select("id, name, slug, start_date")
+      .select("id, name, slug, start_date, cover_image_url, home_cover_image_url, ticket_types(quantity, sold, is_visible, sale_enabled, sale_price, price)")
       .in("id", eventIds)
       .gte("start_date", now)
       .order("start_date");
     linkedEvents = evData ?? [];
+  }
+
+  function ticketState(ev: any): { soon: boolean } {
+    const types = (ev.ticket_types ?? []).filter((tt: any) => tt.is_visible !== false);
+    const available = types.filter((tt: any) => tt.quantity - tt.sold > 0);
+    return { soon: available.length === 0 };
   }
 
   return (
@@ -63,16 +71,15 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
         </div>
 
         {linkedEvents.length > 0 && (
-          <div className="mt-6 flex flex-wrap justify-center gap-2">
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
             {linkedEvents.map((ev) => (
-              <a
+              <span
                 key={ev.id}
-                href={`/events/${ev.slug}`}
-                className="inline-flex items-center rounded-full px-4 py-1.5 text-sm font-bold transition-opacity hover:opacity-80"
+                className="inline-flex items-center rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-widest"
                 style={{ background: "#9FE870", color: "#16170F" }}
               >
-                {ev.name}
-              </a>
+                {formatDate(ev.start_date)}
+              </span>
             ))}
           </div>
         )}
@@ -97,6 +104,26 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
 
         {artist.bio && <p className="mt-6 whitespace-pre-line text-lg leading-relaxed">{artist.bio}</p>}
       </div>
+
+      {linkedEvents.length > 0 && (
+        <section className="mx-auto w-full max-w-3xl px-5 pb-20 pt-4">
+          <h2 className="mb-6 text-center text-2xl font-extrabold uppercase tracking-tight" style={{ letterSpacing: "-0.03em", color: "#16170F" }}>
+            {t(dict, "artist.upcoming_event")}
+          </h2>
+          <EventCarousel
+            dict={dict}
+            events={linkedEvents.map((ev) => ({
+              id: ev.id,
+              slug: ev.slug,
+              name: ev.name,
+              start_date: ev.start_date,
+              cover_image_url: ev.cover_image_url,
+              home_cover_image_url: ev.home_cover_image_url,
+              soon: ticketState(ev).soon,
+            }))}
+          />
+        </section>
+      )}
     </div>
   );
 }

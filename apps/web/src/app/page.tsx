@@ -77,12 +77,12 @@ export default async function HomePage() {
           {(socials.instagram || socials.facebook) && (
             <div className="mt-4 flex justify-center gap-3">
               {socials.instagram && (
-                <a href={socials.instagram} target="_blank" rel="noopener" className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white/80 transition-colors hover:text-white" style={{ background: "rgba(255,255,255,0.12)" }}>
+                <a href={socials.instagram} target="_blank" rel="noopener" className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-80" style={{ background: "rgba(22,23,15,0.78)" }}>
                   <Instagram className="h-4 w-4" />Instagram
                 </a>
               )}
               {socials.facebook && (
-                <a href={socials.facebook} target="_blank" rel="noopener" className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white/80 transition-colors hover:text-white" style={{ background: "rgba(255,255,255,0.12)" }}>
+                <a href={socials.facebook} target="_blank" rel="noopener" className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-80" style={{ background: "rgba(22,23,15,0.78)" }}>
                   <Facebook className="h-4 w-4" />Facebook
                 </a>
               )}

@@ -45,6 +45,7 @@ const en = {
   "artist.back":    "Back",
   "artist.listen":  "Listen",
   "artist.view":    "View Artist",
+  "artist.upcoming_event": "Upcoming Event",
   "artists.title":  "Artists",
   "artists.none":   "No artists yet.",
 
@@ -556,6 +557,7 @@ const hu: typeof en = {
   "artist.back":    "Vissza",
   "artist.listen":  "Meghallgatom",
   "artist.view":    "Fellépő megtekintése",
+  "artist.upcoming_event": "Legközelebbi Esemény",
   "artists.title":  "Fellépők",
   "artists.none":   "Még nincsenek fellépők.",
 
