@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, CalendarDays, Users, BarChart3,
   Ticket, Wine, ScanLine, UserCheck, Gift,
-  LogOut, ChevronLeft, Menu, User, Settings, QrCode, Music, Home, Image as ImageIcon, FileText, MapPin, Coins,
+  LogOut, ChevronLeft, Menu, User, Settings, QrCode, Music, Home, Image as ImageIcon, FileText, MapPin, Coins, Bell,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -27,6 +27,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Events", href: "/dashboard/events", icon: CalendarDays, roles: ["ADMIN", "EDITOR"] },
   { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3, roles: ["ADMIN"] },
   { label: "Guests", href: "/dashboard/guests", icon: Users, roles: ["ADMIN", "EDITOR"] },
+  { label: "Notifications", href: "/dashboard/notifications", icon: Bell, roles: ["ADMIN"] },
   { label: "Drinks", href: "/dashboard/drinks", icon: Wine, roles: ["ADMIN", "EDITOR", "STAFF", "BARTENDER"] },
   { label: "Seller", href: "/seller", icon: Ticket, roles: ["ADMIN", "EDITOR", "SELLER"] },
   { label: "Check-In", href: "/checkin", icon: UserCheck, roles: ["ADMIN", "EDITOR", "STAFF"] },

@@ -90,6 +90,11 @@ export default async function EventDetailPage({
             </Button>
           )}
           <Button variant="outline" size="sm" asChild>
+            <Link href={`/dashboard/events/${id}/analytics`}>
+              <BarChart3 className="h-3.5 w-3.5 mr-1" /> Analytics
+            </Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
             <Link href={`/dashboard/events/${id}/promos`}>
               <Tag className="h-3.5 w-3.5 mr-1" /> Promo Codes
             </Link>
