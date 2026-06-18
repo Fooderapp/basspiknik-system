@@ -12,7 +12,16 @@
       }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_NO_DOTENV": "1",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://ldvfvqwrobsupyoxqnie.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkdmZ2cXdyb2JzdXB5b3hxbmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5NjAxMjcsImV4cCI6MjA5NTUzNjEyN30.v6_GU75S6z3Up3VLB5OeSiQfXheVmHJFydndNR1PXHg",
+        "EXPO_PUBLIC_API_URL": "https://basspiknik.com",
+        "EXPO_PUBLIC_APP_URL": "https://basspiknik.com",
+        "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY": "pk_test_51So2wYRlBgtEX2zsu1uZJgURMztrKPvn4tkt20UVEubcjz1VedOIDUFHC9BKxs6ZEIyWRyraez84t5u8IvQz9DLu00dSIic6bh",
+        "EXPO_PUBLIC_STRIPE_LOCATION_ID": "tml_GhkywAznz8J0xr"
+      }
     },
     "production": {
       "autoIncrement": true,
