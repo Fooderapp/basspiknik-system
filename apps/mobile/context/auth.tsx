@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
 import * as AppleAuthentication from "expo-apple-authentication";
+import * as Notifications from "expo-notifications";
 import { supabase } from "@/lib/supabase";
 import type { Profile } from "@/lib/types";
 import type { Session } from "@supabase/supabase-js";
@@ -36,6 +37,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  async function registerPushToken(sess: Session) {
+    try {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== "granted") return;
+      const tokenData = await Notifications.getExpoPushTokenAsync();
+      await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/push/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sess.access_token}`,
+        },
+        body: JSON.stringify({
+          token: tokenData.data,
+          platform: Platform.OS === "ios" ? "ios" : "android",
+        }),
+      });
+    } catch {
+      // non-fatal
+    }
+  }
+
   async function loadProfile(user: { id: string; email?: string | null; user_metadata?: Record<string, any> }) {
     const { data } = await supabase
       .from("profiles")
@@ -65,8 +87,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session?.user) loadProfile(session.user).finally(() => setLoading(false));
-      else setLoading(false);
+      if (session?.user) {
+        loadProfile(session.user).finally(() => setLoading(false));
+        registerPushToken(session);
+      } else {
+        setLoading(false);
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -77,6 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         setLoading(true);
         loadProfile(session.user).finally(() => setLoading(false));
+        registerPushToken(session);
       } else {
         setProfile(null);
         setLoading(false);

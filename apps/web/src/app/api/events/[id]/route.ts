@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import type { Profile, Event } from "@/lib/supabase/types";
+import { sendOnSaleNotifications } from "@/lib/notifications";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -16,7 +17,7 @@ const updateSchema = z.object({
   venue: z.string().optional(),
   address: z.string().optional(),
   capacity: z.number().min(1).optional(),
-  status: z.enum(["DRAFT", "PUBLISHED", "CANCELLED", "ARCHIVED"]).optional(),
+  status: z.enum(["DRAFT", "PREORDER", "PUBLISHED", "CANCELLED", "ARCHIVED"]).optional(),
   taxRate: z.number().min(0).max(100).optional(),
 });
 
@@ -49,6 +50,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const { name, description, coverImageUrl, bannerImageUrl, homeCoverImageUrl, startDate, endDate, venue, address, capacity, status, taxRate } = parsed.data;
   const supabase = createAdminClient() as any;
+
+  // Snapshot old status to detect PREORDER → PUBLISHED transition
+  let oldStatus: string | null = null;
+  if (status === "PUBLISHED") {
+    const { data: old } = await supabase.from("events").select("status").eq("id", id).single();
+    oldStatus = old?.status ?? null;
+  }
+
   const { data, error } = await supabase.from("events").update({
     ...(name && { name }),
     ...(description !== undefined && { description }),
@@ -65,6 +74,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   }).eq("id", id).select().single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Fire notifications when transitioning from PREORDER to PUBLISHED
+  if (status === "PUBLISHED" && oldStatus === "PREORDER" && data) {
+    sendOnSaleNotifications(data.id, data.name, data.slug).catch(() => {});
+  }
+
   return NextResponse.json(data as Event);
 }
 

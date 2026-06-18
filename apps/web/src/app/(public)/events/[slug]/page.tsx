@@ -4,6 +4,7 @@ import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 import { ChevronLeft, CalendarDays, MapPin } from "lucide-react";
 import { TicketSelector } from "@/components/events/ticket-selector";
+import { PreorderRegister } from "@/components/events/preorder-register";
 import { EventCover } from "@/components/public/event-cover";
 import type { Event, TicketType } from "@/lib/supabase/types";
 import { getSettings } from "@/lib/settings";
@@ -18,7 +19,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   const supabase = await createClient() as any;
 
   const [{ data }, settings, { data: { user } }] = await Promise.all([
-    supabase.from("events").select("*, ticket_types(*)").eq("slug", slug).eq("status", "PUBLISHED").single(),
+    supabase.from("events").select("*, ticket_types(*)").eq("slug", slug).in("status", ["PUBLISHED", "PREORDER"]).single(),
     getSettings(),
     supabase.auth.getUser(),
   ]);
@@ -76,26 +77,39 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
         )}
       </div>
 
-      <TicketSelector
-        eventId={event.id}
-        dict={dict}
-        currency={settings.currency}
-        isLoggedIn={!!user}
-        ticketTypes={tts.map((tt) => ({
-          id: tt.id, name: tt.name,
-          description: tt.description ?? undefined,
-          price: tt.price,
-          saleEnabled: tt.sale_enabled ?? false,
-          salePrice: tt.sale_price ?? undefined,
-          available: tt.quantity - tt.sold,
-          maxPerOrder: tt.max_per_order,
-          tier: tt.tier,
-          isBundle: tt.is_bundle,
-          bundleSize: tt.bundle_size ?? undefined,
-          entriesPerTicket: tt.entries_per_ticket ?? 1,
-          comingSoon: comingSoon(tt),
-        }))}
-      />
+      {(event as any).status === "PREORDER" ? (
+        <>
+          <div className="mb-4 inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-widest" style={{ background: "#9FE870", color: "#16170F" }}>
+            {t(dict, "preorder.badge")}
+          </div>
+          <PreorderRegister
+            slug={slug}
+            dict={dict}
+            defaultEmail={user?.email ?? ""}
+          />
+        </>
+      ) : (
+        <TicketSelector
+          eventId={event.id}
+          dict={dict}
+          currency={settings.currency}
+          isLoggedIn={!!user}
+          ticketTypes={tts.map((tt) => ({
+            id: tt.id, name: tt.name,
+            description: tt.description ?? undefined,
+            price: tt.price,
+            saleEnabled: tt.sale_enabled ?? false,
+            salePrice: tt.sale_price ?? undefined,
+            available: tt.quantity - tt.sold,
+            maxPerOrder: tt.max_per_order,
+            tier: tt.tier,
+            isBundle: tt.is_bundle,
+            bundleSize: tt.bundle_size ?? undefined,
+            entriesPerTicket: tt.entries_per_ticket ?? 1,
+            comingSoon: comingSoon(tt),
+          }))}
+        />
+      )}
       </div>
     </div>
   );

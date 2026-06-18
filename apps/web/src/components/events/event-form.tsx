@@ -26,7 +26,7 @@ const eventSchema = z.object({
   venue: z.string().optional(),
   address: z.string().optional(),
   capacity: z.coerce.number().min(1, "Capacity must be at least 1"),
-  status: z.enum(["DRAFT", "PUBLISHED"]),
+  status: z.enum(["DRAFT", "PREORDER", "PUBLISHED"]),
   taxRate: z.coerce.number().min(0).max(100).default(0),
 });
 
@@ -165,13 +165,14 @@ export function EventForm({ defaultValues, eventId }: EventFormProps) {
               <Label>Status</Label>
               <Select
                 defaultValue={watch("status")}
-                onValueChange={(v) => setValue("status", v as "DRAFT" | "PUBLISHED")}
+                onValueChange={(v) => setValue("status", v as "DRAFT" | "PREORDER" | "PUBLISHED")}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="DRAFT">Draft</SelectItem>
+                  <SelectItem value="PREORDER">Pre-order (notify on launch)</SelectItem>
                   <SelectItem value="PUBLISHED">Published</SelectItem>
                 </SelectContent>
               </Select>

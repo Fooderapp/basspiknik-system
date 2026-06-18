@@ -24,7 +24,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
     venue: event.venue ?? "",
     address: event.address ?? "",
     capacity: event.capacity,
-    status: event.status as "DRAFT" | "PUBLISHED",
+    status: event.status as "DRAFT" | "PREORDER" | "PUBLISHED",
     taxRate: event.tax_rate,
   };
 

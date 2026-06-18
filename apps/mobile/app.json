@@ -78,6 +78,13 @@
           "merchantIdentifier": "merchant.com.eventos.mobile",
           "enableGooglePay": false
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#9FE870"
+        }
       ]
     ],
     "experiments": {
