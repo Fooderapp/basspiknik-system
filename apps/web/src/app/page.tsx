@@ -22,7 +22,7 @@ export default async function HomePage() {
     getSettings(),
     supabase.from("site_content").select("*").eq("id", "home").single(),
     supabase.from("artists").select("*").eq("active", true).order("sort_order").order("name"),
-    supabase.from("events").select("*, ticket_types(quantity, sold, is_visible, sale_enabled, sale_price, price)").eq("status", "PUBLISHED").order("start_date"),
+    supabase.from("events").select("*, ticket_types(quantity, sold, is_visible, sale_enabled, sale_price, price)").in("status", ["PUBLISHED", "PREORDER"]).order("start_date"),
     supabase.from("gallery_images").select("*").order("sort_order").limit(12),
     supabase.from("map_venues").select("*, events!map_venues_event_id_fkey(slug, name)").eq("active", true).order("sort_order"),
   ]);

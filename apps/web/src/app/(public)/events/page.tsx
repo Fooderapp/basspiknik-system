@@ -21,7 +21,7 @@ export default async function EventsPage() {
     supabase
       .from("events")
       .select("*, ticket_types(*)")
-      .eq("status", "PUBLISHED")
+      .in("status", ["PUBLISHED", "PREORDER"])
       .order("start_date", { ascending: true }),
     getSettings(),
   ]);
