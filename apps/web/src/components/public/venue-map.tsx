@@ -128,35 +128,63 @@ export function VenueMap({
       <div ref={containerRef} className="h-full w-full" />
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg overflow-hidden rounded-3xl p-0">
-          {venue.images.length > 0 ? (
-            <div className="flex gap-2 overflow-x-auto p-2">
-              {venue.images.map((src) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img key={src} src={src} alt={venue.name} className="h-44 w-64 flex-none rounded-2xl object-cover" />
-              ))}
-            </div>
-          ) : (
-            <div
-              className="flex h-40 items-end p-5"
-              style={{ background: "radial-gradient(circle at 30% 20%, #3C7A1E 0%, #16170F 85%)" }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.svg" alt={venue.name} className="h-8 w-auto opacity-90" />
-            </div>
-          )}
-          <DialogHeader className="px-6 pb-2 pt-1 text-left">
-            <DialogTitle className="text-2xl font-extrabold tracking-tight">{venue.name}</DialogTitle>
-            <DialogDescription className="text-base leading-relaxed text-muted-foreground">
-              {venue.description[lang]}
-            </DialogDescription>
+        <DialogContent
+          className="max-w-2xl overflow-hidden border-0 p-0"
+          style={{ background: "#000", borderRadius: 36 }}
+        >
+          {/* visually hidden accessible title */}
+          <DialogHeader className="sr-only">
+            <DialogTitle>{venue.name}</DialogTitle>
+            <DialogDescription>{venue.description[lang]}</DialogDescription>
           </DialogHeader>
-          <div className="px-6 pb-6">
-            <Button asChild variant="brand" size="pill" className="w-full">
-              <a href={venue.mapsUrl} target="_blank" rel="noopener noreferrer">
-                {dict["location.directions"]}
-              </a>
-            </Button>
+
+          <div className="grid h-[480px] grid-cols-2">
+            {/* ── Left: photo ── */}
+            <div className="p-2">
+              <div className="relative h-full overflow-hidden rounded-[27px] bg-[#262626]">
+                {venue.images.length > 0 ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={venue.images[0]}
+                    alt={venue.name}
+                    className="absolute inset-0 h-[115%] w-full max-w-none -top-[7.5%] object-cover"
+                  />
+                ) : (
+                  <>
+                    <div
+                      className="h-full w-full"
+                      style={{ background: "radial-gradient(circle at 30% 20%, #3C7A1E 0%, #16170F 85%)" }}
+                    />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/logo.svg" alt={venue.name} className="absolute bottom-5 left-5 h-8 w-auto opacity-90" />
+                  </>
+                )}
+                <div className="pointer-events-none absolute inset-0 rounded-[27px] shadow-[inset_0_0_0_1px_#262626]" />
+              </div>
+            </div>
+
+            {/* ── Right: info ── */}
+            <div className="flex flex-col overflow-hidden">
+              <div className="relative flex-1 overflow-hidden">
+                <div className="h-full overflow-auto p-8">
+                  <p className="mb-5 text-center text-base font-medium text-white">{venue.name}</p>
+                  <p className="text-[11px] leading-[1.5] text-[#E5E5E5]">{venue.description[lang]}</p>
+                </div>
+                {/* fade to black */}
+                <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-black to-transparent" />
+              </div>
+              <div className="p-4">
+                <a
+                  href={venue.mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex w-full items-center justify-center rounded-full py-3 text-base font-medium text-white transition-opacity hover:opacity-90"
+                  style={{ background: "#1966FF" }}
+                >
+                  {dict["location.directions"]}
+                </a>
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

@@ -134,8 +134,10 @@ export default async function HomePage() {
         <div id="about" className="scroll-mt-20" />
         <section className="relative z-[1] flex min-h-screen flex-col justify-center px-5 py-8 text-center">
           <div className="mx-auto w-full max-w-3xl">
-            {c.about_title && <StickyFadeTitle className="sticky top-24 z-0 py-2 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{c.about_title}</StickyFadeTitle>}
-            {c.about_body && <p className="relative z-10 mx-auto mt-4 max-w-2xl whitespace-pre-line text-lg leading-relaxed text-muted-foreground">{c.about_body}</p>}
+            <div className="rounded-[2.25rem] bg-white px-8 py-10 shadow-sm">
+              {c.about_title && <StickyFadeTitle className="sticky top-24 z-0 py-2 text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ letterSpacing: "-0.03em" }}>{c.about_title}</StickyFadeTitle>}
+              {c.about_body && <p className="relative z-10 mx-auto mt-4 max-w-2xl whitespace-pre-line text-lg leading-relaxed text-muted-foreground">{c.about_body}</p>}
+            </div>
           </div>
         </section>
         </>
