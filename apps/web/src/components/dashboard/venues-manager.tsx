@@ -25,6 +25,7 @@ interface MapVenue {
   active: boolean;
   sort_order: number;
   event_id: string | null;
+  pin_svg: string | null;
 }
 
 interface EventOption { id: string; name: string; }
@@ -39,6 +40,7 @@ const EMPTY: Omit<MapVenue, "id" | "sort_order"> = {
   images: [],
   active: true,
   event_id: null,
+  pin_svg: null,
 };
 
 /** Strip-style multi-image manager — thumbnails + "add another" uploader */
@@ -88,6 +90,56 @@ function ImagesField({
         <ImageUpload key={uploadKey} aspect="1/1" value={null} onChange={addImage} />
         <p className="mt-1 text-[10px] text-muted-foreground">Add photo</p>
       </div>
+    </div>
+  );
+}
+
+/** Upload an SVG file → reads it as text and stores raw SVG string */
+function SvgPinField({ value, onChange }: { value: string | null; onChange: (svg: string | null) => void }) {
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = (ev.target?.result as string ?? "").trim();
+      if (!text.includes("<svg")) { toast.error("File must be an SVG"); return; }
+      onChange(text);
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label>Custom Pin SVG</Label>
+      <div className="flex items-center gap-3">
+        {value ? (
+          <>
+            <div
+              className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl border bg-muted"
+              // eslint-disable-next-line react/no-danger
+              dangerouslySetInnerHTML={{ __html: value }}
+              style={{ maxWidth: 64, maxHeight: 64 }}
+            />
+            <div className="flex flex-col gap-1">
+              <label className="cursor-pointer rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-muted">
+                Replace
+                <input type="file" accept=".svg,image/svg+xml" className="sr-only" onChange={handleFile} />
+              </label>
+              <button type="button" onClick={() => onChange(null)} className="rounded-md border px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10">
+                Remove
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground">Custom pin active</p>
+          </>
+        ) : (
+          <label className="cursor-pointer rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-muted">
+            Upload SVG pin
+            <input type="file" accept=".svg,image/svg+xml" className="sr-only" onChange={handleFile} />
+          </label>
+        )}
+      </div>
+      <p className="text-xs text-muted-foreground">Leave empty to use the default Bass Piknik pin.</p>
     </div>
   );
 }
@@ -150,7 +202,7 @@ export function VenuesManager() {
   }
 
   function startEdit(v: MapVenue) {
-    setEditDrafts((d) => ({ ...d, [v.id]: { name: v.name, lat: v.lat, lng: v.lng, maps_url: v.maps_url, description_hu: v.description_hu, description_en: v.description_en, images: [...v.images], event_id: v.event_id ?? null } }));
+    setEditDrafts((d) => ({ ...d, [v.id]: { name: v.name, lat: v.lat, lng: v.lng, maps_url: v.maps_url, description_hu: v.description_hu, description_en: v.description_en, images: [...v.images], event_id: v.event_id ?? null, pin_svg: v.pin_svg ?? null } }));
     setExpanded(v.id);
   }
 
@@ -215,6 +267,9 @@ export function VenuesManager() {
               </div>
               <div className="col-span-2">
                 <ImagesField images={draft.images} onChange={(imgs) => setDraft((d) => ({ ...d, images: imgs }))} />
+              </div>
+              <div className="col-span-2">
+                <SvgPinField value={draft.pin_svg} onChange={(svg) => setDraft((d) => ({ ...d, pin_svg: svg }))} />
               </div>
             </div>
             <div className="flex gap-2">
@@ -294,6 +349,9 @@ export function VenuesManager() {
                         </div>
                         <div className="col-span-2">
                           <ImagesField images={edImages} onChange={(imgs) => patchEdit(v.id, "images", imgs)} />
+                        </div>
+                        <div className="col-span-2">
+                          <SvgPinField value={(ed.pin_svg ?? v.pin_svg) as string | null} onChange={(svg) => patchEdit(v.id, "pin_svg", svg)} />
                         </div>
                       </div>
                       <div className="flex gap-2">

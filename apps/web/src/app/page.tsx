@@ -39,6 +39,7 @@ export default async function HomePage() {
     description: { en: v.description_en, hu: v.description_hu },
     eventSlug: v.events?.slug ?? undefined,
     eventName: v.events?.name ?? undefined,
+    pinSvg: v.pin_svg ?? undefined,
   }));
   const heroSubtitle = c.hero_subtitle || t(dict, "home.hero_subtitle");
   const ctaLabel = c.hero_cta_label || t(dict, "home.browse_events");

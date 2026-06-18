@@ -16,6 +16,7 @@ const schema = z.object({
   active: z.boolean().optional().default(true),
   sort_order: z.number().int().optional().default(0),
   event_id: z.string().uuid().optional().nullable(),
+  pin_svg: z.string().max(100000).optional().nullable(),
 });
 
 async function requireEditor() {

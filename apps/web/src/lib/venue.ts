@@ -17,6 +17,8 @@ export interface Venue {
   eventSlug?: string;
   /** Linked event display name */
   eventName?: string;
+  /** Raw SVG string for the map pin. Falls back to the default Bass Piknik pin. */
+  pinSvg?: string;
 }
 
 export const BASS_PIKNIK_VENUE: Venue = {
