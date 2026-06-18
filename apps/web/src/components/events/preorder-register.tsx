@@ -26,7 +26,7 @@ export function PreorderRegister({ slug, dict, defaultEmail, defaultName }: Preo
     setError("");
     setLoading(true);
     try {
-      const res = await fetch(`/api/events/${slug}/preorder`, {
+      const res = await fetch(`/api/events/preorder/${slug}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, name: name || undefined }),
