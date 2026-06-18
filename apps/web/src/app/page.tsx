@@ -10,24 +10,34 @@ import { EventCarousel } from "@/components/public/event-carousel";
 import { ArtistCarousel } from "@/components/public/artist-carousel";
 import { StickyFadeTitle } from "@/components/public/sticky-fade-title";
 import { VenueExperience } from "@/components/public/venue-experience";
-import { BASS_PIKNIK_VENUE } from "@/lib/venue";
+import type { Venue } from "@/lib/venue";
 import { Button } from "@/components/ui/button";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export default async function HomePage() {
   const supabase = await createClient() as any;
-  const [{ data: { user } }, settings, { data: content }, { data: artists }, { data: events }, { data: gallery }] = await Promise.all([
+  const [{ data: { user } }, settings, { data: content }, { data: artists }, { data: events }, { data: gallery }, { data: venueRows }] = await Promise.all([
     supabase.auth.getUser(),
     getSettings(),
     supabase.from("site_content").select("*").eq("id", "home").single(),
     supabase.from("artists").select("*").eq("active", true).order("sort_order").order("name"),
     supabase.from("events").select("*, ticket_types(quantity, sold, is_visible, sale_enabled, sale_price, price)").eq("status", "PUBLISHED").order("start_date"),
     supabase.from("gallery_images").select("*").order("sort_order").limit(12),
+    supabase.from("map_venues").select("*").eq("active", true).order("sort_order"),
   ]);
 
   const dict = getDictionary(settings.language);
   const c = content ?? {};
+
+  const venues: Venue[] = (venueRows ?? []).map((v: any) => ({
+    name: v.name,
+    lat: v.lat,
+    lng: v.lng,
+    mapsUrl: v.maps_url,
+    images: v.images ?? [],
+    description: { en: v.description_en, hu: v.description_hu },
+  }));
   const heroSubtitle = c.hero_subtitle || t(dict, "home.hero_subtitle");
   const ctaLabel = c.hero_cta_label || t(dict, "home.browse_events");
   const socials: Record<string, string> = c.socials ?? {};
@@ -51,7 +61,7 @@ export default async function HomePage() {
 
       {/* ── Hero ── */}
       <section className="relative z-0 flex h-screen flex-col items-center justify-center overflow-hidden px-5 py-24 text-center">
-        <VenueExperience venue={BASS_PIKNIK_VENUE} dict={dict} lang={settings.language as "en" | "hu"} />
+        <VenueExperience venues={venues.length > 0 ? venues : [{ name: "Tó-Part Panzió", lat: 47.3975366, lng: 16.535894, mapsUrl: "https://www.google.com/maps/place/T%C3%B3-Part+Panzi%C3%B3/@47.3975366,16.535894,17z", images: [], description: { en: "Bass Piknik venue", hu: "Bass Piknik helyszín" } }]} dict={dict} lang={settings.language as "en" | "hu"} />
         <div className="relative z-10">
           <p className="mb-3 text-sm font-bold uppercase tracking-[3px]" style={{ color: "#3C7A1E" }}>{heroSubtitle}</p>
           <div className="text-5xl font-extrabold uppercase leading-[0.98] tracking-tight sm:text-7xl" style={{ letterSpacing: "-0.03em", color: "#16170F" }}>
@@ -93,19 +103,21 @@ export default async function HomePage() {
       {/* ── Who We Are ── */}
       <section className="relative z-[1] flex min-h-screen flex-col justify-center px-5 py-24">
         <div className="mx-auto w-full max-w-3xl">
-          <StickyFadeTitle
-            className="sticky top-24 z-0 py-2 text-center text-5xl font-extrabold uppercase tracking-tight sm:text-7xl"
-            style={{ letterSpacing: "-0.03em" }}
-          >
-            {t(dict, "who.title")}
-          </StickyFadeTitle>
-          <div className="relative z-10 mt-10">
-            <p className="mb-5 text-base font-bold leading-relaxed" style={{ color: "#16170F" }}>
-              {t(dict, "who.greeting")}
-            </p>
-            <p className="whitespace-pre-line text-base font-medium leading-relaxed text-muted-foreground">
-              {t(dict, "who.body")}
-            </p>
+          <div className="rounded-[2.25rem] bg-white px-8 py-10 shadow-sm">
+            <StickyFadeTitle
+              className="sticky top-24 z-0 py-2 text-center text-5xl font-extrabold uppercase tracking-tight sm:text-7xl"
+              style={{ letterSpacing: "-0.03em" }}
+            >
+              {t(dict, "who.title")}
+            </StickyFadeTitle>
+            <div className="relative z-10 mt-10">
+              <p className="mb-5 text-base font-bold leading-relaxed" style={{ color: "#16170F" }}>
+                {t(dict, "who.greeting")}
+              </p>
+              <p className="whitespace-pre-line text-base font-medium leading-relaxed text-muted-foreground">
+                {t(dict, "who.body")}
+              </p>
+            </div>
           </div>
         </div>
       </section>

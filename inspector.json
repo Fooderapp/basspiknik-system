@@ -1,0 +1,4 @@
+{
+  "dev": "pnpm --filter @event/web dev",
+  "install": "pnpm install && pnpm --prefix apps/mobile install"
+}

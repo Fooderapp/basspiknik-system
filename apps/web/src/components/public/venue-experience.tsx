@@ -20,14 +20,15 @@ const VenueMap = dynamic(
  * Auto-plays once when scrolled into view. Click the pin → popup.
  */
 export function VenueExperience({
-  venue,
+  venues,
   dict,
   lang,
 }: {
-  venue: Venue;
+  venues: Venue[];
   dict: Dictionary;
   lang: "en" | "hu";
 }) {
+  const venue = venues[0];
   const rootRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(false);
   const [handoff, setHandoff] = useState(false); // map mounted + flying
@@ -77,7 +78,7 @@ export function VenueExperience({
             transition: "opacity 0.9s ease, transform 1.1s ease, filter 0.9s ease",
           }}
         >
-          <VenueMap venue={venue} dict={dict} lang={lang} fly={handoff} />
+          <VenueMap venues={venues} dict={dict} lang={lang} fly={handoff} />
         </div>
       )}
 

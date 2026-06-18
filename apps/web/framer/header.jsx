@@ -425,7 +425,7 @@ var Component = /* @__PURE__ */ React.forwardRef(function (props, ref) {
 										</React.Fragment>
 									</RichText></Link>
 								)}
-								{isDisplayed() && (
+								{isDisplayed() && labels.items[3] && (
 									<Link href={labels.items[3].href} onClick={onTap1x3tutn} style={{ display: "contents" }}><RichText
 										suppressHydrationWarning={true}
 										__fromCanvasComponent={true}
