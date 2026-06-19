@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { View, ScrollView } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { User, Mail, Hash, Star, ScanLine, Beer, CreditCard, ChevronRight, MapPin, Pencil, type LucideIcon } from "lucide-react-native";
+import { User, Mail, Hash, Star, ScanLine, Beer, CreditCard, ChevronRight, MapPin, Pencil, Bell, BellOff, type LucideIcon } from "lucide-react-native";
 import { useAuth } from "@/context/auth";
 import { useLanguage } from "@/context/language";
 import { supabase } from "@/lib/supabase";
@@ -24,11 +24,18 @@ const STAFF_TOOLS: StaffTool[] = [
 ];
 
 export default function ProfileScreen() {
-  const { profile, session, signOut, refreshProfile } = useAuth();
+  const { profile, session, signOut, refreshProfile, pushStatus, requestPushToken } = useAuth();
   const { dict } = useLanguage();
   const insets = useSafeAreaInsets();
   const [credits, setCredits] = useState<number | null>(null);
   const [billingOpen, setBillingOpen] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+
+  async function handleEnableNotifications() {
+    setRetrying(true);
+    await requestPushToken();
+    setRetrying(false);
+  }
 
   useFocusEffect(
     useCallback(() => {
@@ -171,6 +178,22 @@ export default function ProfileScreen() {
           <Text className="text-muted-foreground text-sm pl-11">{dict["profile.billing_empty"]}</Text>
         )}
       </Card>
+
+      {/* Push notification status */}
+      {pushStatus !== "registered" && (
+        <Button
+          variant="outline"
+          className="w-full mb-3"
+          onPress={handleEnableNotifications}
+          loading={retrying}
+          disabled={retrying}
+          icon={pushStatus === "denied" ? <BellOff size={16} color="#8f8f8f" strokeWidth={1.75} /> : <Bell size={16} color="#8f8f8f" strokeWidth={1.75} />}
+        >
+          <Text className="text-muted-foreground">
+            {pushStatus === "denied" ? "Enable notifications in Settings" : "Enable push notifications"}
+          </Text>
+        </Button>
+      )}
 
       <Button variant="outline" className="w-full" onPress={signOut}>
         <Text>{dict["profile.sign_out"]}</Text>

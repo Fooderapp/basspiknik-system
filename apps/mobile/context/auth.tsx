@@ -11,42 +11,49 @@ import type { Session } from "@supabase/supabase-js";
 
 WebBrowser.maybeCompleteAuthSession();
 
+type PushStatus = "idle" | "denied" | "registered" | "error";
+
 interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
+  pushStatus: PushStatus;
   signIn: (email: string, password: string) => Promise<string | null>;
   signUp: (email: string, password: string, name: string) => Promise<string | null>;
   signInWithGoogle: () => Promise<string | null>;
   signInWithApple: () => Promise<string | null>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  requestPushToken: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   session: null,
   profile: null,
   loading: true,
+  pushStatus: "idle",
   signIn: async () => null,
   signUp: async () => null,
   signInWithGoogle: async () => null,
   signInWithApple: async () => null,
   signOut: async () => {},
   refreshProfile: async () => {},
+  requestPushToken: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pushStatus, setPushStatus] = useState<PushStatus>("idle");
 
   async function registerPushToken(sess: Session) {
     try {
       const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== "granted") return;
+      if (status !== "granted") { setPushStatus("denied"); return; }
       const projectId = Constants.expoConfig?.extra?.eas?.projectId as string | undefined;
       const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
-      await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/push/register`, {
+      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/push/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -57,9 +64,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           platform: Platform.OS === "ios" ? "ios" : "android",
         }),
       });
-    } catch {
-      // non-fatal
+      if (res.ok) {
+        setPushStatus("registered");
+      } else {
+        console.error("[push] register failed:", res.status, await res.text());
+        setPushStatus("error");
+      }
+    } catch (e) {
+      console.error("[push] register error:", e);
+      setPushStatus("error");
     }
+  }
+
+  async function requestPushToken() {
+    if (session) await registerPushToken(session);
   }
 
   async function loadProfile(user: { id: string; email?: string | null; user_metadata?: Record<string, any> }) {
@@ -206,7 +224,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, profile, loading, signIn, signUp, signInWithGoogle, signInWithApple, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ session, profile, loading, pushStatus, signIn, signUp, signInWithGoogle, signInWithApple, signOut, refreshProfile, requestPushToken }}>
       {children}
     </AuthContext.Provider>
   );
