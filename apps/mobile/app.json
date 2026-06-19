@@ -27,8 +27,7 @@
       "entitlements": {
         "com.apple.developer.applesignin": [
           "Default"
-        ],
-        "com.apple.developer.proximity-reader.payment.acceptance": true
+        ]
       }
     },
     "android": {
