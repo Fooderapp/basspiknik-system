@@ -4,7 +4,7 @@
 
 export const en = {
   // ── Auth ────────────────────────────────────────────────────────────────────
-  "auth.title":             "EventOS",
+  "auth.title":             "Bass Piknik",
   "auth.subtitle":          "Sign in to continue",
   "auth.email":             "Email",
   "auth.email_placeholder": "you@example.com",
@@ -15,6 +15,18 @@ export const en = {
   "auth.google":            "Continue with Google",
   "auth.apple":             "Continue with Apple",
   "auth.fill_all_fields":   "Please fill in all fields",
+  "auth.no_account":        "Don't have an account?",
+  "auth.register":          "Sign Up",
+  "auth.have_account":      "Already have an account?",
+  "auth.sign_in_link":      "Sign In",
+  "auth.name":              "Full Name",
+  "auth.name_placeholder":  "Your name",
+  "auth.register_title":    "Create account",
+  "auth.register_subtitle": "Join Bass Piknik",
+  "auth.register_btn":      "Create Account",
+  "auth.passwords_mismatch":"Passwords don't match",
+  "auth.confirm_password":  "Confirm Password",
+  "auth.check_email":       "Check your email to confirm your account",
 
   // ── Tabs ────────────────────────────────────────────────────────────────────
   "tabs.home":    "Home",
@@ -288,7 +300,7 @@ export const en = {
 
 export const hu: typeof en = {
   // ── Auth ────────────────────────────────────────────────────────────────────
-  "auth.title":             "EventOS",
+  "auth.title":             "Bass Piknik",
   "auth.subtitle":          "Jelentkezz be a folytatáshoz",
   "auth.email":             "E-mail",
   "auth.email_placeholder": "te@pelda.hu",
@@ -299,6 +311,18 @@ export const hu: typeof en = {
   "auth.google":            "Folytatás Google-lal",
   "auth.apple":             "Folytatás Apple-lel",
   "auth.fill_all_fields":   "Kérjük tölts ki minden mezőt",
+  "auth.no_account":        "Még nincs fiókod?",
+  "auth.register":          "Regisztráció",
+  "auth.have_account":      "Van már fiókod?",
+  "auth.sign_in_link":      "Bejelentkezés",
+  "auth.name":              "Teljes név",
+  "auth.name_placeholder":  "A neved",
+  "auth.register_title":    "Fiók létrehozása",
+  "auth.register_subtitle": "Csatlakozz a Bass Piknikhez",
+  "auth.register_btn":      "Fiók létrehozása",
+  "auth.passwords_mismatch":"A jelszavak nem egyeznek",
+  "auth.confirm_password":  "Jelszó megerősítése",
+  "auth.check_email":       "Ellenőrizd az e-mailodat a fiók megerősítéséhez",
 
   // ── Tabs ────────────────────────────────────────────────────────────────────
   "tabs.home":    "Főoldal",

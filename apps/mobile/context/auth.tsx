@@ -16,6 +16,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<string | null>;
+  signUp: (email: string, password: string, name: string) => Promise<string | null>;
   signInWithGoogle: () => Promise<string | null>;
   signInWithApple: () => Promise<string | null>;
   signOut: () => Promise<void>;
@@ -27,6 +28,7 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   loading: true,
   signIn: async () => null,
+  signUp: async () => null,
   signInWithGoogle: async () => null,
   signInWithApple: async () => null,
   signOut: async () => {},
@@ -120,6 +122,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return error?.message ?? null;
   }
 
+  async function signUp(email: string, password: string, name: string): Promise<string | null> {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { name } },
+    });
+    if (error) return error.message;
+    // If session is immediately available (email confirm disabled), register push now
+    if (data.session) await registerPushToken(data.session);
+    return null;
+  }
+
   async function signInWithGoogle(): Promise<string | null> {
     // Use the app's deep-link scheme so Supabase redirects back here, not to
     // the web app. Add "eventos://" to Supabase → Auth → URL Configuration →
@@ -192,7 +206,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, profile, loading, signIn, signInWithGoogle, signInWithApple, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ session, profile, loading, signIn, signUp, signInWithGoogle, signInWithApple, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
