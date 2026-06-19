@@ -51,7 +51,7 @@ function EventCard({ event, onPress, dict }: { event: EventWithTickets; onPress:
   const totalSold = (event.ticket_types ?? []).reduce((s, t) => s + t.sold, 0);
   const totalQty  = (event.ticket_types ?? []).reduce((s, t) => s + t.quantity, 0);
   const soldOut   = totalQty > 0 && totalSold >= totalQty;
-  const soon      = !soldOut && minPrice === null;
+  const soon      = !soldOut && (minPrice === null || (event as any).status === "PREORDER");
   const badge     = soon || soldOut ? null : formatDate(event.start_date);
 
   return (
@@ -125,7 +125,7 @@ export default function BuyTicketsScreen() {
     const { data } = await (supabase as any)
       .from("events")
       .select("*, ticket_types(*)")
-      .eq("status", "PUBLISHED")
+      .in("status", ["PUBLISHED", "PREORDER"])
       .order("start_date", { ascending: true });
     setEvents((data as EventWithTickets[]) ?? []);
   }

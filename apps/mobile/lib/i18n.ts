@@ -47,6 +47,8 @@ export const en = {
   "buy.no_events_sub":  "Check back soon for new events",
   "buy.sold_out":       "Sold out",
   "buy.coming_soon":    "Coming soon",
+  "buy.preorder_title": "Tickets coming soon",
+  "buy.preorder_sub":   "Tickets for this event aren't on sale yet. Check back soon!",
   "buy.from_price":     "from {price}",
   "buy.buy_tickets":    "Buy tickets",
 
@@ -329,6 +331,8 @@ export const hu: typeof en = {
   "buy.no_events_sub": "Hamarosan új események érkeznek",
   "buy.sold_out":      "Elfogyott",
   "buy.coming_soon":   "Hamarosan",
+  "buy.preorder_title": "Jegyek hamarosan",
+  "buy.preorder_sub":   "Erre az eseményre még nem kezdődött meg a jegyértékesítés. Nézz vissza hamarosan!",
   "buy.from_price":    "{price}-tól",
   "buy.buy_tickets":   "Jegyek vásárlása",
 

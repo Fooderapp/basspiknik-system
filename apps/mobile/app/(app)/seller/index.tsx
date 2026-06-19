@@ -117,7 +117,7 @@ export default function SellerScreen() {
     (supabase as any)
       .from("events")
       .select("*")
-      .eq("status", "PUBLISHED")
+      .in("status", ["PUBLISHED", "PREORDER"])
       .order("start_date")
       .then(({ data }: any) => { setEvents(data ?? []); setLoading(false); });
   }, []);

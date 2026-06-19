@@ -76,7 +76,7 @@ export default function BuyEventScreen() {
   useEffect(() => {
     (async () => {
       const [{ data: ev }, { data: settings }] = await Promise.all([
-        (supabase as any).from("events").select("*, ticket_types(*)").eq("id", eventId).eq("status", "PUBLISHED").single(),
+        (supabase as any).from("events").select("*, ticket_types(*)").eq("id", eventId).in("status", ["PUBLISHED", "PREORDER"]).single(),
         (supabase as any).from("app_settings").select("currency").single(),
       ]);
       if (ev) {
@@ -349,7 +349,21 @@ export default function BuyEventScreen() {
             {dict["buy.title"]}
           </Text>
 
-          {/* Ticket types */}
+          {/* PREORDER: tickets not on sale yet — mirror web "coming soon" state */}
+          {(event as any).status === "PREORDER" ? (
+            <View style={{ borderRadius: 24, backgroundColor: INK, padding: 24, alignItems: "center", gap: 8 }}>
+              <View style={{ width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center", backgroundColor: LIME, marginBottom: 4 }}>
+                <CalendarDays size={22} color={INK} strokeWidth={2} />
+              </View>
+              <Text style={{ color: "#fff", fontSize: 17, fontWeight: "800", letterSpacing: -0.3, textAlign: "center" }}>
+                {dict["buy.preorder_title"]}
+              </Text>
+              <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, textAlign: "center", lineHeight: 18 }}>
+                {dict["buy.preorder_sub"]}
+              </Text>
+            </View>
+          ) : (
+          /* Ticket types */
           <View className="gap-3">
             {ticketTypes.map((tt) => {
               const ta = tt as any;
@@ -416,6 +430,7 @@ export default function BuyEventScreen() {
               );
             })}
           </View>
+          )}
         </View>
       </ScrollView>
 
