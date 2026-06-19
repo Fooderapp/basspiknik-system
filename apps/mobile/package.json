@@ -20,6 +20,7 @@
     "expo-dev-client": "~56.0.20",
     "expo-font": "^56.0.5",
     "expo-gl": "~56.0.5",
+    "expo-linear-gradient": "~56.0.4",
     "expo-linking": "~56.0.14",
     "expo-location": "^56.0.15",
     "expo-notifications": "~56.0.18",

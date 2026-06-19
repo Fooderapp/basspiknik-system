@@ -46,9 +46,10 @@ export default function ProfileScreen() {
   const hasBilling = !!(profile.billing_address && profile.billing_city);
 
   return (
+    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
     <ScrollView
-      className="flex-1 bg-background"
-      contentContainerStyle={{ paddingTop: insets.top + 16, paddingHorizontal: 20, paddingBottom: insets.bottom + 40 }}
+      className="flex-1"
+      contentContainerStyle={{ paddingTop: 20, paddingHorizontal: 20, paddingBottom: insets.bottom + 40 }}
       showsVerticalScrollIndicator={false}
     >
       {/* Title + credit chip */}
@@ -189,6 +190,7 @@ export default function ProfileScreen() {
         onSave={async () => { await refreshProfile(); }}
       />
     </ScrollView>
+    </View>
   );
 }
 

@@ -7,6 +7,7 @@ import {
   RefreshControl,
   View,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { ShoppingBag } from "lucide-react-native";
 import { Screen } from "@/components/ui/Screen";
@@ -68,10 +69,12 @@ function EventCard({ event, onPress, dict }: { event: EventWithTickets; onPress:
           ? <Image source={{ uri: event.cover_image_url }} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} resizeMode="cover" />
           : <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "#3C7A1E" }} />}
 
-        {/* Gradient overlay — dark at bottom, transparent at top */}
-        <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.18)" }} />
-        <View style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: CARD_H * 0.6, backgroundColor: "rgba(0,0,0,0.55)" }} />
-        <View style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: CARD_H * 0.38, backgroundColor: "rgba(0,0,0,0.3)" }} />
+        {/* Gradient overlay — smooth dark at bottom, transparent at top */}
+        <LinearGradient
+          colors={["transparent", "rgba(0,0,0,0.15)", "rgba(0,0,0,0.72)", "rgba(0,0,0,0.88)"]}
+          locations={[0, 0.3, 0.7, 1]}
+          style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: CARD_H * 0.72 }}
+        />
 
         {/* Content pinned to bottom */}
         <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: 32, alignItems: "center", gap: 16 }}>

@@ -124,7 +124,7 @@ export default function MenuScreen() {
         horizontal
         showsHorizontalScrollIndicator={false}
         style={{ marginBottom: 8 }}
-        contentContainerStyle={{ gap: 8, paddingHorizontal: 20, paddingVertical: 4, alignItems: "center" }}
+        contentContainerStyle={{ gap: 8, paddingHorizontal: 20, paddingVertical: 4, alignItems: "flex-start" }}
       >
         {[{ id: "ALL", name: dict["menu.all"] }, ...categoryTabs].map((c) => {
           const active = activeCat === c.id;
