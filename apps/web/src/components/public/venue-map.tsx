@@ -79,8 +79,8 @@ export function VenueMap({
       // MapLibre owns `wrapper`'s transform for positioning — never touch it.
       // Animate `inner` instead so the spring bounce doesn't override positioning.
       const PILL_H = 26;
-      const PIN_W = 72;
-      const PIN_H = 86;
+      const PIN_W = 104;
+      const PIN_H = 124;
       // The default SVG tip is at y≈57.7 in a 75-unit viewBox; shadow extends to 74.8.
       // anchor:"bottom" places element-bottom at the coordinate, but the visual tip
       // is ~23% above the element bottom. Shift element down by that gap so tip = coordinate.
@@ -166,9 +166,8 @@ export function VenueMap({
     const map = mapRef.current;
     if (!fly || !mapLoaded || flownRef.current || !map || !primary) return;
     flownRef.current = true;
-    // padding.bottom = 50% of container height → MapLibre places the focal
-    // point (venue pin) at the centre of the top half = ~25% from top,
-    // which is above the hero fade line on every screen size.
+    // Small bottom padding → focal point (venue pin) sits near the vertical
+    // centre (~44% from top), landing the pin over the subheadline.
     const h = map.getContainer().clientHeight;
     map.flyTo({
       center: [primary.lng, primary.lat],
@@ -176,7 +175,7 @@ export function VenueMap({
       duration: 3000,
       curve: 1.5,
       essential: true,
-      padding: { top: 0, bottom: Math.round(h * 0.5), left: 0, right: 0 },
+      padding: { top: 0, bottom: Math.round(h * 0.12), left: 0, right: 0 },
     });
     // Bounce all pins in once the camera settles
     map.once("moveend", () => {
