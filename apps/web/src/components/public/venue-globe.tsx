@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { AfterimagePass } from "three/examples/jsm/postprocessing/AfterimagePass.js";
 import { latLngToVec3, type Venue } from "@/lib/venue";
 
 const GLOBE_R = 2;
@@ -29,24 +32,12 @@ function makeDotTexture() {
   return tex;
 }
 
-function DotGlobe() {
-  const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null);
-  const dotTex = useMemo(makeDotTexture, []);
-  const matRef = useRef<THREE.PointsMaterial | null>(null);
-
-  // Shrink dots as camera zooms in so they stay crisp rather than blobbing out.
-  useFrame((state) => {
-    if (!matRef.current) return;
-    const z = state.camera.position.z;
-    const t = THREE.MathUtils.clamp((z - 2.7) / (7.6 - 2.7), 0, 1);
-    matRef.current.size = THREE.MathUtils.lerp(0.009, 0.026, t);
-  });
-
-  useEffect(() => {
-    let cancelled = false;
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.src = LAND_MASK;
+// Two clouds: base = always on, detail = fades in as camera zooms (more dots near).
+function buildGeometries() {
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.src = LAND_MASK;
+  return new Promise<{ base: THREE.BufferGeometry; detail: THREE.BufferGeometry }>((resolve, reject) => {
     img.onload = () => {
       const cw = img.width, ch = img.height;
       const canvas = document.createElement("canvas");
@@ -56,9 +47,12 @@ function DotGlobe() {
       const data = ctx.getImageData(0, 0, cw, ch).data;
 
       const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
-      const CANDIDATES = isMobile ? 16000 : 30000;
-      const pos: number[] = [];
-      const col: number[] = [];
+      // Dense candidate set — only land survives the mask (~1 draw call per cloud).
+      const CANDIDATES = isMobile ? 55000 : 130000;
+      const DETAIL_FRACTION = 0.62; // most points live in the zoom-in detail layer
+
+      const bPos: number[] = [], bCol: number[] = [];
+      const dPos: number[] = [], dCol: number[] = [];
       const green = new THREE.Color(GREEN);
       const greenHi = new THREE.Color(GREEN_HI);
       const yellow = new THREE.Color(YELLOW);
@@ -77,45 +71,121 @@ function DotGlobe() {
         const py = Math.min(ch - 1, Math.max(0, Math.floor(v * ch)));
         if (data[(py * cw + px) * 4] <= 128) continue; // mask: land = white
 
-        pos.push(x * GLOBE_R, y * GLOBE_R, z * GLOBE_R);
         const roll = Math.random();
         const c = roll > 0.9 ? yellow : roll > 0.62 ? greenHi : green;
-        col.push(c.r, c.g, c.b);
+        if (Math.random() < DETAIL_FRACTION) {
+          dPos.push(x * GLOBE_R, y * GLOBE_R, z * GLOBE_R);
+          dCol.push(c.r, c.g, c.b);
+        } else {
+          bPos.push(x * GLOBE_R, y * GLOBE_R, z * GLOBE_R);
+          bCol.push(c.r, c.g, c.b);
+        }
       }
 
-      if (cancelled) return;
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(pos), 3));
-      geo.setAttribute("color", new THREE.BufferAttribute(new Float32Array(col), 3));
-      setGeometry(geo);
+      const mk = (pos: number[], col: number[]) => {
+        const g = new THREE.BufferGeometry();
+        g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(pos), 3));
+        g.setAttribute("color", new THREE.BufferAttribute(new Float32Array(col), 3));
+        return g;
+      };
+      resolve({ base: mk(bPos, bCol), detail: mk(dPos, dCol) });
     };
+    img.onerror = reject;
+  });
+}
+
+function DotGlobe({ zoom }: { zoom: React.MutableRefObject<number> }) {
+  const [geos, setGeos] = useState<{ base: THREE.BufferGeometry; detail: THREE.BufferGeometry } | null>(null);
+  const dotTex = useMemo(makeDotTexture, []);
+  const baseMat = useRef<THREE.PointsMaterial | null>(null);
+  const detailMat = useRef<THREE.PointsMaterial | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    buildGeometries().then((g) => { if (!cancelled) setGeos(g); }).catch(() => {});
     return () => { cancelled = true; };
   }, []);
 
-  if (!geometry) return null;
+  // Shrink dots as we zoom in (stay crisp); fade detail layer in with zoom.
+  useFrame(() => {
+    const z = zoom.current; // 0 = far, 1 = near
+    const size = THREE.MathUtils.lerp(0.022, 0.008, z);
+    if (baseMat.current) baseMat.current.size = size;
+    if (detailMat.current) {
+      detailMat.current.size = size;
+      detailMat.current.opacity = THREE.MathUtils.clamp(z * 1.4, 0, 1);
+    }
+  });
+
+  if (!geos) return null;
   return (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    <points geometry={geometry as any}>
-      <pointsMaterial
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ref={matRef as any}
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        map={dotTex as any}
-        size={0.026}
-        vertexColors
-        sizeAttenuation
-        transparent
-        alphaTest={0.45}
-        depthWrite={false}
-      />
-    </points>
+    <>
+      {/* eslint-disable @typescript-eslint/no-explicit-any */}
+      <points geometry={geos.base as any}>
+        <pointsMaterial
+          ref={baseMat as any}
+          map={dotTex as any}
+          size={0.022}
+          vertexColors
+          sizeAttenuation
+          transparent
+          alphaTest={0.45}
+          depthWrite={false}
+        />
+      </points>
+      <points geometry={geos.detail as any}>
+        <pointsMaterial
+          ref={detailMat as any}
+          map={dotTex as any}
+          size={0.022}
+          opacity={0}
+          vertexColors
+          sizeAttenuation
+          transparent
+          alphaTest={0.2}
+          depthWrite={false}
+        />
+      </points>
+      {/* eslint-enable @typescript-eslint/no-explicit-any */}
+    </>
   );
+}
+
+/* ── Motion blur: feedback trail, strength tracks zoom speed (self-clears) ──── */
+function MotionBlur({ zoom }: { zoom: React.MutableRefObject<number> }) {
+  const { gl, scene, camera, size } = useThree();
+  const prevZoom = useRef(0);
+
+  const { composer, after } = useMemo(() => {
+    const c = new EffectComposer(gl);
+    c.addPass(new RenderPass(scene, camera));
+    const a = new AfterimagePass(0); // damp 0 = clean pass-through, no ghost when idle
+    c.addPass(a);
+    return { composer: c, after: a };
+  }, [gl, scene, camera]);
+
+  useEffect(() => {
+    composer.setSize(size.width, size.height);
+    composer.setPixelRatio(gl.getPixelRatio());
+  }, [composer, gl, size]);
+
+  // Render priority > 0 hands the loop to us; blur damp ramps with zoom velocity.
+  useFrame((_, delta) => {
+    const speed = Math.abs(zoom.current - prevZoom.current) / Math.max(delta, 1e-4);
+    prevZoom.current = zoom.current;
+    const target = THREE.MathUtils.clamp(speed * 0.9, 0, 0.62);
+    const u = after.uniforms.damp as { value: number };
+    u.value = THREE.MathUtils.damp(u.value, target, 6, delta);
+    composer.render(delta);
+  }, 1);
+
+  return null;
 }
 
 /* ── Scene: zoom from space (continents) toward the country ────────────────── */
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-function Scene({ venue, active, onProgress }: { venue: Venue; active: boolean; onProgress: (p: number) => void }) {
+function Scene({ venue, active, onProgress, zoom }: { venue: Venue; active: boolean; onProgress: (p: number) => void; zoom: React.MutableRefObject<number> }) {
   const progress = useRef(0);
   const elapsed = useRef(0);
 
@@ -139,6 +209,7 @@ function Scene({ venue, active, onProgress }: { venue: Venue; active: boolean; o
     progress.current = THREE.MathUtils.damp(progress.current, target, 1.6, delta);
     const p = progress.current;
     const e = p * p * (3 - 2 * p);
+    zoom.current = e;
 
     state.camera.position.set(
       lerp(camFar[0], camNear[0], e),
@@ -161,17 +232,20 @@ function Scene({ venue, active, onProgress }: { venue: Venue; active: boolean; o
           <sphereGeometry args={[GLOBE_R * 0.97, 48, 48]} />
           <meshBasicMaterial colorWrite={false} />
         </mesh>
-        <DotGlobe />
+        <DotGlobe zoom={zoom} />
       </group>
+
+      <MotionBlur zoom={zoom} />
     </>
   );
 }
 
 /* ── Public component — the dotted-globe intro ─────────────────────────────── */
 export function VenueGlobe({ venue, active, onProgress }: { venue: Venue; active: boolean; onProgress?: (p: number) => void }) {
+  const zoom = useRef(0);
   return (
     <Canvas camera={{ position: [0, 0, 7.6], fov: 45 }} gl={{ antialias: true, alpha: true }} dpr={[1, 2]}>
-      <Scene venue={venue} active={active} onProgress={onProgress ?? (() => {})} />
+      <Scene venue={venue} active={active} onProgress={onProgress ?? (() => {})} zoom={zoom} />
     </Canvas>
   );
 }
