@@ -148,6 +148,13 @@ export function VenueMap({
 </filter>
 </defs>
 </svg>`;
+      // Custom venue pin SVGs ship their own width/height — force ours so the
+      // pin actually renders at PIN_W × PIN_H regardless of the source SVG.
+      const svgEl = btn.querySelector("svg");
+      if (svgEl) {
+        svgEl.setAttribute("width", String(PIN_W));
+        svgEl.setAttribute("height", String(PIN_H));
+      }
       btn.addEventListener("click", () => { setImgIndex(0); setActiveVenue(venue); });
       inner.appendChild(btn);
       wrapper.appendChild(inner);
@@ -166,16 +173,20 @@ export function VenueMap({
     const map = mapRef.current;
     if (!fly || !mapLoaded || flownRef.current || !map || !primary) return;
     flownRef.current = true;
-    // Small bottom padding → focal point (venue pin) sits near the vertical
-    // centre (~44% from top), landing the pin over the subheadline.
+    // Fixed-pixel bottom padding (NOT a fraction): the subheadline lives in a
+    // vertically-centred flex block, so its offset above centre is ~constant in
+    // px across viewport heights. focal_from_top = (h - bottom) / 2, so a fixed
+    // bottom keeps the pin a constant distance above centre → it lands over the
+    // subheadline on every screen size instead of only one height.
     const h = map.getContainer().clientHeight;
+    const PIN_BOTTOM_PAD = 150; // focal ≈ centre − 75px; pin body covers the subheadline
     map.flyTo({
       center: [primary.lng, primary.lat],
       zoom: 14,
       duration: 3000,
       curve: 1.5,
       essential: true,
-      padding: { top: 0, bottom: Math.round(h * 0.12), left: 0, right: 0 },
+      padding: { top: 0, bottom: Math.min(PIN_BOTTOM_PAD, Math.round(h * 0.3)), left: 0, right: 0 },
     });
     // Bounce all pins in once the camera settles
     map.once("moveend", () => {
