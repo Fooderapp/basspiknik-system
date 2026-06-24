@@ -179,14 +179,18 @@ export function VenueMap({
     // bottom keeps the pin a constant distance above centre → it lands over the
     // subheadline on every screen size instead of only one height.
     const h = map.getContainer().clientHeight;
-    const PIN_BOTTOM_PAD = 150; // focal ≈ centre − 75px; pin body covers the subheadline
+    // The centred hero block puts the subheadline ~140px ABOVE viewport centre,
+    // on every height. focal_from_top = (h - bottom) / 2, so bottom ≈ 280 puts
+    // the pin tip right on the subheadline (centre − 140px). Clamped for short
+    // viewports. Larger PIN_BOTTOM_PAD = pin higher, smaller = lower.
+    const PIN_BOTTOM_PAD = 280;
     map.flyTo({
       center: [primary.lng, primary.lat],
       zoom: 14,
       duration: 3000,
       curve: 1.5,
       essential: true,
-      padding: { top: 0, bottom: Math.min(PIN_BOTTOM_PAD, Math.round(h * 0.3)), left: 0, right: 0 },
+      padding: { top: 0, bottom: Math.min(PIN_BOTTOM_PAD, Math.round(h * 0.45)), left: 0, right: 0 },
     });
     // Bounce all pins in once the camera settles
     map.once("moveend", () => {
