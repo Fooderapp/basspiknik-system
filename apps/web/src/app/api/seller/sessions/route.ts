@@ -4,6 +4,7 @@ import { createClient as createSbClient } from "@supabase/supabase-js";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getSettings } from "@/lib/settings";
 import { createBillingoInvoice, type BillingoLineItem } from "@/lib/billingo";
+import { sendTicketConfirmation } from "@/lib/email";
 import type { Profile } from "@/lib/supabase/types";
 
 /** POS payment method → canonical orders.payment_method enum. */
@@ -129,8 +130,12 @@ export async function POST(req: Request) {
 
   if (orderErr) return NextResponse.json({ error: orderErr.message }, { status: 500 });
 
-  // Event name for invoice line items
-  const { data: ev } = await supabase.from("events").select("name").eq("id", eventId).single();
+  // Event details — name for invoice line items, the rest for the email.
+  const { data: ev } = await supabase
+    .from("events")
+    .select("name, start_date, venue, banner_image_url")
+    .eq("id", eventId)
+    .single();
   const eventName = ev?.name ?? "Event";
   const invoiceItems: BillingoLineItem[] = [];
 
@@ -257,7 +262,44 @@ export async function POST(req: Request) {
     });
   }
 
-  return NextResponse.json({ orderId: order.id, totalAmount, totalQty, invoiceNumber }, { status: 201 });
+  // Tickets just created — used for the web receipt QR and the email.
+  const { data: createdTickets } = await supabase
+    .from("tickets")
+    .select("qr_code, ticket_name, tier, holder_name, ticket_types(image_url)")
+    .eq("order_id", order.id);
+  const ticketQrs: string[] = (createdTickets ?? []).map((t: any) => t.qr_code);
+
+  // Confirmation email. The Stripe webhook sends it for ONLINE orders; POS sales
+  // bypass the webhook, so send it here. Only for WEB callers (cookie, no Bearer)
+  // — the mobile app already triggers its own send-confirmation, so this avoids a
+  // double email without touching the app.
+  const usedBearer = !!req.headers.get("authorization")?.startsWith("Bearer ");
+  if (!usedBearer && buyerEmail && (createdTickets?.length ?? 0) > 0 && ev) {
+    try {
+      await sendTicketConfirmation({
+        to: buyerEmail,
+        buyerName: buyerName || "Guest",
+        eventName: ev.name,
+        eventDate: ev.start_date,
+        eventVenue: ev.venue ?? undefined,
+        eventBannerUrl: ev.banner_image_url ?? null,
+        tickets: (createdTickets ?? []).map((t: any) => ({
+          id: t.qr_code,
+          qrCode: t.qr_code,
+          ticketName: t.ticket_name ?? "Ticket",
+          tier: t.tier ?? "GENERAL",
+          holderName: t.holder_name || undefined,
+          imageUrl: t.ticket_types?.image_url ?? null,
+        })),
+        total: totalAmount,
+        orderId: order.id,
+        language: settings.language,
+        currency: settings.currency,
+      });
+    } catch { /* email failure must not fail the sale */ }
+  }
+
+  return NextResponse.json({ orderId: order.id, totalAmount, totalQty, invoiceNumber, ticketQrs }, { status: 201 });
 }
 
 export async function GET(req: Request) {

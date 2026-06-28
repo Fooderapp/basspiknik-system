@@ -44,7 +44,7 @@ export function SellerApp({ events, dict }: Props) {
   const [buyerEmail, setBuyerEmail] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [lastReceipt, setLastReceipt] = useState<{ orderId: string; total: number; qty: number } | null>(null);
+  const [lastReceipt, setLastReceipt] = useState<{ orderId: string; total: number; qty: number; qrs: string[] } | null>(null);
 
   const selectedEvent = events.find((e) => e.id === selectedEventId);
   const availableTickets = selectedEvent?.ticket_types.filter(
@@ -94,7 +94,7 @@ export function SellerApp({ events, dict }: Props) {
       }
 
       const result = await res.json();
-      setLastReceipt({ orderId: result.orderId, total: result.totalAmount, qty: result.totalQty });
+      setLastReceipt({ orderId: result.orderId, total: result.totalAmount, qty: result.totalQty, qrs: result.ticketQrs ?? [] });
       setCart([]);
       setBuyerName("");
       setBuyerEmail("");
@@ -123,6 +123,22 @@ export function SellerApp({ events, dict }: Props) {
           </p>
           <p className="text-xs text-muted-foreground mt-1">{dict["seller.order_no"]}{lastReceipt.orderId.slice(0, 8).toUpperCase()}</p>
         </div>
+
+        {/* Entry QR(s) — show so the buyer can scan in immediately, even without email */}
+        {lastReceipt.qrs.length > 0 && (
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">{dict["seller.entry_qr"]}</p>
+            <div className="flex flex-wrap justify-center gap-3">
+              {lastReceipt.qrs.map((code) => (
+                <div key={code} className="rounded-2xl bg-white p-3 shadow-sm">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/api/tickets/qr?code=${encodeURIComponent(code)}`} alt="Entry QR" width={132} height={132} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <Button size="lg" onClick={() => setLastReceipt(null)}>
           {dict["seller.new_sale"]}
         </Button>
