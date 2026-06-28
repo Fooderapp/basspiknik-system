@@ -34,7 +34,7 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
   ] = await Promise.all([
     supabase.from("events").select("id, name, slug, ticket_types(id, name, quantity, sold, price)").eq("id", id).single(),
     supabase.from("orders")
-      .select("id, total, payment_method, guest_name, guest_email, created_at, status, order_items(quantity, total, ticket_types(name))")
+      .select("id, total, payment_method, guest_name, guest_email, created_at, status, seller_id, profiles!orders_seller_id_fkey(name, email), order_items(quantity, total, ticket_types(name))")
       .eq("event_id", id)
       .in("status", ["PAID", "REFUNDED"])
       .order("created_at", { ascending: false }),
@@ -69,6 +69,18 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
     }
   }
   const byType = [...typeMap.entries()].map(([name, v]) => ({ name, ...v }));
+
+  // Per seller breakdown — only cash/POS orders have seller_id
+  const sellerMap = new Map<string, { sellerName: string; sold: number; revenue: number }>();
+  for (const o of paidOrders) {
+    if (!o.seller_id) continue;
+    const name = (o.profiles as any)?.name || (o.profiles as any)?.email || o.seller_id.slice(0, 8);
+    const e = sellerMap.get(o.seller_id) ?? { sellerName: name, sold: 0, revenue: 0 };
+    for (const it of o.order_items ?? []) e.sold += it.quantity;
+    e.revenue += o.total;
+    sellerMap.set(o.seller_id, e);
+  }
+  const bySeller = [...sellerMap.values()].sort((a, b) => b.revenue - a.revenue);
 
   const kpis = [
     { label: dict["event_analytics.gross"],    value: fmt(gross),         icon: TrendingUp },
@@ -154,6 +166,35 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
           </CardContent>
         </Card>
       )}
+
+      {/* By seller */}
+      <Card>
+        <CardHeader><CardTitle className="text-sm">{dict["event_analytics.by_seller"]}</CardTitle></CardHeader>
+        <CardContent className="p-0">
+          {bySeller.length === 0 ? (
+            <p className="px-6 py-4 text-sm text-muted-foreground">{dict["event_analytics.no_sellers"]}</p>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-muted-foreground text-xs">
+                  <th className="px-6 py-3 text-left font-medium">{dict["event_analytics.seller_name"]}</th>
+                  <th className="px-6 py-3 text-right font-medium">Sold</th>
+                  <th className="px-6 py-3 text-right font-medium">Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bySeller.map((r) => (
+                  <tr key={r.sellerName} className="border-b last:border-0">
+                    <td className="px-6 py-3 font-medium">{r.sellerName}</td>
+                    <td className="px-6 py-3 text-right tabular-nums">{r.sold}</td>
+                    <td className="px-6 py-3 text-right font-semibold tabular-nums">{fmt(r.revenue)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Recent orders */}
       <Card>

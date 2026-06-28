@@ -16,7 +16,7 @@ export default async function SellerPage() {
   const { data } = await supabase
     .from("events")
     .select("*, ticket_types(*)")
-    .in("status", ["PUBLISHED", "DRAFT"])
+    .eq("status", "PUBLISHED")
     .order("start_date", { ascending: true });
 
   const events = (data ?? []) as EventWithTickets[];
