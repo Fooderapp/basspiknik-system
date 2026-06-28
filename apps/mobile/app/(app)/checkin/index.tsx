@@ -105,7 +105,7 @@ export default function CheckInScreen() {
             <Text className="text-foreground text-2xl font-bold tracking-tight">{dict["checkin.title"]}</Text>
             <Text className="text-muted-foreground text-sm mt-1">{dict["checkin.subtitle"]}</Text>
           </View>
-          <Pressable onPress={() => router.push("/(app)/seller" as never)} className="active:opacity-60 flex-row items-center gap-1.5 bg-primary rounded-xl px-3 py-2 mt-1">
+          <Pressable onPress={() => router.push({ pathname: "/(app)/seller", params: { door: "1" } } as never)} className="active:opacity-60 flex-row items-center gap-1.5 bg-primary rounded-xl px-3 py-2 mt-1">
             <ShoppingCart size={14} color="#fff" strokeWidth={1.75} />
             <Text className="text-primary-foreground text-sm font-medium">{dict["checkin.seller"]}</Text>
           </Pressable>
@@ -195,7 +195,7 @@ export default function CheckInScreen() {
           </Text>
         </View>
         <Pressable
-          onPress={() => router.push("/(app)/seller" as never)}
+          onPress={() => router.push({ pathname: "/(app)/seller", params: { door: "1" } } as never)}
           className="w-11 h-11 rounded-full items-center justify-center active:opacity-70"
           style={{ backgroundColor: "rgba(255,255,255,0.92)" }}
         >

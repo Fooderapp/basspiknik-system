@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useLocalSearchParams } from "expo-router";
 import {
   View, FlatList, ActivityIndicator, ScrollView,
   Modal, Alert, Pressable, StyleSheet,
@@ -36,6 +37,8 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
 export default function SellerScreen() {
   const insets = useSafeAreaInsets();
   const { dict } = useLanguage();
+  const { door } = useLocalSearchParams<{ door?: string }>();
+  const doorMode = door === "1";
 
   // ── Data state ──
   const [events, setEvents]               = useState<Event[]>([]);
@@ -131,13 +134,13 @@ export default function SellerScreen() {
       .eq("event_id", event.id)
       .order("price");
     const now = new Date();
-    const doorTickets = (data ?? []).filter((tt: TicketType) =>
-      tt.is_door_ticket &&
+    const filtered = (data ?? []).filter((tt: TicketType) =>
+      (doorMode ? tt.is_door_ticket : !tt.is_door_ticket) &&
       tt.quantity - tt.sold > 0 &&
       (!tt.sale_starts_at || new Date(tt.sale_starts_at) <= now) &&
       (!tt.sale_ends_at   || new Date(tt.sale_ends_at)   >= now)
     );
-    setTicketTypes(doorTickets);
+    setTicketTypes(filtered);
   }
 
   function addToCart(tt: TicketType) {

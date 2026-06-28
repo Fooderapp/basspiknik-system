@@ -9,7 +9,9 @@ import type { Event, TicketType } from "@/lib/supabase/types";
 
 type EventWithTickets = Event & { ticket_types: TicketType[] };
 
-export default async function SellerPage() {
+export default async function SellerPage({ searchParams }: { searchParams: Promise<{ door?: string }> }) {
+  const { door } = await searchParams;
+  const doorMode = door === "1";
   const [profile, settings] = await Promise.all([getCurrentProfile(), getSettings()]);
   const supabase = await createClient() as any;
 
@@ -31,7 +33,7 @@ export default async function SellerPage() {
         </div>
         <a href="/dashboard" className="text-xs text-muted-foreground underline">{dict["seller.dashboard"]}</a>
       </div>
-      <SellerApp events={events} sellerId={profile!.id} dict={dict} />
+      <SellerApp events={events} sellerId={profile!.id} dict={dict} doorMode={doorMode} />
     </div>
   );
 }

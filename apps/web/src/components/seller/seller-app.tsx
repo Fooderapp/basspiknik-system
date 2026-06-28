@@ -27,6 +27,7 @@ interface Props {
   events: EventWithTickets[];
   sellerId: string;
   dict: Dictionary;
+  doorMode?: boolean;
 }
 
 type PaymentMethod = "CASH" | "CARD" | "TERMINAL";
@@ -37,7 +38,7 @@ const PAYMENT_ICONS: Record<PaymentMethod, React.ReactNode> = {
   TERMINAL: <Smartphone className="h-4 w-4" />,
 };
 
-export function SellerApp({ events, dict }: Props) {
+export function SellerApp({ events, dict, doorMode = false }: Props) {
   const [selectedEventId, setSelectedEventId] = useState<string>(events[0]?.id ?? "");
   const [cart, setCart] = useState<CartItem[]>([]);
   const paymentMethod: PaymentMethod = "CASH"; // web POS is cash-only
@@ -72,7 +73,7 @@ export function SellerApp({ events, dict }: Props) {
   const now = new Date();
   const availableTickets = selectedEvent?.ticket_types.filter(
     (t) =>
-      t.is_door_ticket &&
+      (doorMode ? t.is_door_ticket : !t.is_door_ticket) &&
       t.quantity - t.sold > 0 &&
       (!t.sale_starts_at || new Date(t.sale_starts_at) <= now) &&
       (!t.sale_ends_at   || new Date(t.sale_ends_at)   >= now)
