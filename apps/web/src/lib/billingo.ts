@@ -56,7 +56,15 @@ export interface BillingoInvoiceResult {
 }
 
 async function apiKey(): Promise<string | null> {
-  return (await getConfig("BILLINGO_API_KEY")) || null;
+  const raw = await getConfig("BILLINGO_API_KEY");
+  if (!raw) return null;
+  // HTTP header values must be Latin-1 (ByteString). Copy-pasted keys often
+  // carry invisible chars (U+2028 line separator, NBSP, stray whitespace) that
+  // make fetch throw "Cannot convert argument to a ByteString" before the
+  // request is sent. Billingo keys are URL-safe ASCII, so strip anything that
+  // isn't a printable ASCII char.
+  const clean = raw.replace(/[^\x21-\x7E]/g, "");
+  return clean || null;
 }
 
 /** Billingo requires an ISO-3166-1 alpha-2 country code. Profiles often store
