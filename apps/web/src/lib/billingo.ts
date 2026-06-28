@@ -238,8 +238,11 @@ export async function createBillingoInvoice(input: BillingoInvoiceInput): Promis
       conversion_rate: 1,
       electronic: true,
       paid: input.paid ?? true,
-      // Top-level flag (v3 API requires it here AND in settings for some plans)
-      should_send_letter: !!(input.buyer.email),
+      // NOTE: `should_send_letter` means a PHYSICAL POSTAL letter (paid add-on),
+      // NOT email — enabling it makes Billingo return 402 "You do not have
+      // subscription for this operation". The buyer is emailed via the separate
+      // /documents/{id}/send call below, so keep postal sending off.
+      should_send_letter: false,
       items: input.items.map((it) => ({
         name: it.name,
         unit_price: it.unitPrice,
@@ -252,7 +255,7 @@ export async function createBillingoInvoice(input: BillingoInvoiceInput): Promis
       // Billingo round enum: none/half/one/five/ten/fifty/hundred/thousand.
       // HUF cash rounds to 5; decimal currencies (EUR) must NOT round → "none".
       settings: {
-        should_send_letter: !!(input.buyer.email),
+        should_send_letter: false,
         round: input.currency === "HUF" ? "five" : "none",
         without_financial_fulfillment: false,
       },
