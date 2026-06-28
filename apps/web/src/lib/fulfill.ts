@@ -203,6 +203,18 @@ export async function fulfillTicketOrder(input: FulfillInput): Promise<FulfillRe
           language: lang,
           paid: true,
         });
+        // Invoice (számla) can fail if the Billingo plan doesn't include API
+        // invoicing (HTTP 402). Fall back to a receipt so the buyer still gets a
+        // document instead of nothing.
+        if (!billingoResult) {
+          billingoResult = await createBillingoReceipt({
+            items: invoiceItems,
+            currency: input.currency,
+            language: lang,
+            paid: true,
+            email: buyerEmail,
+          });
+        }
       } else {
         billingoResult = await createBillingoReceipt({
           items: invoiceItems,
