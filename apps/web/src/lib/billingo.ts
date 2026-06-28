@@ -152,20 +152,31 @@ export async function createBillingoReceipt(
 ): Promise<BillingoInvoiceResult | null> {
   const key = await apiKey();
   if (!key) return null;
-  const receiptBlock = (await getConfig("BILLINGO_RECEIPT_BLOCK_ID")) || (await getConfig("BILLINGO_BLOCK_ID"));
-  if (!receiptBlock) return null;
+  // Receipts require a RECEIPT-type document block. Never fall back to the
+  // invoice block — Billingo rejects it with "block cannot be used for this
+  // document type". Set BILLINGO_RECEIPT_BLOCK_ID to a receipt block.
+  const receiptBlock = await getConfig("BILLINGO_RECEIPT_BLOCK_ID");
+  if (!receiptBlock) {
+    console.error("Billingo receipt skipped: BILLINGO_RECEIPT_BLOCK_ID not set — a receipt-type block is required (the invoice block cannot issue receipts).");
+    return null;
+  }
 
   const vat = (await getConfig("BILLINGO_VAT")) || "27%";
   const paymentMethod = input.paymentMethod || (await getConfig("BILLINGO_PAYMENT_METHOD")) || "online_bankcard";
+  // Electronic receipts require a recipient email IN the create payload. Without
+  // an email, issue a non-electronic (printed) receipt instead of failing.
+  const hasEmail = !!input.email;
 
   try {
     const body: Record<string, unknown> = {
+      type: "receipt",
       block_id: Number(receiptBlock),
       payment_method: paymentMethod,
       language: (input.language || "hu").toUpperCase() === "EN" ? "en" : "hu",
       currency: input.currency,
       conversion_rate: 1,
-      electronic: true,
+      electronic: hasEmail,
+      ...(hasEmail ? { emails: [input.email] } : {}),
       paid: input.paid ?? true,
       items: input.items.map((it) => ({
         name: it.name,
@@ -182,20 +193,9 @@ export async function createBillingoReceipt(
       },
     };
 
+    // For an electronic receipt, the `emails` field above makes Billingo deliver
+    // it automatically — no separate /send call needed.
     const doc = await billingoFetch("/documents/receipt", { method: "POST", body: JSON.stringify(body) });
-
-    // Email the receipt when we have an address (optional — receipts are often
-    // just printed/shown). Non-fatal on failure.
-    if (input.email && doc.id) {
-      try {
-        await billingoFetch(`/documents/${doc.id}/send`, {
-          method: "POST",
-          body: JSON.stringify({ emails: [input.email] }),
-        });
-      } catch (sendErr) {
-        console.error(`Billingo receipt send FAILED — ${doc.id}:`, sendErr instanceof Error ? sendErr.message : String(sendErr));
-      }
-    }
 
     return {
       documentId: doc.id as number,

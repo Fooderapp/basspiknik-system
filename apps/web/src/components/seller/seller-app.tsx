@@ -39,7 +39,7 @@ const PAYMENT_ICONS: Record<PaymentMethod, React.ReactNode> = {
 export function SellerApp({ events, dict }: Props) {
   const [selectedEventId, setSelectedEventId] = useState<string>(events[0]?.id ?? "");
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CASH");
+  const paymentMethod: PaymentMethod = "CASH"; // web POS is cash-only
   const [buyerName, setBuyerName] = useState("");
   const [buyerEmail, setBuyerEmail] = useState("");
   const [notes, setNotes] = useState("");
@@ -273,22 +273,19 @@ export function SellerApp({ events, dict }: Props) {
           </CardContent>
         </Card>
 
-        {/* Payment method */}
+        {/* Payment method — web POS is cash-only (card needs mobile Tap to Pay
+            or a physical Stripe Terminal reader). */}
         <div className="space-y-2">
           <Label className="text-xs uppercase tracking-wide text-muted-foreground">{dict["seller.payment_method"]}</Label>
-          <div className="grid grid-cols-3 gap-2">
-            {(["CASH", "CARD", "TERMINAL"] as PaymentMethod[]).map((method) => (
-              <Button
-                key={method}
-                type="button"
-                variant={paymentMethod === method ? "default" : "outline"}
-                className="flex flex-col h-auto py-3 gap-1"
-                onClick={() => setPaymentMethod(method)}
-              >
-                {PAYMENT_ICONS[method]}
-                <span className="text-[10px]">{method}</span>
-              </Button>
-            ))}
+          <div className="grid grid-cols-1 gap-2">
+            <Button
+              type="button"
+              variant="default"
+              className="flex flex-col h-auto py-3 gap-1"
+            >
+              {PAYMENT_ICONS.CASH}
+              <span className="text-[10px]">CASH</span>
+            </Button>
           </div>
         </div>
 
