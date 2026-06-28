@@ -130,7 +130,14 @@ export default function SellerScreen() {
       .select("*")
       .eq("event_id", event.id)
       .order("price");
-    setTicketTypes(data ?? []);
+    const now = new Date();
+    const doorTickets = (data ?? []).filter((tt: TicketType) =>
+      tt.is_door_ticket &&
+      tt.quantity - tt.sold > 0 &&
+      (!tt.sale_starts_at || new Date(tt.sale_starts_at) <= now) &&
+      (!tt.sale_ends_at   || new Date(tt.sale_ends_at)   >= now)
+    );
+    setTicketTypes(doorTickets);
   }
 
   function addToCart(tt: TicketType) {

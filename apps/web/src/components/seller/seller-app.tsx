@@ -69,8 +69,13 @@ export function SellerApp({ events, dict }: Props) {
   const [lastReceipt, setLastReceipt] = useState<{ orderId: string; total: number; qty: number; qrs: string[] } | null>(null);
 
   const selectedEvent = events.find((e) => e.id === selectedEventId);
+  const now = new Date();
   const availableTickets = selectedEvent?.ticket_types.filter(
-    (t) => t.quantity - t.sold > 0
+    (t) =>
+      t.is_door_ticket &&
+      t.quantity - t.sold > 0 &&
+      (!t.sale_starts_at || new Date(t.sale_starts_at) <= now) &&
+      (!t.sale_ends_at   || new Date(t.sale_ends_at)   >= now)
   ) ?? [];
 
   const cartTotal = cart.reduce((sum, i) => sum + i.ticketType.price * i.quantity, 0);
