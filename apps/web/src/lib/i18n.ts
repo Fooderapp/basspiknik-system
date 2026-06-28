@@ -99,6 +99,13 @@ const en = {
   "profile.email":      "Email",
   "profile.sign_out":   "Sign out",
   "profile.sign_in_prompt": "Sign in to view your profile and entry pass.",
+  "profile.staff_tools":  "Staff tools",
+  "profile.checkin":      "Check-In",
+  "profile.checkin_sub":  "Scan tickets at the gate",
+  "profile.sell":         "Sell (POS)",
+  "profile.sell_sub":     "Door sales & card payments",
+  "profile.bar":          "Bar",
+  "profile.bar_sub":      "Fulfil drink orders",
 
   // Homepage
   "home.headline":       "Events. Tickets. Bar.",
@@ -655,6 +662,13 @@ const hu: typeof en = {
   "profile.email":      "Email",
   "profile.sign_out":   "Kijelentkezés",
   "profile.sign_in_prompt": "Jelentkezz be a profilod és belépőkártyád megtekintéséhez.",
+  "profile.staff_tools":  "Munkatársi eszközök",
+  "profile.checkin":      "Beléptetés",
+  "profile.checkin_sub":  "Jegyek beolvasása a kapuban",
+  "profile.sell":         "Értékesítés (POS)",
+  "profile.sell_sub":     "Helyszíni eladás és kártyás fizetés",
+  "profile.bar":          "Bár",
+  "profile.bar_sub":      "Italrendelések teljesítése",
 
   // Homepage
   "home.headline":       "Rendezvények. Jegyek. Bár.",

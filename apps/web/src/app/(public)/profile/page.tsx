@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { User, Mail, Hash, Star } from "lucide-react";
+import { User, Mail, Hash, Star, ScanLine, CreditCard, Beer, ChevronRight, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SignOutButton } from "@/components/consumer/sign-out-button";
@@ -41,6 +41,15 @@ export default async function ProfilePage() {
   const walletToken: string | null = p.wallet_token ?? null;
   const displayId: string | null = p.display_id ?? null;
   const credits = typeof balance === "number" ? balance : 0;
+  const role: string = p.role ?? "GUEST";
+
+  type TKey = Parameters<typeof t>[1];
+  const STAFF_TOOLS: { href: string; icon: LucideIcon; labelKey: TKey; subKey: TKey; roles: string[] }[] = [
+    { href: "/checkin", icon: ScanLine,   labelKey: "profile.checkin", subKey: "profile.checkin_sub", roles: ["ADMIN", "EDITOR", "STAFF"] },
+    { href: "/seller",  icon: CreditCard, labelKey: "profile.sell",    subKey: "profile.sell_sub",    roles: ["ADMIN", "EDITOR", "SELLER"] },
+    { href: "/bar",     icon: Beer,       labelKey: "profile.bar",     subKey: "profile.bar_sub",     roles: ["ADMIN", "EDITOR", "STAFF", "BARTENDER"] },
+  ];
+  const tools = STAFF_TOOLS.filter((tool) => tool.roles.includes(role));
 
   return (
     <div className="container max-w-md px-4 py-8 md:py-12">
@@ -91,6 +100,34 @@ export default async function ProfilePage() {
           <p className="text-xs text-center text-muted-foreground px-6 mt-3">
             {t(dict, "profile.share_hint")}
           </p>
+        </div>
+      )}
+
+      {/* Staff tools — role-gated, mirrors the mobile app's Profile screen */}
+      {tools.length > 0 && (
+        <div className="mb-6">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t(dict, "profile.staff_tools")}</p>
+          <div className="space-y-3">
+            {tools.map((tool) => {
+              const Icon = tool.icon;
+              return (
+                <Link
+                  key={tool.href}
+                  href={tool.href}
+                  className="flex items-center gap-3 rounded-2xl bg-card p-4 shadow-sm transition-colors hover:bg-muted"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-muted">
+                    <Icon className="h-[18px] w-[18px]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold tracking-tight">{t(dict, tool.labelKey)}</p>
+                    <p className="text-xs text-muted-foreground">{t(dict, tool.subKey)}</p>
+                  </div>
+                  <ChevronRight className="h-[18px] w-[18px] text-muted-foreground" />
+                </Link>
+              );
+            })}
+          </div>
         </div>
       )}
 
