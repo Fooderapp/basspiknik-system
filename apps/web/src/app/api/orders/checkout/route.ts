@@ -109,6 +109,10 @@ export async function POST(req: Request) {
 
   let discountAmount = 0;
   let promoCodeId = "";
+  // loyalty_discount is tracked for reporting but NOT deducted from the charge,
+  // matching the mobile payment-intent flow. (Previously web applied it as a
+  // coupon, so web charged 10% less than the app for the same ticket.)
+  let loyaltyDiscount = 0;
   if (promoCode || promoId) {
     // promoId path (QR scan) resolves the code server-side so it's never exposed.
     const { data: pc } = promoId
@@ -141,7 +145,7 @@ export async function POST(req: Request) {
     const adminRead = createAdminClient() as any;
     const { data: profileData } = await adminRead.from("profiles").select("*").eq("id", user.id).single();
     const profile = profileData as Profile | null;
-    if (profile?.loyalty_discount) discountAmount = subtotal * 0.1;
+    if (profile?.loyalty_discount) loyaltyDiscount = subtotal * 0.1;
     profileEmail = profile?.email ?? guestEmail;
   }
 
@@ -284,7 +288,7 @@ export async function POST(req: Request) {
     metadata: {
       eventId, userId: user?.id ?? "", guestEmail: guestEmail ?? "", guestName: guestName ?? "",
       items: JSON.stringify(items), promoCodeId, currency,
-      discountAmount: (discountAmount + creditDiscount).toString(), taxAmount: taxAmount.toString(),
+      discountAmount: (discountAmount + creditDiscount + loyaltyDiscount).toString(), taxAmount: taxAmount.toString(),
       creditsApplied: String(creditsApplied),
       wantsInvoice: wantsInvoice ? "1" : "",
       billing: wantsInvoice && billing ? JSON.stringify(billing) : "",
