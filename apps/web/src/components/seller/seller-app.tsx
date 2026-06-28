@@ -11,9 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Minus, Plus, ShoppingCart, CheckCircle2, Banknote, CreditCard, Smartphone } from "lucide-react";
+import { Minus, Plus, ShoppingCart, CheckCircle2, Banknote, CreditCard, Smartphone, QrCode, UserCheck } from "lucide-react";
 import type { Event, TicketType } from "@/lib/supabase/types";
 import type { Dictionary } from "@/lib/i18n";
+import { PassScanner } from "@/components/seller/pass-scanner";
 
 type EventWithTickets = Event & { ticket_types: TicketType[] };
 
@@ -42,8 +43,29 @@ export function SellerApp({ events, dict }: Props) {
   const paymentMethod: PaymentMethod = "CASH"; // web POS is cash-only
   const [buyerName, setBuyerName] = useState("");
   const [buyerEmail, setBuyerEmail] = useState("");
+  const [buyerUserId, setBuyerUserId] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [scanning, setScanning] = useState(false);
+
+  async function resolveBuyer(walletToken: string) {
+    setScanning(false);
+    try {
+      const res = await fetch("/api/seller/resolve-buyer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ walletToken }),
+      });
+      const data = await res.json();
+      if (!res.ok) { toast.error(data.error ?? dict["seller.buyer_not_found"]); return; }
+      setBuyerUserId(data.id);
+      setBuyerName(data.name ?? "");
+      setBuyerEmail(data.email ?? "");
+      toast.success(`${dict["seller.buyer_linked"]} ${data.name ?? ""}`.trim());
+    } catch {
+      toast.error(dict["seller.buyer_not_found"]);
+    }
+  }
   const [lastReceipt, setLastReceipt] = useState<{ orderId: string; total: number; qty: number; qrs: string[] } | null>(null);
 
   const selectedEvent = events.find((e) => e.id === selectedEventId);
@@ -84,6 +106,7 @@ export function SellerApp({ events, dict }: Props) {
           })),
           buyerName: buyerName || undefined,
           buyerEmail: buyerEmail || undefined,
+          buyerUserId: buyerUserId || undefined,
           notes: notes || undefined,
         }),
       });
@@ -98,6 +121,7 @@ export function SellerApp({ events, dict }: Props) {
       setCart([]);
       setBuyerName("");
       setBuyerEmail("");
+      setBuyerUserId(null);
       setNotes("");
       toast.success(`${dict["seller.sale_success"]} ${result.totalQty} ${dict["seller.sold"]}`);
       return true;
@@ -222,7 +246,13 @@ export function SellerApp({ events, dict }: Props) {
 
         {/* Optional buyer info */}
         <div className="space-y-3 pt-2">
-          <Label className="text-muted-foreground text-xs uppercase tracking-wide">{dict["seller.buyer_info"]}</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-muted-foreground text-xs uppercase tracking-wide">{dict["seller.buyer_info"]}</Label>
+            <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={() => setScanning(true)}>
+              {buyerUserId ? <UserCheck className="h-4 w-4 text-green-600" /> : <QrCode className="h-4 w-4" />}
+              <span className="text-xs">{buyerUserId ? dict["seller.buyer_linked"] : dict["seller.scan_pass"]}</span>
+            </Button>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="buyerName" className="text-xs">{dict["seller.buyer_name"]}</Label>
@@ -300,6 +330,10 @@ export function SellerApp({ events, dict }: Props) {
           }}
         />
       </div>
+
+      {scanning && (
+        <PassScanner dict={dict} onResult={resolveBuyer} onClose={() => setScanning(false)} />
+      )}
     </div>
   );
 }
