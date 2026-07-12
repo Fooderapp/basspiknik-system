@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TicketTypeManager } from "@/components/events/ticket-type-manager";
 import { SpinConfigManager } from "@/components/events/spin-config-manager";
-import { CalendarDays, MapPin, Users, ExternalLink, Pencil, BarChart3, Ticket, Tag, Code2 } from "lucide-react";
+import { CalendarDays, MapPin, Users, ExternalLink, Pencil, BarChart3, Ticket, Tag } from "lucide-react";
+import { DeleteEventButton } from "@/components/events/delete-event-button";
 import { EmbedSnippet } from "@/components/events/embed-snippet";
 import type { Event, TicketType } from "@/lib/supabase/types";
 
@@ -104,6 +105,7 @@ export default async function EventDetailPage({
               <Pencil className="h-3.5 w-3.5 mr-1" /> Edit Event
             </Link>
           </Button>
+          <DeleteEventButton eventId={id} eventName={event.name} />
         </div>
       </div>
 

@@ -6,8 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, stripeFee } from "@/lib/utils";
 import { TrendingUp, DollarSign, CreditCard, Percent, Wine, Users, Receipt } from "lucide-react";
 import { getCurrentProfile } from "@/lib/auth";
-import { TicketTypeChart, type TicketTypeDatum } from "@/components/dashboard/ticket-type-chart";
-import type { Order, Event } from "@/lib/supabase/types";
+import type { Order } from "@/lib/supabase/types";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -15,10 +14,6 @@ type OrderWithEvent = Order & {
   events: { name: string } | null;
   order_items?: Array<{ quantity: number; total: number; ticket_types: { name: string } | null }>;
   seller?: { name: string } | null;
-};
-type EventWithRelations = Event & {
-  ticket_types: Array<{ quantity: number; sold: number }>;
-  check_ins: Array<unknown>;
 };
 
 /** Payment method buckets */
@@ -49,7 +44,6 @@ export default async function AnalyticsPage() {
   const [
     { data: paidRaw },
     { data: refundedRaw },
-    { data: eventsRaw },
     { data: drinkOrdersRaw },
     { data: drinkItemsRaw },
     settings,
@@ -60,7 +54,6 @@ export default async function AnalyticsPage() {
       .eq("status", "PAID")
       .order("created_at", { ascending: false }),
     supabase.from("orders").select("total").eq("status", "REFUNDED"),
-    supabase.from("events").select("id, name, ticket_types(quantity, sold), check_ins(id)").eq("status", "PUBLISHED"),
     // Bar: all fulfilled drink orders
     supabase
       .from("drink_orders")
@@ -79,7 +72,6 @@ export default async function AnalyticsPage() {
 
   const paidOrders = (paidRaw as OrderWithEvent[] | null) ?? [];
   const refunds    = ((refundedRaw as Array<{ total: number }> | null) ?? []).reduce((s, o) => s + o.total, 0);
-  const events     = (eventsRaw as EventWithRelations[] | null) ?? [];
 
   const gross = paidOrders.reduce((s, o) => s + o.total, 0);
 
@@ -112,21 +104,6 @@ export default async function AnalyticsPage() {
     acc[name] = e;
     return acc;
   }, {} as Record<string, { count: number; revenue: number; items: number }>);
-
-  // ── Ticket-type breakdown ──
-  const typeMap = new Map<string, { paid: number; free: number; revenue: number }>();
-  for (const o of paidOrders) {
-    const isFree = (o.total ?? 0) <= 0;
-    for (const it of o.order_items ?? []) {
-      const name = it.ticket_types?.name ?? "—";
-      const e = typeMap.get(name) ?? { paid: 0, free: 0, revenue: 0 };
-      if (isFree) e.free += it.quantity;
-      else { e.paid += it.quantity; e.revenue += it.total; }
-      typeMap.set(name, e);
-    }
-  }
-  const byType = [...typeMap.entries()].map(([name, v]) => ({ name, ...v }));
-  const chartData: TicketTypeDatum[] = byType.map((r) => ({ name: r.name, paid: r.paid, free: r.free }));
 
   // ── Bar analytics ──
   const drinkOrders = (drinkOrdersRaw as any[] | null) ?? [];
@@ -251,75 +228,6 @@ export default async function AnalyticsPage() {
           </CardContent>
         </Card>
       )}
-
-      {/* ── Tickets by type ── */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t(dict, "analytics.by_type")}</CardTitle>
-          <p className="text-sm text-muted-foreground">{t(dict, "analytics.by_type_desc")}</p>
-        </CardHeader>
-        <CardContent>
-          {chartData.length === 0 ? (
-            <p className="text-sm text-muted-foreground">—</p>
-          ) : (
-            <>
-              <TicketTypeChart
-                data={chartData}
-                paidLabel={t(dict, "analytics.paid_tickets")}
-                freeLabel={t(dict, "analytics.free_tickets")}
-              />
-              <div className="mt-4 overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-muted-foreground">
-                      <th className="py-2 text-left font-medium">{t(dict, "analytics.ticket_type")}</th>
-                      <th className="py-2 text-right font-medium">{t(dict, "analytics.paid_tickets")}</th>
-                      <th className="py-2 text-right font-medium">{t(dict, "analytics.free_tickets")}</th>
-                      <th className="py-2 text-right font-medium">{t(dict, "analytics.revenue")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {byType.map((r) => (
-                      <tr key={r.name} className="border-b last:border-0">
-                        <td className="py-2">{r.name}</td>
-                        <td className="py-2 text-right tabular-nums">{r.paid}</td>
-                        <td className="py-2 text-right tabular-nums text-[#9FE870]">{r.free}</td>
-                        <td className="py-2 text-right font-medium tabular-nums">{fmt(r.revenue)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* ── Event capacity ── */}
-      <Card>
-        <CardHeader><CardTitle>{t(dict, "analytics.capacity")}</CardTitle></CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {events.map((event) => {
-              const totalSold     = event.ticket_types.reduce((a, tt) => a + tt.sold, 0);
-              const totalCapacity = event.ticket_types.reduce((a, tt) => a + tt.quantity, 0);
-              const checkinRate   = totalSold > 0 ? Math.round((event.check_ins.length / totalSold) * 100) : 0;
-              const pct           = totalCapacity > 0 ? Math.round((totalSold / totalCapacity) * 100) : 0;
-              return (
-                <div key={event.id} className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span className="font-medium">{event.name}</span>
-                    <span className="text-muted-foreground">{totalSold}/{totalCapacity} · {checkinRate}% {t(dict, "analytics.checked_in")}</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-secondary">
-                    <div className="h-full rounded-full bg-gold transition-all" style={{ width: `${pct}%` }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
 
       {/* ── Bar analytics ── */}
       <div>
