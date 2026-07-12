@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, stripeFee } from "@/lib/utils";
 import { TrendingUp, DollarSign, CreditCard, Percent, Wine, Users, Receipt } from "lucide-react";
 import { getCurrentProfile } from "@/lib/auth";
+import { ResetBarButton } from "@/components/dashboard/reset-bar-button";
 import type { Order } from "@/lib/supabase/types";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -231,10 +232,13 @@ export default async function AnalyticsPage() {
 
       {/* ── Bar analytics ── */}
       <div>
-        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <Wine className="h-5 w-5 text-muted-foreground" />
-          Bar Analytics
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <Wine className="h-5 w-5 text-muted-foreground" />
+            Bar Analytics
+          </h2>
+          <ResetBarButton />
+        </div>
 
         <div className="grid gap-4 md:grid-cols-3 mb-6">
           {[
