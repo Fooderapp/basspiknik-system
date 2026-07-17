@@ -48,6 +48,7 @@ export function SellerApp({ events, dict, doorMode = false }: Props) {
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [manualId, setManualId] = useState("");
 
   async function resolveBuyer(walletToken: string) {
     setScanning(false);
@@ -259,6 +260,23 @@ export function SellerApp({ events, dict, doorMode = false }: Props) {
               <span className="text-xs">{buyerUserId ? dict["seller.buyer_linked"] : dict["seller.scan_pass"]}</span>
             </Button>
           </div>
+          <form
+            className="flex gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (manualId.trim()) { resolveBuyer(manualId.trim()); setManualId(""); }
+            }}
+          >
+            <Input
+              placeholder={dict["seller.bass_id_ph"]}
+              value={manualId}
+              onChange={(e) => setManualId(e.target.value)}
+              className="text-xs h-8"
+            />
+            <Button type="submit" variant="outline" size="sm" disabled={!manualId.trim()} className="h-8 shrink-0">
+              {dict["seller.bass_id_lookup"]}
+            </Button>
+          </form>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="buyerName" className="text-xs">{dict["seller.buyer_name"]}</Label>

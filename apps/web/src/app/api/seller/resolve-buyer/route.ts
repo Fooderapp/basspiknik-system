@@ -33,13 +33,26 @@ export async function POST(req: Request) {
   if (!walletToken) return NextResponse.json({ error: "walletToken required" }, { status: 400 });
 
   const supabaseAdmin = createAdminClient() as any;
-  const { data: profile, error } = await supabaseAdmin
-    .from("profiles")
-    .select("id, name, email, billing_name, billing_address, billing_city, billing_postal_code, billing_country")
-    .eq("wallet_token", walletToken)
-    .single();
+  const FIELDS = "id, name, email, billing_name, billing_address, billing_city, billing_postal_code, billing_country";
 
-  if (error || !profile) {
+  // Accept both wallet_token (UUID from QR) and display_id (Bass-XXXXXX typed manually)
+  let profile: any = null;
+  const isDisplayId = /^bass-?[a-z0-9]{4,8}$/i.test(walletToken.trim());
+  if (isDisplayId) {
+    const { data } = await supabaseAdmin
+      .from("profiles").select(FIELDS)
+      .ilike("display_id", walletToken.trim())
+      .maybeSingle();
+    profile = data;
+  } else {
+    const { data } = await supabaseAdmin
+      .from("profiles").select(FIELDS)
+      .eq("wallet_token", walletToken.trim())
+      .maybeSingle();
+    profile = data;
+  }
+
+  if (!profile) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 

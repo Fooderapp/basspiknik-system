@@ -50,6 +50,7 @@ export default function SellerScreen() {
   const [buyerEmail, setBuyerEmail]       = useState("");
   const [registeredProfile, setRegisteredProfile] = useState<ResolvedProfile | null>(null);
   const [scannerOpen, setScannerOpen]     = useState(false);
+  const [manualId, setManualId]           = useState("");
   const [resolving, setResolving]         = useState(false);
   const [loading, setLoading]             = useState(true);
   const [selling, setSelling]             = useState(false);
@@ -733,15 +734,38 @@ export default function SellerScreen() {
                     )}
                   </View>
                 ) : (
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onPress={openScanner}
-                    loading={resolving}
-                    icon={<QrCode size={16} color="#14160F" strokeWidth={1.75} />}
-                  >
-                    <Text>{dict["seller.scan_customer"]}</Text>
-                  </Button>
+                  <View className="gap-2">
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onPress={openScanner}
+                      loading={resolving}
+                      icon={<QrCode size={16} color="#14160F" strokeWidth={1.75} />}
+                    >
+                      <Text>{dict["seller.scan_customer"]}</Text>
+                    </Button>
+                    <View className="flex-row gap-2 items-center">
+                      <Input
+                        placeholder="Bass-XXXXXX"
+                        value={manualId}
+                        onChangeText={setManualId}
+                        autoCapitalize="characters"
+                        returnKeyType="search"
+                        onSubmitEditing={() => {
+                          if (manualId.trim()) { resolveWalletToken(manualId.trim()); setManualId(""); }
+                        }}
+                        className="flex-1"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={!manualId.trim() || resolving}
+                        onPress={() => { if (manualId.trim()) { resolveWalletToken(manualId.trim()); setManualId(""); } }}
+                      >
+                        <Text>{dict["seller.bass_id_lookup"]}</Text>
+                      </Button>
+                    </View>
+                  </View>
                 )}
                 {/* Billing warning for registered user with missing billing */}
                 {registeredProfile && !registeredProfile.hasBilling && !billingData && (
