@@ -83,7 +83,7 @@ export async function POST(req: Request) {
     const ticketType = event.ticket_types.find((t) => t.id === item.ticketTypeId);
     if (!ticketType) return NextResponse.json({ error: "Ticket type not found" }, { status: 400 });
     const vt = ticketType as any;
-    if (vt.is_door_ticket || vt.is_visible === false
+    if (vt.is_door_ticket || vt.is_vip_ticket || vt.is_visible === false
       || (vt.visible_from && new Date(vt.visible_from) > new Date())
       || (vt.visible_until && new Date(vt.visible_until) < new Date())) {
       return NextResponse.json({ error: `${ticketType.name} is not available` }, { status: 400 });

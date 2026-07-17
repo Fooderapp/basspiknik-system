@@ -27,6 +27,7 @@ const updateSchema = z.object({
   isBundle: z.boolean().optional(),
   bundleSize: z.number().int().min(2).optional().nullable(),
   isDoorTicket: z.boolean().optional(),
+  isVipTicket: z.boolean().optional(),
   saleEnabled: z.boolean().optional(),
   salePrice: z.number().min(0).optional().nullable(),
   isVisible: z.boolean().optional(),
@@ -49,7 +50,7 @@ export async function PATCH(
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
   const { name, description, imageUrl, price, quantity, tier, maxPerOrder, entriesPerTicket,
-          saleStartsAt, saleEndsAt, isBundle, bundleSize, isDoorTicket, saleEnabled, salePrice,
+          saleStartsAt, saleEndsAt, isBundle, bundleSize, isDoorTicket, isVipTicket, saleEnabled, salePrice,
           isVisible, visibleFrom, visibleUntil } = parsed.data;
 
   const supabase = createAdminClient() as any;
@@ -69,6 +70,7 @@ export async function PATCH(
       ...(isBundle !== undefined && { is_bundle: isBundle }),
       ...(bundleSize !== undefined && { bundle_size: bundleSize }),
       ...(isDoorTicket !== undefined && { is_door_ticket: isDoorTicket }),
+      ...(isVipTicket !== undefined && { is_vip_ticket: isVipTicket }),
       ...(saleEnabled !== undefined && { sale_enabled: saleEnabled }),
       ...(salePrice !== undefined && { sale_price: salePrice }),
       ...(isVisible !== undefined && { is_visible: isVisible }),

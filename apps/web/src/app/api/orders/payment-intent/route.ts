@@ -52,7 +52,7 @@ export async function POST(req: Request) {
   for (const item of items) {
     const tt = event.ticket_types.find((t) => t.id === item.ticketTypeId);
     if (!tt) return NextResponse.json({ error: "Ticket type not found" }, { status: 400 });
-    if ((tt as any).is_door_ticket) return NextResponse.json({ error: "Door tickets are POS-only" }, { status: 400 });
+    if ((tt as any).is_door_ticket || (tt as any).is_vip_ticket) return NextResponse.json({ error: "This ticket is POS-only" }, { status: 400 });
     const vt = tt as any;
     if (vt.is_visible === false
       || (vt.visible_from && new Date(vt.visible_from) > new Date())

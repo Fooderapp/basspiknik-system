@@ -18,7 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 import { BannerImageUploader } from "@/components/events/banner-image-uploader";
-import { Plus, Pencil, Trash2, Ticket, Users, Tag, PackageOpen, RefreshCcw, DoorOpen, Eye, EyeOff, type LucideIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, Ticket, Users, Tag, PackageOpen, RefreshCcw, DoorOpen, Star, Eye, EyeOff, type LucideIcon } from "lucide-react";
 import type { TicketType } from "@/lib/supabase/types";
 
 const TIERS = ["EARLY_BIRD", "GENERAL", "LATE", "DOOR", "VIP", "FREE"] as const;
@@ -50,6 +50,8 @@ const schema = z.object({
   bundleSize: z.coerce.number().int().min(2).optional(),
   // Door ticket (auto-admitted at creation)
   isDoorTicket: z.boolean().default(false),
+  // VIP / sponsor ticket (POS-only, NOT auto-admitted)
+  isVipTicket: z.boolean().default(false),
   // Sale price
   saleEnabled: z.boolean().default(false),
   salePrice: z.coerce.number().min(0).optional(),
@@ -112,12 +114,13 @@ export function TicketTypeManager({ eventId, initialTicketTypes }: Props) {
   const isBundle = watch("isBundle");
   const saleEnabled = watch("saleEnabled");
   const isDoorTicket = watch("isDoorTicket");
+  const isVipTicket  = watch("isVipTicket");
   const isVisible = watch("isVisible");
   const entriesPerTicket = watch("entriesPerTicket") ?? 1;
 
   const openAdd = () => {
     setEditing(null);
-    reset({ tier: "GENERAL", maxPerOrder: 10, entriesPerTicket: 1, isBundle: false, isDoorTicket: false, saleEnabled: false, price: 0, quantity: 100, isVisible: true, visibleFrom: "", visibleUntil: "" });
+    reset({ tier: "GENERAL", maxPerOrder: 10, entriesPerTicket: 1, isBundle: false, isDoorTicket: false, isVipTicket: false, saleEnabled: false, price: 0, quantity: 100, isVisible: true, visibleFrom: "", visibleUntil: "" });
     setDialogOpen(true);
   };
 
@@ -135,6 +138,7 @@ export function TicketTypeManager({ eventId, initialTicketTypes }: Props) {
       isBundle: tt.is_bundle,
       bundleSize: tt.bundle_size ?? undefined,
       isDoorTicket: tt.is_door_ticket ?? false,
+      isVipTicket: (tt as any).is_vip_ticket ?? false,
       saleEnabled: tt.sale_enabled ?? false,
       salePrice: tt.sale_price ?? undefined,
       isVisible: (tt as any).is_visible ?? true,
@@ -165,6 +169,7 @@ export function TicketTypeManager({ eventId, initialTicketTypes }: Props) {
           isBundle: data.isBundle,
           bundleSize: data.isBundle ? data.bundleSize : null,
           isDoorTicket: data.isDoorTicket,
+          isVipTicket: data.isVipTicket,
           saleEnabled: data.saleEnabled,
           salePrice: data.saleEnabled ? data.salePrice : null,
           isVisible: data.isVisible,
@@ -247,6 +252,11 @@ export function TicketTypeManager({ eventId, initialTicketTypes }: Props) {
                     {tt.is_door_ticket && (
                       <Badge variant="outline" className="text-[11px]">
                         <DoorOpen className="h-2.5 w-2.5 mr-1" />Door
+                      </Badge>
+                    )}
+                    {(tt as any).is_vip_ticket && (
+                      <Badge variant="outline" className="text-[11px] border-amber-400/60 text-amber-600">
+                        VIP / Sponsor
                       </Badge>
                     )}
                     {(tt.entries_per_ticket ?? 1) > 1 && (
@@ -419,7 +429,17 @@ export function TicketTypeManager({ eventId, initialTicketTypes }: Props) {
                 label="Door ticket"
                 description="POS-only — hidden from the public event page, auto-admitted on creation"
                 checked={isDoorTicket}
-                onCheckedChange={(v) => setValue("isDoorTicket", v)}
+                onCheckedChange={(v) => { setValue("isDoorTicket", v); if (v) setValue("isVipTicket", false); }}
+              />
+
+              {/* VIP / sponsor ticket */}
+              <ToggleRow
+                id="vipTicket"
+                icon={Star}
+                label="VIP / Sponsor ticket"
+                description="POS-only — hidden from the public event page, NOT auto-admitted (ticket stays valid after sale)"
+                checked={isVipTicket}
+                onCheckedChange={(v) => { setValue("isVipTicket", v); if (v) setValue("isDoorTicket", false); }}
               />
 
               {/* Visibility on the public event page */}

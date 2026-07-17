@@ -39,7 +39,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   // sale hasn't started yet (visible_from in the future) is SHOWN but locked as
   // "Coming Soon" — not purchasable.
   const tts = (event.ticket_types as VisTT[]).filter((t) => {
-    if (t.is_door_ticket) return false;
+    if (t.is_door_ticket || (t as any).is_vip_ticket) return false;
     if (t.is_visible === false) return false;
     if (t.visible_until && new Date(t.visible_until).getTime() < nowMs) return false;
     return true;

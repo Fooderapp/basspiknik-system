@@ -84,7 +84,7 @@ export default function BuyEventScreen() {
         const now = Date.now();
         setTicketTypes(((ev.ticket_types as TicketType[]) ?? []).filter((tt) => {
           const ta = tt as any;
-          if (ta.is_door_ticket) return false;
+          if (ta.is_door_ticket || ta.is_vip_ticket) return false;
           if (ta.is_visible === false) return false;
           if (ta.visible_until && new Date(ta.visible_until).getTime() < now) return false;
           return true;

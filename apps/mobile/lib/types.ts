@@ -59,6 +59,7 @@ export interface TicketType {
   is_bundle: boolean;
   bundle_size: number | null;
   is_door_ticket: boolean;
+  is_vip_ticket: boolean;
   sale_starts_at: string | null;
   sale_ends_at: string | null;
 }
