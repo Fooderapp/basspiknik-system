@@ -65,6 +65,12 @@ export function SignUpForm({ dict }: Props) {
       });
     }
 
+    if (authData.session) {
+      // Email confirmation disabled — user is immediately logged in
+      router.push(redirectTo);
+      return;
+    }
+
     toast.success(dict["auth.confirm_email"]);
     router.push(signInHref);
   };
