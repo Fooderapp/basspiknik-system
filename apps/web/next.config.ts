@@ -52,6 +52,11 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**.supabase.co" },
       { protocol: "https", hostname: "images.unsplash.com" },
     ],
+    // Keep optimized variants at the edge for 30 days. Every cache hit is a
+    // Supabase Storage request that never happens — this is the main lever on
+    // egress, since the originals are immutable (upload paths are timestamped).
+    minimumCacheTTL: 60 * 60 * 24 * 30,
+    formats: ["image/avif", "image/webp"],
   },
 };
 

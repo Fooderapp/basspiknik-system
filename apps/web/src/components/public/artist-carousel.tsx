@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { Music2 } from "lucide-react";
 import { t, type Dictionary } from "@/lib/i18n";
+import { imgUrl, IMG } from "@/lib/image";
 
 interface ArtistCardData {
   id: string;
@@ -42,7 +43,7 @@ export function ArtistCarousel({ artists, dict }: { artists: ArtistCardData[]; d
               <div className="relative aspect-square w-full overflow-hidden rounded-[1.75rem] bg-muted">
                 {a.photo_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={a.photo_url} alt={a.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  <img src={imgUrl(a.photo_url, IMG.card)} alt={a.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                 ) : (
                   <div className="flex h-full items-center justify-center" style={{ background: "var(--pastel-lavender)" }}>
                     <Music2 className="h-8 w-8" style={{ color: "#2E2350" }} />

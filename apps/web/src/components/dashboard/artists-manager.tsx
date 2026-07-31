@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "@/components/dashboard/image-upload";
+import { imgUrl, IMG } from "@/lib/image";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -159,7 +160,7 @@ export function ArtistsManager() {
               <div className="aspect-[3/4] overflow-hidden rounded-2xl bg-muted">
                 {a.photo_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={a.photo_url} alt={a.name} className="h-full w-full object-cover" />
+                  <img src={imgUrl(a.photo_url, IMG.thumb)} alt={a.name} className="h-full w-full object-cover" />
                 ) : <div className="flex h-full items-center justify-center"><Music className="h-8 w-8 text-muted-foreground/40" /></div>}
               </div>
               <div className="mt-2 flex items-start justify-between gap-2">

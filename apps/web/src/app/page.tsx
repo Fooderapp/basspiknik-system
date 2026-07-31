@@ -12,6 +12,7 @@ import { StickyFadeTitle } from "@/components/public/sticky-fade-title";
 import { VenueExperience } from "@/components/public/venue-experience";
 import type { Venue } from "@/lib/venue";
 import { Button } from "@/components/ui/button";
+import { imgUrl, IMG } from "@/lib/image";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -180,7 +181,7 @@ export default async function HomePage() {
             <div className="relative z-10 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
               {gallery.map((g: any) => (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img key={g.id} src={g.image_url} alt={g.caption ?? ""} className="aspect-square w-full rounded-2xl object-cover shadow-sm" />
+                <img key={g.id} src={imgUrl(g.image_url, IMG.card)} alt={g.caption ?? ""} loading="lazy" className="aspect-square w-full rounded-2xl object-cover shadow-sm" />
               ))}
             </div>
           </div>

@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
 import { getSettings } from "@/lib/settings";
 import { getDictionary, t } from "@/lib/i18n";
+import { imgUrl, IMG } from "@/lib/image";
 import type { Event, TicketType } from "@/lib/supabase/types";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -66,8 +67,9 @@ export default async function EventsPage() {
                 {event.cover_image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={event.cover_image_url}
+                    src={imgUrl(event.cover_image_url, IMG.card)}
                     alt={event.name}
+                    loading="lazy"
                     className="h-[190px] w-full rounded-xl object-cover"
                   />
                 ) : (

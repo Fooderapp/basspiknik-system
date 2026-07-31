@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { ImageUpload } from "@/components/dashboard/image-upload";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { imgUrl, IMG } from "@/lib/image";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -123,7 +124,7 @@ function ImagesField({
           {images.map((url, idx) => (
             <div key={url + idx} className="group relative h-20 w-20 overflow-hidden rounded-xl border bg-muted">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={url} alt="" className="h-full w-full object-cover" />
+              <img src={imgUrl(url, IMG.thumb)} alt="" className="h-full w-full object-cover" />
               <button
                 type="button"
                 onClick={() => removeImage(idx)}

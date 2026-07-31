@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { formatDate } from "@/lib/utils";
 import { t, type Dictionary } from "@/lib/i18n";
+import { imgUrl, IMG } from "@/lib/image";
 
 interface EventCardData {
   id: string;
@@ -44,7 +45,7 @@ export function EventCarousel({ events, dict }: { events: EventCardData[]; dict:
             <div className="group relative flex aspect-[4/5] w-[78vw] shrink-0 snap-start flex-col justify-end overflow-hidden rounded-[2.25rem] bg-muted sm:w-[320px]">
               {ev.home_cover_image_url || ev.cover_image_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={ev.home_cover_image_url || ev.cover_image_url || ""} alt={ev.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <img src={imgUrl(ev.home_cover_image_url || ev.cover_image_url, IMG.card)} alt={ev.name} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
               ) : (
                 <div className="absolute inset-0" style={{ background: "var(--pastel-green)" }} />
               )}

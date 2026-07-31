@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { imgUrl, IMG } from "@/lib/image";
 
 /** Event cover image in a rounded card, matching the app's card radius. */
 export function EventCover({ src }: { src: string | null | undefined }) {
@@ -21,7 +22,7 @@ export function EventCover({ src }: { src: string | null | undefined }) {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         ref={imgRef}
-        src={src}
+        src={imgUrl(src, IMG.banner)}
         alt=""
         onLoad={() => setLoaded(true)}
         className={`h-full w-full object-cover transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}

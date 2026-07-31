@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CalendarDays, MapPin, QrCode, Ticket as TicketIcon, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { WalletButtons } from "@/components/consumer/wallet-buttons";
+import { imgUrl, IMG } from "@/lib/image";
 
 export interface WalletTicket {
   id: string;
@@ -108,7 +109,7 @@ function TicketCard({
           <div className="relative aspect-[4/1] w-full overflow-hidden bg-secondary">
             {tk.banner || tk.cover ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={(tk.banner ?? tk.cover)!} alt="" className="h-full w-full object-cover" />
+              <img src={imgUrl(tk.banner ?? tk.cover, IMG.card)} alt="" className="h-full w-full object-cover" />
             ) : (
               <div className="h-full w-full bg-gradient-to-br from-gold/30 to-brand/20" />
             )}

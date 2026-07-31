@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Event } from "@/lib/supabase/types";
 import { getSettings } from "@/lib/settings";
 import { getDictionary, t } from "@/lib/i18n";
+import { imgUrl, IMG } from "@/lib/image";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -77,7 +78,7 @@ export default async function SuccessPage({
         <div className="rounded-[2.25rem] p-5 space-y-3" style={{ background: "#E5E5E5" }}>
           {event.cover_image_url && (
             <div className="w-full aspect-video rounded-lg overflow-hidden mb-4">
-              <img src={event.cover_image_url} alt={event.name} className="w-full h-full object-cover object-center" />
+              <img src={imgUrl(event.cover_image_url, IMG.banner)} alt={event.name} className="w-full h-full object-cover object-center" />
             </div>
           )}
           <h2 className="text-xl font-bold">{event.name}</h2>

@@ -18,6 +18,7 @@ import { useLanguage } from "@/context/language";
 import { t } from "@/lib/i18n";
 import type { Event, TicketType } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
+import { imgUri, IMG } from "@/lib/image";
 
 const W = Dimensions.get("window").width;
 const CARD_H = (W - 40) * (5 / 4); // 4:5 aspect ratio matching web
@@ -66,7 +67,7 @@ function EventCard({ event, onPress, dict }: { event: EventWithTickets; onPress:
       <View style={{ height: CARD_H, borderRadius: 36, overflow: "hidden", backgroundColor: INK }}>
         {/* Cover image */}
         {event.cover_image_url
-          ? <Image source={{ uri: event.cover_image_url }} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} resizeMode="cover" />
+          ? <Image source={{ uri: imgUri(event.cover_image_url, IMG.card) }} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} resizeMode="cover" />
           : <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "#3C7A1E" }} />}
 
         {/* Gradient overlay — smooth dark at bottom, transparent at top */}

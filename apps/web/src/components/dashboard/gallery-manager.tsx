@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ImageUpload } from "@/components/dashboard/image-upload";
+import { imgUrl, IMG } from "@/lib/image";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -52,7 +53,7 @@ export function GalleryManager() {
           {images.map((img) => (
             <div key={img.id} className="group relative aspect-square overflow-hidden rounded-2xl bg-muted shadow-sm">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img.image_url} alt="" className="h-full w-full object-cover" />
+              <img src={imgUrl(img.image_url, IMG.thumb)} alt="" className="h-full w-full object-cover" />
               <Button size="icon" variant="destructive" className="absolute right-2 top-2 h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100" onClick={() => remove(img.id)}>
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>

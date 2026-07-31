@@ -8,6 +8,7 @@ import { SiteHeader } from "@/components/public/site-header";
 import { Button } from "@/components/ui/button";
 import { EventCarousel } from "@/components/public/event-carousel";
 import { formatDate } from "@/lib/utils";
+import { imgUrl, IMG } from "@/lib/image";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -66,7 +67,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
         <div className="relative mx-auto mt-6 aspect-[4/5] w-full max-w-sm overflow-hidden rounded-[2.5rem] bg-muted shadow-sm">
           {artist.photo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={artist.photo_url} alt={artist.name} className="h-full w-full object-cover" />
+            <img src={imgUrl(artist.photo_url, IMG.banner)} alt={artist.name} className="h-full w-full object-cover" />
           ) : <div className="absolute inset-0" style={{ background: "linear-gradient(135deg,#2E2350,#16170F)" }} />}
         </div>
 

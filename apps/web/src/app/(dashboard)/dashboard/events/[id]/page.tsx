@@ -12,6 +12,7 @@ import { CalendarDays, MapPin, Users, ExternalLink, Pencil, BarChart3, Ticket, T
 import { DeleteEventButton } from "@/components/events/delete-event-button";
 import { EmbedSnippet } from "@/components/events/embed-snippet";
 import type { Event, TicketType } from "@/lib/supabase/types";
+import { imgUrl, IMG } from "@/lib/image";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -114,11 +115,11 @@ export default async function EventDetailPage({
         <div className="w-full rounded-xl overflow-hidden border">
           {/* Desktop: fixed 400px height, natural aspect ratio */}
           <div className="hidden sm:block w-full h-[400px]">
-            <img src={event.cover_image_url} alt={event.name} className="w-full h-full object-cover object-center" />
+            <img src={imgUrl(event.cover_image_url, IMG.card)} alt={event.name} className="w-full h-full object-cover object-center" />
           </div>
           {/* Mobile: 1:1 centre-crop */}
           <div className="sm:hidden w-full aspect-square">
-            <img src={event.cover_image_url} alt={event.name} className="w-full h-full object-cover object-center" />
+            <img src={imgUrl(event.cover_image_url, IMG.card)} alt={event.name} className="w-full h-full object-cover object-center" />
           </div>
         </div>
       )}

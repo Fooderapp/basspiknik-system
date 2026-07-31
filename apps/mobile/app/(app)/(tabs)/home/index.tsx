@@ -26,6 +26,7 @@ import { useAuth } from "@/context/auth";
 import { useLanguage } from "@/context/language";
 import { t } from "@/lib/i18n";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { imgUri, IMG } from "@/lib/image";
 
 const W = Dimensions.get("window").width;
 const CARD_W = W - 40;
@@ -104,7 +105,7 @@ function FlipCard({
             {/* Banner 4:1 */}
             <View style={{ height: CARD_W / 4 }} className="bg-secondary overflow-hidden">
               {(tk.ticket_types?.image_url || tk.events?.banner_image_url || tk.events?.cover_image_url)
-                ? <Image source={{ uri: (tk.ticket_types?.image_url ?? tk.events?.banner_image_url ?? tk.events?.cover_image_url)! }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                ? <Image source={{ uri: imgUri(tk.ticket_types?.image_url ?? tk.events?.banner_image_url ?? tk.events?.cover_image_url, IMG.card) }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
                 : <View style={{ flex: 1, backgroundColor: `${LIME}30` }} />}
             </View>
 

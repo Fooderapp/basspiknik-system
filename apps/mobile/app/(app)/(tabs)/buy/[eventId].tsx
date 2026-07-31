@@ -17,6 +17,7 @@ import { OnboardingModal } from "@/components/OnboardingModal";
 import { SpinModal } from "@/components/SpinModal";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Event, TicketType } from "@/lib/types";
+import { imgUri, IMG } from "@/lib/image";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -319,7 +320,7 @@ export default function BuyEventScreen() {
         {event.cover_image_url && (
           <View style={{ marginHorizontal: 20, marginBottom: 20, borderRadius: 24, overflow: "hidden", aspectRatio: 16 / 9 }}>
             <Image
-              source={{ uri: event.cover_image_url }}
+              source={{ uri: imgUri(event.cover_image_url, IMG.hero) }}
               style={{ width: "100%", height: "100%" }}
               resizeMode="cover"
             />
